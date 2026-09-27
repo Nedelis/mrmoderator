@@ -1,122 +1,108 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0)
+import Sidebar from './components/Sidebar';
+import MobileNav from './components/MobileNav';
+import { useMaxBridge } from './hooks/useMaxBridge';
+import { useRoles } from './contexts/RolesContext';
+import { useCurrentUser } from './contexts/CurrentUserContext';
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+import Dashboard from './pages/Dashboard';
+import MyStats from './pages/MyStats';  // ← ДОБАВЛЕНО
+import Reminders from './pages/Reminders';
+import Progress from './pages/Progress';
+import Debts from './pages/Debts';
+import Exams from './pages/Exams';
+import Tasks from './pages/Tasks';
+import Materials from './pages/Materials';
+import Mail from './pages/Mail';
+import Roles from './pages/Roles';
+import Settings from './pages/Settings';
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function RequireMenu({ path, children }: { path: string; children: React.ReactNode }) {
+  const { hasMenuItem } = useCurrentUser();
+  if (!hasMenuItem(path)) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+        🔒 Доступ к этому разделу ограничен
+      </div>
+    );
+  }
+  return <>{children}</>;
 }
 
-export default App
+export default function App() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { isReady } = useMaxBridge();
+  const { loading: rolesLoading, error: rolesError } = useRoles();
+  const { loading: userLoading, error: userError, user, role, hasMenuItem } = useCurrentUser();
+  const location = useLocation();
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  if (!isReady || rolesLoading || userLoading) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100vh', background: 'var(--bg)', color: 'var(--text)', fontSize: 16,
+      }}>
+        Загрузка...
+      </div>
+    );
+  }
+
+  if (rolesError || userError) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--red)' }}>
+        Ошибка: {rolesError || userError}
+      </div>
+    );
+  }
+
+  if (!user || !role) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+        Не удалось определить пользователя или роль
+      </div>
+    );
+  }
+
+  const isDashboardForbidden = !hasMenuItem('/');
+
+  return (
+    <div className="app-layout">
+      <Sidebar />
+      <MobileNav
+        open={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+        onToggle={() => setMobileNavOpen(prev => !prev)}
+      />
+
+      <main className="main-content">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              isDashboardForbidden
+                ? <Navigate to="/my-stats" replace />
+                : <RequireMenu path="/"><Dashboard /></RequireMenu>
+            }
+          />
+          <Route path="/my-stats" element={<RequireMenu path="/my-stats"><MyStats /></RequireMenu>} />
+          <Route path="/reminders" element={<RequireMenu path="/reminders"><Reminders /></RequireMenu>} />
+          <Route path="/progress" element={<RequireMenu path="/progress"><Progress /></RequireMenu>} />
+          <Route path="/debts" element={<RequireMenu path="/debts"><Debts /></RequireMenu>} />
+          <Route path="/exams" element={<RequireMenu path="/exams"><Exams /></RequireMenu>} />
+          <Route path="/tasks" element={<RequireMenu path="/tasks"><Tasks /></RequireMenu>} />
+          <Route path="/materials" element={<RequireMenu path="/materials"><Materials /></RequireMenu>} />
+          <Route path="/mail" element={<RequireMenu path="/mail"><Mail /></RequireMenu>} />
+          <Route path="/roles" element={<RequireMenu path="/roles"><Roles /></RequireMenu>} />
+          <Route path="/settings" element={<RequireMenu path="/settings"><Settings /></RequireMenu>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}

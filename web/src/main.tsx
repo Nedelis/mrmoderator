@@ -1,10 +1,26 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import './styles/global.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+import App from './App';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { RolesProvider } from './contexts/RolesContext';
+import { CurrentUserProvider } from './contexts/CurrentUserContext';
+import { ToastProvider } from './components/Toast';   // ← ПРОВЕРЬ ЭТУ СТРОКУ
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>              {/* ← ВОТ ЗДЕСЬ */}
+          <RolesProvider>
+            <CurrentUserProvider>
+              <App />
+            </CurrentUserProvider>
+          </RolesProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
