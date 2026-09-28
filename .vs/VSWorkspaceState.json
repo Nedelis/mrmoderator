@@ -11,6 +11,6 @@
     "\\web\\src\\types",
     "\\web\\src\\utils"
   ],
-  "SelectedNode": "\\backend\\app\\core\\roles.py",
+  "SelectedNode": "\\web\\src\\pages\\Dashboard.tsx",
   "PreviewInSolutionExplorer": false
 }

@@ -19,7 +19,6 @@ export default function Roles() {
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
     const [selectedRoleId, setSelectedRoleId] = useState<RoleId>('');
-    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
     const [renamingStudent, setRenamingStudent] = useState<Student | null>(null);
     const [newName, setNewName] = useState('');
@@ -45,21 +44,30 @@ export default function Roles() {
     const canRemove = can('group.edit');
 
     const myFullName = user ? `${user.firstName} ${user.lastName}` : '';
-    const isSelf = (s: Student) => s.name === myFullName;
+
+    /**
+     * Проверка «это я». Сравниваем и по id, и по имени:
+     * — на бэке id студента совпадает с id текущего юзера (одна и та же запись в БД),
+     * — в моках id могут не совпадать, но имя точное.
+     */
+    const isSelf = (s: Student) =>
+        (!!user?.id && s.id === user.id) ||
+        (!!myFullName && s.name === myFullName);
 
     const selectedRole = roles.find(r => r.id === selectedRoleId) ?? null;
 
-    // Список студентов для селекта — без себя
+    // Селект «Назначить роль» — без себя
     const selectableStudents = students.filter(s => !isSelf(s));
 
     const canAssignSelected =
         !!selectedRoleId &&
         !!selectedStudentId &&
-        !selectableStudents.every(s => s.id !== selectedStudentId) &&
+        selectableStudents.some(s => s.id === selectedStudentId) &&
         canAssign(selectedRoleId);
 
     const handleAssign = async () => {
         const target = students.find(s => s.id === selectedStudentId);
+
         if (!target) {
             showToast('Выберите студента', 'error');
             return;
@@ -72,6 +80,7 @@ export default function Roles() {
             showToast('Недостаточно прав', 'error');
             return;
         }
+
         await run(
             () => api.assignRole({ studentId: target.id, roleId: selectedRoleId }),
             {
@@ -81,40 +90,17 @@ export default function Roles() {
         );
     };
 
-    const openEditRole = (s: Student) => {
-        if (!canEditRoles) {
-            showToast('Нет прав на изменение роли', 'error');
-            return;
-        }
-        setEditingStudent(s);
-        setSelectedRoleId(s.role || 'student');
-    };
-
-    const handleSaveRole = async (e: FormEvent) => {
-        e.preventDefault();
-        if (!editingStudent || !selectedRoleId) return;
-        if (!canAssign(selectedRoleId)) {
-            showToast('Недостаточно прав на эту роль', 'error');
-            return;
-        }
-        await run(
-            () => api.assignRole({ studentId: editingStudent.id, roleId: selectedRoleId }),
-            {
-                successMessage: `Роль обновлена: ${editingStudent.name}`,
-                onSuccess: () => {
-                    setEditingStudent(null);
-                    load();
-                },
-            }
-        );
-    };
-
     const handleRemove = async (s: Student) => {
         if (!canRemove) {
             showToast('Только староста может удалять участников', 'error');
             return;
         }
+        if (isSelf(s)) {
+            showToast('Нельзя удалить себя из группы', 'error');
+            return;
+        }
         if (!confirm(`Удалить «${s.name}» из группы?`)) return;
+
         await run(() => api.removeGroupMember(s.id), {
             successMessage: `Участник «${s.name}» удалён`,
             onSuccess: load,
@@ -170,8 +156,11 @@ export default function Roles() {
     };
 
     return (
-        <PageWrapper title= "Роли и доступ" subtitle = "Управление правами участников группы" >
-            <div className="grid grid-2" style = {{ marginBottom: 20 }
+        <PageWrapper
+      title= "Роли и доступ"
+    subtitle = "Управление правами участников группы"
+        >
+        <div className="grid grid-2" style = {{ marginBottom: 20 }
 }>
     <div className="card" >
         <div className="card-header" >
@@ -183,20 +172,29 @@ export default function Roles() {
                         <div
                 key= { r.id }
                 style = {{
-                        display: 'flex', alignItems: 'center', gap: 12, padding: 12,
-                        background: 'var(--panel-2)', borderRadius: 'var(--radius-sm)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: 12,
+                        background: 'var(--panel-2)',
+                        borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--border)',
                     }}
                     >
-                    <div className="user-avatar" style = {{ width: 34, height: 34, fontSize: 13 }}>
-                    { r.label.charAt(0) }
-                        </div>
-                        < div style = {{ flex: 1 }}>
-                            <div style={ { fontSize: 13, fontWeight: 600 } }> { r.label } </div>
-                                < div style = {{ fontSize: 11, color: 'var(--muted)' }}> { r.description } </div>
-                                    </div>
-                                    < span className = {`role-badge ${r.badgeClass}`}>
-                                    { r.badgeIcon } { r.badgeText }
+                    <div
+                  className="user-avatar"
+style = {{ width: 34, height: 34, fontSize: 13 }}
+                >
+{ r.label.charAt(0) }
+    </div>
+    < div style = {{ flex: 1 }}>
+        <div style={ { fontSize: 13, fontWeight: 600 } }> { r.label } </div>
+            < div style = {{ fontSize: 11, color: 'var(--muted)' }}>
+            { r.description }
+                </div>
+                </div>
+                < span className = {`role-badge ${r.badgeClass}`}>
+                { r.badgeIcon } { r.badgeText }
 </span>
     </div>
             ))}
@@ -210,8 +208,15 @@ export default function Roles() {
 
 {
     !canEditRoles ? (
-        <div style= {{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }
-}>
+        <div
+              style= {{
+        padding: 20,
+            textAlign: 'center',
+                color: 'var(--muted)',
+                    fontSize: 13,
+              }
+}
+            >
               🔒 У вашей роли нет прав на назначение ролей
     </div>
           ) : (
@@ -224,7 +229,9 @@ onChange = { e => setSelectedStudentId(e.target.value) }
     <option value="" > Выберите студента...</option>
 {
     selectableStudents.map(s => (
-        <option key= { s.id } value = { s.id } > { s.name } </option>
+        <option key= { s.id } value = { s.id } >
+        { s.name }
+        </option>
     ))
 }
 </select>
@@ -237,7 +244,9 @@ disabled = {!selectedStudentId}
               >
 {
     assignableRoles.map(r => (
-        <option key= { r.id } value = { r.id } > { r.label } </option>
+        <option key= { r.id } value = { r.id } >
+        { r.label }
+        </option>
     ))
 }
     </select>
@@ -247,19 +256,31 @@ disabled = {!selectedStudentId}
         <div
                   style={
         {
-            background: 'var(--panel-2)', borderRadius: 'var(--radius-sm)',
-                padding: 14, border: '1px solid var(--border)',
+            background: 'var(--panel-2)',
+                borderRadius: 'var(--radius-sm)',
+                    padding: 14,
+                        border: '1px solid var(--border)',
                   }
     }
                 >
-        <div style={ { fontSize: 12, color: 'var(--muted)', marginBottom: 8 } }>
-            Права роли «{ selectedRole.label }»:
+        <div
+                    style={
+        {
+            fontSize: 12,
+                color: 'var(--muted)',
+                    marginBottom: 8,
+                    }
+    }
+                  >
+        Права роли «{ selectedRole.label }»:
     </div>
         < div style = {{ display: 'flex', flexWrap: 'wrap', gap: 6 }
 }>
 {
     selectedRole.permissions.map(p => (
-        <span key= { p } className = "tag tag-blue" > { permissionLabel(p) } </span>
+        <span key= { p } className = "tag tag-blue" >
+        { permissionLabel(p) }
+        </span>
     ))
 }
     </div>
@@ -304,8 +325,11 @@ disabled = {!canAssignSelected || pending}
             { s.name }
         {
             self && (
-                <span className="tag tag-blue" style = {{ marginLeft: 8, fontSize: 10 }
-        }>
+                <span
+                        className="tag tag-blue"
+            style = {{ marginLeft: 8, fontSize: 10 }
+        }
+                      >
             вы
             </span>
                     )
@@ -322,12 +346,16 @@ disabled = {!canAssignSelected || pending}
                     )}
 </td>
     <td>
+{/* Себя: обычные роли — без действий */ }
 {
     self && !selfStarosta && (
-        <span style={ { fontSize: 12, color: 'var(--muted)' } }>—</span>
+        <span style={ { fontSize: 12, color: 'var(--muted)' } }>
+                        —
+    </span>
                     )
 }
 
+{/* Себя-староста: только переименование */ }
 {
     selfStarosta && (
         <button
@@ -342,23 +370,12 @@ title = "Изменить отображаемое имя"
     </button>
                     )}
 
+{/* Другие участники */ }
 {
     !self && (
         <div style={ { display: 'flex', gap: 6, flexWrap: 'wrap' } }>
-        { canEditRoles && (
+        { canRename && (
                 <button
-                            className="btn btn-ghost"
-    style = {{ padding: '6px 12px', fontSize: 12 }
-}
-disabled = { pending }
-onClick = {() => openEditRole(s)}
-                          >
-                            ✏️ Роль
-    </button>
-                        )}
-{
-    canRename && (
-        <button
                             className="btn btn-ghost"
     style = {{ padding: '6px 12px', fontSize: 12 }
 }
@@ -373,7 +390,11 @@ title = "Изменить отображаемое имя"
     canRemove && (
         <button
                             className="btn btn-ghost"
-    style = {{ padding: '6px 12px', fontSize: 12, color: 'var(--red)' }
+    style = {{
+        padding: '6px 12px',
+            fontSize: 12,
+                color: 'var(--red)',
+                            }
 }
 disabled = { pending }
 onClick = {() => handleRemove(s)}
@@ -391,52 +412,20 @@ onClick = {() => handleRemove(s)}
     </table>
     </div>
 
-{/* Модалка роли */ }
-<Modal
-        open={ !!editingStudent }
-onClose = {() => setEditingStudent(null)}
-title = {`Изменить роль · ${editingStudent?.name ?? ''}`}
-      >
-    <form onSubmit={ handleSaveRole } style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div>
-        <label style={ { fontSize: 12, color: 'var(--muted)' } }> Новая роль </label>
-            < select
-className = "role-select"
-style = {{ width: '100%', marginTop: 4 }}
-value = { selectedRoleId }
-onChange = { e => setSelectedRoleId(e.target.value) }
-    >
-{
-    assignableRoles.map(r => (
-        <option key= { r.id } value = { r.id } > { r.label } </option>
-    ))
-}
-    </select>
-    < div style = {{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
-        Роль «Староста» нельзя назначить через интерфейс
-            </div>
-            </div>
-
-            < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <button type="button" className = "btn btn-ghost" onClick = {() => setEditingStudent(null)}>
-                    Отмена
-                    </button>
-                    < button type = "submit" className = "btn btn-primary" disabled = { pending } >
-                    { pending? '⏳ Сохраняем...': '✅ Сохранить' }
-                        </button>
-                        </div>
-                        </form>
-                        </Modal>
-
 {/* Модалка переименования */ }
 <Modal
         open={ !!renamingStudent }
 onClose = {() => setRenamingStudent(null)}
 title = {`Изменить имя · ${renamingStudent?.name ?? ''}`}
       >
-    <form onSubmit={ handleRename } style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div>
-        <label style={ { fontSize: 12, color: 'var(--muted)' } }> Отображаемое имя </label>
+    <form
+          onSubmit={ handleRename }
+style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}
+        >
+    <div>
+    <label style={ { fontSize: 12, color: 'var(--muted)' } }>
+        Отображаемое имя
+            </label>
             < input
 className = {`role-select ${nameError ? 'field-error' : ''}`}
 style = {{ width: '100%', marginTop: 4 }}
@@ -447,20 +436,25 @@ autoFocus
     />
 { nameError && <div className="field-error-msg" > { nameError } </div>}
 <div style={ { fontSize: 11, color: 'var(--muted)', marginTop: 6 } }>
-    Имя используется только для отображения в этом приложении.Профиль в MAX останется прежним.
+    Имя используется только для отображения в этом приложении.
+              Профиль в MAX останется прежним.
             </div>
-        </div>
+    </div>
 
-        < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button type="button" className = "btn btn-ghost" onClick = {() => setRenamingStudent(null)}>
-                Отмена
-                </button>
-                < button type = "submit" className = "btn btn-primary" disabled = { pending } >
-                { pending? '⏳ Сохраняем...': '✅ Сохранить' }
-                    </button>
-                    </div>
-                    </form>
-                    </Modal>
-                    </PageWrapper>
+    < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button
+              type="button"
+className = "btn btn-ghost"
+onClick = {() => setRenamingStudent(null)}
+            >
+    Отмена
+    </button>
+    < button type = "submit" className = "btn btn-primary" disabled = { pending } >
+    { pending? '⏳ Сохраняем...': '✅ Сохранить' }
+        </button>
+        </div>
+        </form>
+        </Modal>
+        </PageWrapper>
   );
 }
