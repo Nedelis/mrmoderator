@@ -1,6 +1,7 @@
 import { mockApi, type Mailbox } from './mock';
 import type { Role, CurrentUser, ExamMaterial, Exam } from '../types/api';
 
+/** Читаем флаг из .env: VITE_USE_API_MOCK=true — работать на моках */
 const USE_API_MOCK = import.meta.env.VITE_USE_API_MOCK === 'true';
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
@@ -24,7 +25,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     });
 
     if (!res.ok) {
-        // Пробуем прочитать тело ошибки как JSON и достать code
         let errBody: any = null;
         try {
             errBody = await res.clone().json();
@@ -93,8 +93,8 @@ export const api = {
         return request('/materials');
     },
 
-    async getExams() {
-        if (USE_MOCK) return mockApi.getExams();
+    async getExams(): Promise<Exam[]> {
+        if (USE_API_MOCK) return mockApi.getExams();
         return request('/exams');
     },
 
@@ -103,12 +103,7 @@ export const api = {
         return request('/tasks');
     },
 
-    async getSettings() {
-        if (USE_MOCK) return mockApi.getSettings();
-        return request('/settings');
-    },
-
-    // ==== НАПОМИНАЛКИ ====
+    // ===== НАПОМИНАЛКИ =====
     async createReminder(payload: {
         title: string;
         description: string;
@@ -125,13 +120,11 @@ export const api = {
         });
     },
 
-    async deleteReminder(id: string) {
-        if (USE_MOCK) return mockApi.deleteReminder(id);
-        return request(`/reminders/${id}`, { method: 'DELETE' });
-    },
-
-    async updateReminder(id: string, payload: Partial<{ title: string; description: string }>) {
-        if (USE_MOCK) return mockApi.updateReminder(id, payload);
+    async updateReminder(
+        id: string,
+        payload: Partial<{ title: string; description: string }>
+    ) {
+        if (USE_API_MOCK) return mockApi.updateReminder(id, payload);
         return request(`/reminders/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -140,7 +133,7 @@ export const api = {
     },
 
     async deleteReminder(id: string) {
-        if (USE_MOCK) return mockApi.deleteReminder(id);
+        if (USE_API_MOCK) return mockApi.deleteReminder(id);
         return request(`/reminders/${id}`, { method: 'DELETE' });
     },
 
@@ -164,13 +157,16 @@ export const api = {
         });
     },
 
-    async updateDebt(id: string, payload: Partial<{
-        studentName: string;
-        subject: string;
-        type: string;
-        deadline: string;
-    }>) {
-        if (USE_MOCK) return mockApi.updateDebt(id, payload);
+    async updateDebt(
+        id: string,
+        payload: Partial<{
+            studentName: string;
+            subject: string;
+            type: string;
+            deadline: string;
+        }>
+    ) {
+        if (USE_API_MOCK) return mockApi.updateDebt(id, payload);
         return request(`/debts/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -217,14 +213,15 @@ export const api = {
         return request(`/tasks/${id}/remind`, { method: 'POST' });
     },
 
-    // ==== МАТЕРИАЛЫ ====
-    async uploadMaterial(payload: { title: string; type: string; file?: File }) {
-        if (USE_MOCK) return mockApi.uploadMaterial(payload);
-        const formData = new FormData();
-        formData.append('title', payload.title);
-        formData.append('type', payload.type);
-        if (payload.file) formData.append('file', payload.file);
-        return request('/materials', { method: 'POST', body: formData });
+    // ===== МАТЕРИАЛЫ =====
+    /** Материалы добавляются только ссылкой на сообщение в MAX */
+    async uploadMaterial(payload: { title: string; type: string; url: string }) {
+        if (USE_API_MOCK) return mockApi.uploadMaterial(payload);
+        return request('/materials', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
     },
 
     async downloadMaterial(id: string) {
@@ -247,7 +244,7 @@ export const api = {
         teacher?: string;
         icon?: string;
     }) {
-        if (USE_MOCK) return mockApi.createExam(payload);
+        if (USE_API_MOCK) return mockApi.createExam(payload);
         return request('/exams', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -260,11 +257,7 @@ export const api = {
         title: string;
         url?: string;
     }): Promise<ExamMaterial> {
-        if (USE_MOCK) return mockApi.addExamMaterial(payload);
-        const formData = new FormData();
-        formData.append('title', payload.title);
-        if (payload.url) formData.append('url', payload.url);
-        if (payload.file) formData.append('file', payload.file);
+        if (USE_API_MOCK) return mockApi.addExamMaterial(payload);
         return request(`/exams/${payload.examId}/materials`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -304,8 +297,12 @@ export const api = {
         });
     },
 
-    async addMailbox(payload: { email: string; label: string; autoForward?: boolean }) {
-        if (USE_MOCK) return mockApi.addMailbox(payload);
+    async addMailbox(payload: {
+        email: string;
+        label: string;
+        autoForward?: boolean;
+    }) {
+        if (USE_API_MOCK) return mockApi.addMailbox(payload);
         return request('/mail/mailboxes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -329,7 +326,7 @@ export const api = {
     },
 
     async renameMember(studentId: string, newName: string) {
-        if (USE_MOCK) return mockApi.renameMember(studentId, newName);
+        if (USE_API_MOCK) return mockApi.renameMember(studentId, newName);
         return request(`/group/members/${studentId}/name`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -340,16 +337,6 @@ export const api = {
     async removeGroupMember(studentId: string) {
         if (USE_API_MOCK) return mockApi.removeGroupMember(studentId);
         return request(`/group/members/${studentId}`, { method: 'DELETE' });
-    },
-
-    // ==== НАСТРОЙКИ ====
-    async saveSettings(payload: Record<string, unknown>) {
-        if (USE_MOCK) return mockApi.saveSettings(payload);
-        return request('/settings', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
     },
 };
 
