@@ -1,9 +1,10 @@
 from maxapi import Dispatcher
 from maxapi.filters.command import Command, CommandStart
-from maxapi.types import MessageCreated, MessageCallback, ButtonsPayload, LinkButton, CallbackButton
+from maxapi.types import MessageCreated, MessageCallback, ButtonsPayload, LinkButton, CallbackButton, BotStarted
 from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
 
 from app.core.database import async_session
+from app.core.roles import ROLES
 from app.models.user import User
 from app.services import group_service, notify_service, user_service
 
@@ -39,6 +40,49 @@ def no_group_kb() -> ButtonsPayload:
 # /start
 # ═══════════════════════════════════════════════════════════════
 
+@dp.bot_started()
+async def on_bot_started(event: BotStarted):
+    """Обработка запуска бота (в т.ч. через диплинк)."""
+    payload = event.payload  # ← сюда приходит "invite_ABC123"
+    
+    if not payload or not payload.startswith("invite_"):
+        return
+    
+    invite_code = payload.replace("invite_", "", 1)
+    max_user_id = str(event.user.user_id)
+    
+    async with async_session() as db:
+        user = await user_service.get_user_by_max_id(db, max_user_id)
+        if user is None:
+            user = User(
+                max_user_id=max_user_id,
+                first_name=event.user.first_name or "",
+                last_name=event.user.last_name or "",
+                role_id="student",
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        
+        if user.group_id:
+            await bot.send_message(
+                chat_id=event.chat_id,
+                text="Ты уже в группе."
+            )
+            return
+        
+        group = await group_service.join_group_by_invite(db, user, invite_code)
+        if group:
+            await bot.send_message(
+                chat_id=event.chat_id,
+                text=f"✅ Ты вступил в группу «{group.name}»!\nОткрой приложение: /open"
+            )
+        else:
+            await bot.send_message(
+                chat_id=event.chat_id,
+                text="❌ Неверный код приглашения."
+            )
+
 @dp.message_created(CommandStart())
 async def cmd_start(event: MessageCreated):
     sender = event.message.sender
@@ -59,18 +103,30 @@ async def cmd_start(event: MessageCreated):
             await db.commit()
             await db.refresh(user)
 
+    commands_text = (
+        "📖 Доступные команды:\n\n"
+        "/start — начать\n"
+        "/help — список команд\n"
+        "/creategroup НАЗВАНИЕ — создать группу\n"
+        "/join КОД — вступить по коду\n"
+        "/invite — код приглашения (староста)\n"
+        "/setchat — привязать чат (староста)\n"
+        "/open — открыть приложение\n"
+        "/test_notify — тест уведомления"
+    )
+    
     if not user.group_id:
         await event.message.answer(
             f"Привет, {first_name or 'друг'}! 👋\n\n"
             "Я — Мистер Модератор.\n\n"
-            "Ты пока не в группе. Выбери действие:",
+            "Ты пока не в группе. Выбери действие:\n\n" + commands_text,
             attachments=[no_group_kb()],
         )
         return
 
     await event.message.answer(
         f"Привет, {first_name or 'друг'}! 👋\n\n"
-        "Ты в группе. Вот меню:",
+        "Ты в группе.\n\n" + commands_text,
         attachments=[main_menu_kb()],
     )
 
@@ -187,7 +243,11 @@ async def cmd_invite(event: MessageCreated):
             await event.message.answer("Код не найден.")
             return
 
-        await event.message.answer(f"🔑 Код приглашения: {group.invite_code}")
+        await event.message.answer(
+            f"🔑 Ссылка-приглашение:\n"
+            f"https://max.ru/mrmoderator_bot?start=invite_{group.invite_code}\n\n"
+            f"Или код для ручного ввода: {group.invite_code}"
+        )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -254,13 +314,35 @@ async def cmd_test_notify(event: MessageCreated):
         await event.message.answer("❌ Не удалось отправить.")
 
 
+@dp.message_created()
+async def fallback_handler(event: MessageCreated):
+    """Ловит все сообщения, которые не подошли под другие хендлеры."""
+    text = (event.message.body.text or "").strip()
+
+    # Игнорируем пустые сообщения и вложения без текста
+    if not text:
+        return
+
+    # Если это команда (начинается с /), но неизвестная
+    if text.startswith("/"):
+        await event.message.answer(
+            f"❓ Неизвестная команда: {text.split()[0]}\n\n"
+            "Напиши /help, чтобы увидеть список доступных команд."
+        )
+        return
+
+    # Если это обычный текст — подсказываем, что делать
+    await event.message.answer(
+        "Я понимаю только команды. Напиши /help, чтобы увидеть список."
+    )
+
+
 # ═══════════════════════════════════════════════════════════════
 # CALLBACK-ОБРАБОТЧИКИ
 # ═══════════════════════════════════════════════════════════════
 
 @dp.message_callback()
 async def on_callback(event: MessageCallback):
-    # ⚠️ ВОТ ИСПРАВЛЕНИЕ: payload лежит в event.callback.payload
     payload = event.callback.payload
     user = event.callback.user
     max_user_id = str(user.user_id)
@@ -273,14 +355,30 @@ async def on_callback(event: MessageCallback):
                 return
             group = await group_service.get_group(db, user_db.group_id)
             if group:
+                role_label = ROLES.get(user_db.role_id, {}).get("label", user_db.role_id)
                 await event.message.answer(
                     f"📚 Группа: {group.name}\n"
-                    f"Курс: {group.course}, семестр: {group.semester}\n"
-                    f"Твоя роль: {user_db.role_id}"
+                    f"Твоя роль: {role_label}"
                 )
 
     elif payload == "invite":
-        await cmd_invite(event)
+        # Отдельная логика — НЕ вызываем cmd_invite
+        async with async_session() as db:
+            user_db = await user_service.get_user_by_max_id(db, max_user_id)
+            if not user_db or not user_db.group_id:
+                await event.message.answer("Ты не в группе.")
+                return
+            if user_db.role_id != "starosta":
+                await event.message.answer("Только староста может выдавать приглашения.")
+                return
+            group = await group_service.get_group(db, user_db.group_id)
+            if not group or not group.invite_code:
+                await event.message.answer("Код не найден.")
+                return
+            await event.message.answer(
+                f"🔑 Ссылка-приглашение:\n"
+                f"https://max.ru/mrmoderator_bot?start=invite_{group.invite_code}"
+            )
 
     elif payload == "create_group":
         await event.message.answer(
