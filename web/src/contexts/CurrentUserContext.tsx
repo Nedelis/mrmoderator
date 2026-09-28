@@ -93,9 +93,6 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
             const target = rolesById[targetRoleId];
             if (!target) return false;
 
-            // Старосту нельзя назначить через UI
-            if (target.id === 'starosta') return false;
-
             // Староста может назначать любую, кроме старосты
             if (role.id === 'starosta') return true;
 
