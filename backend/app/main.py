@@ -1,17 +1,55 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from maxapi import Bot
 
 from app.api.v1.router import api_router
 from app.core.config import SETTINGS
+from app.services import notify_service
 
-app = FastAPI(title="Mister Moderator API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """При старте API регистрируем sender для notify_service."""
+    token: str = SETTINGS.MAX_BOT_TOKEN.get_secret_value()
+    api_bot: Bot | None = None
+
+    if token:
+        api_bot = Bot(token=token)
+
+        async def sender(user_id: int, text: str) -> bool:
+            try:
+                await api_bot.send_message(user_id=user_id, text=text)
+                return True
+            except Exception as e:
+                print(f"[api] Ошибка отправки в {user_id}: {e}")
+                return False
+
+        notify_service.register_sender(sender)
+        print("[api] Sender зарегистрирован")
+    else:
+        print("[api] MAX_BOT_TOKEN пустой — sender не зарегистрирован")
+
+    yield
+
+    if api_bot is not None:
+        await api_bot.close_session()
+        print("[api] Bot закрыт")
+
+
+app = FastAPI(
+    title="Mister Moderator API",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*", "X-Max-Init-Data"]
+    allow_headers=["*", "X-Max-Init-Data"],
 )
 
 app.include_router(api_router, prefix="/api")
