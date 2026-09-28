@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.core.roles import has_permission
 from app.core.security import validate_init_data
 from app.models.user import User
+from app.models.group import Group
 
 
 # =============================================================================
@@ -14,13 +15,38 @@ from app.models.user import User
 # =============================================================================
 
 async def _get_or_create_test_user(db: AsyncSession) -> User:
-    """
-    Заглушка для локальной разработки.
-    Возвращает (или создаёт) тестового старосту.
-    Используется, когда STRICT_AUTH=false.
-    """
     TEST_MAX_ID = "test_user_001"
+    TEST_GROUP_ID = "TEST-GROUP-01"
+    TEST_GROUP_NAME = "Тестовая группа"
+    TEST_INVITE_CODE = "TESTINVITE"
 
+    # 1. Ищем группу по ID
+    group_result = await db.execute(
+        select(Group).where(Group.id == TEST_GROUP_ID)
+    )
+    group = group_result.scalar_one_or_none()
+
+    # 2. Если нет — ищем по invite_code (на случай, если ID другой, но код тот же)
+    if group is None:
+        group_result = await db.execute(
+            select(Group).where(Group.invite_code == TEST_INVITE_CODE)
+        )
+        group = group_result.scalar_one_or_none()
+
+    # 3. Если всё ещё нет — создаём
+    if group is None:
+        group = Group(
+            id=TEST_GROUP_ID,
+            name=TEST_GROUP_NAME,
+            course=1,
+            semester=1,
+            invite_code=TEST_INVITE_CODE,
+        )
+        db.add(group)
+        await db.commit()
+        await db.refresh(group)
+
+    # 4. Пользователь
     result = await db.execute(select(User).where(User.max_user_id == TEST_MAX_ID))
     user = result.scalar_one_or_none()
 
@@ -32,7 +58,7 @@ async def _get_or_create_test_user(db: AsyncSession) -> User:
             username="test_user",
             photo_url=None,
             role_id="starosta",
-            group_id="TEST-GROUP-01",
+            group_id=group.id,
         )
         db.add(user)
         await db.commit()
