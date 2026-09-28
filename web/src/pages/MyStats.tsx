@@ -128,7 +128,7 @@ style = {{ color: activeDebts.length > 0 ? 'var(--red)' : 'var(--green)' }}
             < td > { d.type } </td>
             < td > { formatDate(d.deadline)
 } </td>
-    < td > <span className={ `tag ${STATUS_CLASS[st]}` }> { STATUS_LABEL[st]} < /span></td >
+    <td> <span className={ `tag ${STATUS_CLASS[st]}` }> { STATUS_LABEL[st]}</span></td>
         </tr>
                 );
               })}

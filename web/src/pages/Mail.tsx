@@ -3,7 +3,8 @@ import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
 import { useToast } from '../components/Toast';
 import { useAsyncAction } from '../hooks/useAsyncAction';
-import { api, type Mailbox } from '../api/client';
+import { api } from '../api/client';
+import type { Mailbox } from '../types/api';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
 import { rules, validateObject } from '../utils/validation';
 import type { MailItem } from '../types/api';
@@ -411,8 +412,8 @@ style = {{
                             lineHeight: 1.5,
             }}
           >
-    <div><strong>🤖 Авто → группа < /strong> — новые письма из ящика сразу попадают в чат группы.</div >
-        <div><strong>✋ Вручную < /strong> — письма копятся в агрегаторе, староста или зам могут переслать их вручную.</div >
+    <div><strong>🤖 Авто → группа </strong> — новые письма из ящика сразу попадают в чат группы.</div>
+        <div><strong>✋ Вручную </strong> — письма копятся в агрегаторе, староста или зам могут переслать их вручную.</div>
             </div>
 
             < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>

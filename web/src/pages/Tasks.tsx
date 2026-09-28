@@ -131,7 +131,13 @@ export default function Tasks() {
         }
 
         await run(
-            () => (editingTask ? api.updateTask(editingTask.id, form) : api.createTask(form)),
+            async () => {
+                if (editingTask) {
+                    await api.updateTask(editingTask.id, form);
+                } else {
+                    await api.createTask(form);
+                }
+            },
             {
                 successMessage: editingTask ? 'Задание обновлено' : 'Задание создано',
                 onSuccess: () => {

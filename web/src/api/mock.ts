@@ -216,7 +216,6 @@ export const mockApi = {
         studentsCount: STUDENTS.length,
     }),
 
-    // ===== НАПОМИНАЛКИ =====
     async createReminder(payload: {
         title: string;
         description: string;
@@ -240,6 +239,7 @@ export const mockApi = {
                 payload.scope === 'selected' && payload.studentIds?.length
                     ? payload.studentIds
                     : undefined,
+            completedBy: [],   // ← ДОБАВИТЬ
         };
         REMINDERS = [reminder, ...REMINDERS];
         return reminder;

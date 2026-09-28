@@ -122,10 +122,13 @@ export default function Debts() {
         }
 
         await run(
-            () =>
-                editingDebt
-                    ? api.updateDebt(editingDebt.id, form)
-                    : api.createDebt(form),
+            async () => {
+                if (editingDebt) {
+                    await api.updateDebt(editingDebt.id, form);
+                } else {
+                    await api.createDebt(form);
+                }
+            },
             {
                 successMessage: editingDebt ? 'Долг обновлён' : 'Долг добавлен',
                 errorMessage: editingDebt ? 'Ошибка обновления' : 'Ошибка добавления',

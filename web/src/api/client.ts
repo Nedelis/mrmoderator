@@ -1,11 +1,21 @@
-import { mockApi, type Mailbox } from './mock';
-import type { Role, CurrentUser, ExamMaterial, Exam } from '../types/api';
+import { mockApi } from './mock';
+import type {
+    Role,
+    CurrentUser,
+    ExamMaterial,
+    Exam,
+    Reminder,
+    Debt,
+    Task,
+    MailItem,
+    Mailbox,
+    Material,
+    Student,
+} from '../types/api';
 
-/** Читаем флаг из .env: VITE_USE_API_MOCK=true — работать на моках */
 const USE_API_MOCK = import.meta.env.VITE_USE_API_MOCK === 'true';
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
-/** Ошибка «юзер не в группе» — кидаем на страницу 504 */
 export class NotRegisteredError extends Error {
     constructor() {
         super('not_in_group');
@@ -58,49 +68,49 @@ export const api = {
         return data.user;
     },
 
-    async getGroup() {
+    async getGroup(): Promise<{ name: string; course: number; semester: number; studentsCount: number }> {
         if (USE_API_MOCK) return mockApi.getGroupInfo();
         return request('/group');
     },
 
-    async getStudents() {
+    async getStudents(): Promise<Student[]> {
         if (USE_API_MOCK) return mockApi.getStudents();
-        return request('/students');
+        return request<Student[]>('/students');
     },
 
-    async getReminders() {
+    async getReminders(): Promise<Reminder[]> {
         if (USE_API_MOCK) return mockApi.getReminders();
-        return request('/reminders');
+        return request<Reminder[]>('/reminders');
     },
 
-    async getDebts() {
+    async getDebts(): Promise<Debt[]> {
         if (USE_API_MOCK) return mockApi.getDebts();
-        return request('/debts');
+        return request<Debt[]>('/debts');
     },
 
-    async getMail() {
+    async getMail(): Promise<MailItem[]> {
         if (USE_API_MOCK) return mockApi.getMail();
-        return request('/mail');
+        return request<MailItem[]>('/mail');
     },
 
     async getMailboxes(): Promise<Mailbox[]> {
         if (USE_API_MOCK) return mockApi.getMailboxes();
-        return request('/mail/mailboxes');
+        return request<Mailbox[]>('/mail/mailboxes');
     },
 
-    async getMaterials() {
+    async getMaterials(): Promise<Material[]> {
         if (USE_API_MOCK) return mockApi.getMaterials();
-        return request('/materials');
+        return request<Material[]>('/materials');
     },
 
     async getExams(): Promise<Exam[]> {
         if (USE_API_MOCK) return mockApi.getExams();
-        return request('/exams');
+        return request<Exam[]>('/exams');
     },
 
-    async getTasks() {
+    async getTasks(): Promise<Task[]> {
         if (USE_API_MOCK) return mockApi.getTasks();
-        return request('/tasks');
+        return request<Task[]>('/tasks');
     },
 
     // ===== НАПОМИНАЛКИ =====
@@ -111,9 +121,9 @@ export const api = {
         time: string;
         scope: 'personal' | 'group' | 'selected';
         studentIds?: string[];
-    }) {
+    }): Promise<Reminder> {
         if (USE_API_MOCK) return mockApi.createReminder(payload);
-        return request('/reminders', {
+        return request<Reminder>('/reminders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -123,28 +133,37 @@ export const api = {
     async updateReminder(
         id: string,
         payload: Partial<{ title: string; description: string }>
-    ) {
+    ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.updateReminder(id, payload);
-        return request(`/reminders/${id}`, {
+        return request<{ ok: boolean }>(`/reminders/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async deleteReminder(id: string) {
+    async deleteReminder(id: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.deleteReminder(id);
-        return request(`/reminders/${id}`, { method: 'DELETE' });
+        return request<{ ok: boolean }>(`/reminders/${id}`, { method: 'DELETE' });
     },
 
-    async remindReminder(id: string) {
+    async remindReminder(id: string): Promise<{
+        ok: boolean;
+        id: string;
+        title: string;
+        sentTo: number;
+        sentAt: string;
+    }> {
         if (USE_API_MOCK) return mockApi.remindReminder(id);
         return request(`/reminders/${id}/remind`, { method: 'POST' });
     },
 
-    async markReminderCompleted(id: string, completed: boolean) {
+    async markReminderCompleted(
+        id: string,
+        completed: boolean
+    ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.toggleReminderCompleted(id, completed);
-        return request(`/reminders/${id}/complete`, {
+        return request<{ ok: boolean }>(`/reminders/${id}/complete`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ completed }),
@@ -157,9 +176,9 @@ export const api = {
         subject: string;
         type: string;
         deadline: string;
-    }) {
+    }): Promise<Debt> {
         if (USE_API_MOCK) return mockApi.createDebt(payload);
-        return request('/debts', {
+        return request<Debt>('/debts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -174,18 +193,18 @@ export const api = {
             type: string;
             deadline: string;
         }>
-    ) {
+    ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.updateDebt(id, payload);
-        return request(`/debts/${id}`, {
+        return request<{ ok: boolean }>(`/debts/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async deleteDebt(id: string) {
+    async deleteDebt(id: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.deleteDebt(id);
-        return request(`/debts/${id}`, { method: 'DELETE' });
+        return request<{ ok: boolean }>(`/debts/${id}`, { method: 'DELETE' });
     },
 
     // ===== ЗАДАНИЯ =====
@@ -194,53 +213,65 @@ export const api = {
         description: string;
         deadline: string;
         type: 'group' | 'personal';
-    }) {
+    }): Promise<Task> {
         if (USE_API_MOCK) return mockApi.createTask(payload);
-        return request('/tasks', {
+        return request<Task>('/tasks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async updateTask(id: string, payload: Record<string, unknown>) {
+    async updateTask(
+        id: string,
+        payload: Record<string, unknown>
+    ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.updateTask(id, payload);
-        return request(`/tasks/${id}`, {
+        return request<{ ok: boolean }>(`/tasks/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async deleteTask(id: string) {
+    async deleteTask(id: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.deleteTask(id);
-        return request(`/tasks/${id}`, { method: 'DELETE' });
+        return request<{ ok: boolean }>(`/tasks/${id}`, { method: 'DELETE' });
     },
 
-    async remindTask(id: string) {
+    async remindTask(id: string): Promise<{
+        ok: boolean;
+        id: string;
+        title: string;
+        sentTo: number;
+        sentAt: string;
+    }> {
         if (USE_API_MOCK) return mockApi.remindTask(id);
         return request(`/tasks/${id}/remind`, { method: 'POST' });
     },
 
     // ===== МАТЕРИАЛЫ =====
-    /** Материалы добавляются только ссылкой на сообщение в MAX */
-    async uploadMaterial(payload: { title: string; type: string; url: string }) {
+    async uploadMaterial(payload: {
+        title: string;
+        type: string;
+        url: string;
+    }): Promise<Material> {
         if (USE_API_MOCK) return mockApi.uploadMaterial(payload);
-        return request('/materials', {
+        return request<Material>('/materials', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async downloadMaterial(id: string) {
+    async downloadMaterial(id: string): Promise<{ ok: boolean; maxUrl?: string }> {
         if (USE_API_MOCK) return mockApi.downloadMaterial(id);
-        return request(`/materials/${id}/download`);
+        return request<{ ok: boolean; maxUrl?: string }>(`/materials/${id}/download`);
     },
 
-    async deleteMaterial(id: string) {
+    async deleteMaterial(id: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.deleteMaterial(id);
-        return request(`/materials/${id}`, { method: 'DELETE' });
+        return request<{ ok: boolean }>(`/materials/${id}`, { method: 'DELETE' });
     },
 
     // ===== ЭКЗАМЕНЫ =====
@@ -252,9 +283,9 @@ export const api = {
         room?: string;
         teacher?: string;
         icon?: string;
-    }) {
+    }): Promise<Exam> {
         if (USE_API_MOCK) return mockApi.createExam(payload);
-        return request('/exams', {
+        return request<Exam>('/exams', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -267,7 +298,7 @@ export const api = {
         url?: string;
     }): Promise<ExamMaterial> {
         if (USE_API_MOCK) return mockApi.addExamMaterial(payload);
-        return request(`/exams/${payload.examId}/materials`, {
+        return request<ExamMaterial>(`/exams/${payload.examId}/materials`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -277,29 +308,38 @@ export const api = {
         });
     },
 
-    async deleteExamMaterial(examId: string, materialId: string) {
+    async deleteExamMaterial(
+        examId: string,
+        materialId: string
+    ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.deleteExamMaterial(examId, materialId);
-        return request(`/exams/${examId}/materials/${materialId}`, {
+        return request<{ ok: boolean }>(`/exams/${examId}/materials/${materialId}`, {
             method: 'DELETE',
         });
     },
 
     // ===== ПОЧТА =====
-    async forwardMail(id: string) {
+    async forwardMail(id: string): Promise<{
+        ok: boolean;
+        id: string;
+        forwardedTo: string;
+    }> {
         if (USE_API_MOCK) return mockApi.forwardMail(id);
         return request(`/mail/${id}/forward`, { method: 'POST' });
     },
 
-    async refreshMail() {
+    async refreshMail(): Promise<{ ok: boolean; newMessages: number }> {
         if (USE_API_MOCK) return mockApi.refreshMail();
-        return request('/mail/refresh', { method: 'POST' });
+        return request<{ ok: boolean; newMessages: number }>('/mail/refresh', {
+            method: 'POST',
+        });
     },
 
     async configureMailboxes(payload: {
         mailboxes: Array<{ id: string; connected: boolean; autoForward: boolean }>;
-    }) {
+    }): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.configureMailboxes(payload);
-        return request('/mail/configure', {
+        return request<{ ok: boolean }>('/mail/configure', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -310,31 +350,39 @@ export const api = {
         email: string;
         label: string;
         autoForward?: boolean;
-    }) {
+    }): Promise<Mailbox> {
         if (USE_API_MOCK) return mockApi.addMailbox(payload);
-        return request('/mail/mailboxes', {
+        return request<Mailbox>('/mail/mailboxes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async removeMailbox(id: string) {
+    async removeMailbox(id: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.removeMailbox(id);
-        return request(`/mail/mailboxes/${id}`, { method: 'DELETE' });
+        return request<{ ok: boolean }>(`/mail/mailboxes/${id}`, {
+            method: 'DELETE',
+        });
     },
 
     // ===== РОЛИ =====
-    async assignRole(payload: { studentId: string; roleId: string }) {
+    async assignRole(payload: {
+        studentId: string;
+        roleId: string;
+    }): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.assignRole(payload);
-        return request('/roles/assign', {
+        return request<{ ok: boolean }>('/roles/assign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
     },
 
-    async renameMember(studentId: string, newName: string) {
+    async renameMember(
+        studentId: string,
+        newName: string
+    ): Promise<{ ok: boolean; oldName: string; newName: string }> {
         if (USE_API_MOCK) return mockApi.renameMember(studentId, newName);
         return request(`/group/members/${studentId}/name`, {
             method: 'PATCH',
@@ -343,10 +391,10 @@ export const api = {
         });
     },
 
-    async removeGroupMember(studentId: string) {
+    async removeGroupMember(studentId: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.removeGroupMember(studentId);
-        return request(`/group/members/${studentId}`, { method: 'DELETE' });
+        return request<{ ok: boolean }>(`/group/members/${studentId}`, {
+            method: 'DELETE',
+        });
     },
 };
-
-export type { Mailbox };

@@ -39,11 +39,10 @@ export interface Reminder {
     id: string;
     title: string;
     description: string;
-    deadline: string;               // ISO datetime
+    deadline: string;
     type: 'personal' | 'group';
     priority: 'low' | 'medium' | 'high';
-    targetStudentIds?: string[];    // для напоминаний конкретным студентам
-    /** id студентов, которые отметили напоминание выполненным (для себя) */
+    targetStudentIds?: string[];
     completedBy: string[];
 }
 
@@ -52,7 +51,7 @@ export interface Debt {
     studentName: string;
     subject: string;
     type: string;
-    deadline: string;               // ISO date
+    deadline: string;
     status: 'active' | 'overdue' | 'closed';
 }
 
@@ -79,7 +78,7 @@ export interface Material {
     author: string;
     type: 'pdf' | 'video' | 'other';
     createdAt: string;
-    maxUrl?: string;                // ссылка на сообщение в MAX
+    maxUrl?: string;
 }
 
 export interface ExamMaterial {
@@ -94,7 +93,7 @@ export interface ExamMaterial {
 export interface Exam {
     id: string;
     subject: string;
-    date: string;                   // ISO datetime
+    date: string;
     time: string;
     room: string;
     teacher: string;
@@ -107,7 +106,7 @@ export interface Task {
     id: string;
     title: string;
     description: string;
-    deadline: string;               // ISO date
+    deadline: string;
     type: 'group' | 'personal';
     status: 'active' | 'soon' | 'done' | 'overdue';
 }
