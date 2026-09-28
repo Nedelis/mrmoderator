@@ -1,6 +1,8 @@
 # Project Settings
 .vs/
+vs/
 .continue/
+continue/
 
 # Databases
 *.db
