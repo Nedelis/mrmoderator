@@ -1,16 +1,16 @@
 {
   "ExpandedNodes": [
     "",
+    "\\backend",
     "\\web",
     "\\web\\src",
-    "\\web\\src\\api",
     "\\web\\src\\components",
     "\\web\\src\\config",
+    "\\web\\src\\contexts",
     "\\web\\src\\pages",
-    "\\web\\src\\styles",
     "\\web\\src\\types",
     "\\web\\src\\utils"
   ],
-  "SelectedNode": "\\web\\src\\api\\client.ts",
+  "SelectedNode": "\\backend\\app\\core\\roles.py",
   "PreviewInSolutionExplorer": false
 }

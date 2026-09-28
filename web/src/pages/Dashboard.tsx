@@ -5,7 +5,13 @@ import { api } from '../api/client';
 import { formatDate, formatDateTime, daysUntil } from '../utils/date';
 import type { Reminder, Debt, MailItem, Material } from '../types/api';
 
+interface GroupInfo {
+    name: string;
+    studentsCount?: number;
+}
+
 export default function Dashboard() {
+    const [group, setGroup] = useState<GroupInfo | null>(null);
     const [reminders, setReminders] = useState<Reminder[]>([]);
     const [debts, setDebts] = useState<Debt[]>([]);
     const [mail, setMail] = useState<MailItem[]>([]);
@@ -13,11 +19,13 @@ export default function Dashboard() {
 
     useEffect(() => {
         Promise.all([
+            api.getGroup(),
             api.getReminders(),
             api.getDebts(),
             api.getMail(),
             api.getMaterials(),
-        ]).then(([r, d, m, mat]) => {
+        ]).then(([g, r, d, m, mat]) => {
+            setGroup(g as GroupInfo);
             setReminders(r.slice(0, 3));
             setDebts(d.slice(0, 5));
             setMail(m.slice(0, 2));
@@ -25,12 +33,11 @@ export default function Dashboard() {
         });
     }, []);
 
+    const subtitle = group?.name ? `Обзор группы ${group.name}` : 'Загрузка...';
+
     return (
-        <PageWrapper
-      title= "Дашборд"
-    subtitle = "Обзор группы ИУ7-42Б · 2 курс · 4 семестр"
-        >
-        <div className="grid grid-2" style = {{ marginBottom: 18 }
+        <PageWrapper title= "Дашборд" subtitle = { subtitle } >
+            <div className="grid grid-2" style = {{ marginBottom: 18 }
 }>
     <div className="card" >
         <div className="card-header" >
@@ -95,7 +102,7 @@ export default function Dashboard() {
             < td > { d.subject } </td>
             < td > { formatDate(d.deadline)
 } </td>
-    <td><span className={`tag ${cls}`}>{ label } </span></td>
+    < td > <span className={ `tag ${cls}` }> { label } < /span></td >
         </tr>
                 );
               })}
@@ -145,7 +152,7 @@ export default function Dashboard() {
         <div key= { m.id } className = "reminder-item" >
         <div className={`reminder-icon ${m.type === 'pdf' ? 'red' : m.type === 'video' ? 'blue' : 'green'
             }`}>
-            { m.type === 'pdf' ? '📄' : m.type === 'video' ? '🎬' : '🤖' }
+            { m.type === 'pdf' ? '📄' : m.type === 'video' ? '🎬' : '📎' }
                 </div>
                 < div className = "reminder-content" >
                     <div className="title" > { m.title } </div>
