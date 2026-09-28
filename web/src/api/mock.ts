@@ -527,4 +527,23 @@ export const mockApi = {
         STUDENTS = STUDENTS.filter(s => s.id !== studentId);
         return { ok: true, removed: studentId };
     },
+
+    /**
+ * Покинуть группу. Удаляем пользователя из списка, сбрасываем группу.
+ * После вызова — reload() в контексте вернёт юзера без группы,
+ * и App покажет страницу 504.
+ */
+    async leaveGroup() {
+        await delay();
+        const myName = `${ME.firstName} ${ME.lastName}`;
+
+        // Убираем себя из списка студентов
+        STUDENTS = STUDENTS.filter(s => s.id !== ME.id && s.name !== myName);
+
+        // Сбрасываем группу у текущего юзера
+        ME.groupId = '';
+        ME.groupName = '';
+
+        return { ok: true };
+    },
 };

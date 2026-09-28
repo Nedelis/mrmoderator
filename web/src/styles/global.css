@@ -588,10 +588,12 @@ body {
     transition: transform 0.25s ease;
     padding: 20px;
     overflow-y: auto;
+    flex-direction: column;
 }
 
     .mobile-nav.open {
         transform: translateX(0);
+        display: flex;
     }
 
 .mobile-nav-header {
@@ -615,6 +617,23 @@ body {
         cursor: pointer;
     }
 
+/* Список навигации растягивается и толкает футер вниз */
+.mobile-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.mobile-nav-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .mobile-nav-item {
     display: flex;
     align-items: center;
@@ -624,7 +643,6 @@ body {
     color: var(--text);
     text-decoration: none;
     font-size: 14px;
-    margin-bottom: 4px;
 }
 
     .mobile-nav-item.active {
@@ -803,4 +821,19 @@ body {
 
     .reminder-item-completed .desc {
         color: var(--muted);
+    }
+
+/* ===== DANGER ACTION ===== */
+.sidebar-action-danger {
+    color: var(--red);
+    border-color: var(--red);
+}
+
+    .sidebar-action-danger:hover:not(:disabled) {
+        background: rgba(255, 92, 92, 0.1);
+    }
+
+    .sidebar-action-danger:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }

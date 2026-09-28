@@ -315,7 +315,7 @@ disabled = {!canAssignSelected || pending}
                     <tbody>
 {
     students.map(s => {
-        const cfg = roles.find(r => r.id === s.role);
+        const cfg = roles.find(r => r.id === s.role || r.label === s.role);
         const self = isSelf(s);
         const selfStarosta = self && s.role === 'starosta';
 

@@ -397,4 +397,9 @@ export const api = {
             method: 'DELETE',
         });
     },
+
+    async leaveGroup(): Promise<{ ok: boolean }> {
+        if (USE_API_MOCK) return mockApi.leaveGroup();
+        return request<{ ok: boolean }>('/group/leave', { method: 'POST' });
+    },
 };
