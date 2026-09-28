@@ -7,13 +7,13 @@ import App from './App';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { RolesProvider } from './contexts/RolesContext';
 import { CurrentUserProvider } from './contexts/CurrentUserContext';
-import { ToastProvider } from './components/Toast';   // ← ПРОВЕРЬ ЭТУ СТРОКУ
+import { ToastProvider } from './components/Toast';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <ToastProvider>              {/* ← ВОТ ЗДЕСЬ */}
+        <ToastProvider>
           <RolesProvider>
             <CurrentUserProvider>
               <App />

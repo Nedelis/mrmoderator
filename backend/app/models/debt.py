@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from functools import partial
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 from app.core.database import Base
 
@@ -15,4 +16,4 @@ class Debt(Base):
     status = Column(String, default="active")
 
     group_id = Column(String, ForeignKey("groups.id"), index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=partial(datetime.now, timezone.utc))

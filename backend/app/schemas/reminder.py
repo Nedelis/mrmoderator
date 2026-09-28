@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Literal
 from app.schemas.base import BaseSchema
 
-
 ReminderType = Literal["personal", "group"]
 ReminderPriority = Literal["low", "medium", "high"]
 ReminderScope = Literal["personal", "group", "selected"]

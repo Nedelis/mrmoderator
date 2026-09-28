@@ -1,9 +1,7 @@
 import app.services.user_service as user_service
-
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.roles import has_permission
 from app.models.debt import Debt
 from app.models.user import User
@@ -39,7 +37,7 @@ async def _find_student_by_name(
 
 
 def _compute_status(deadline: datetime) -> str:
-    if deadline < datetime.now():
+    if deadline < datetime.now(timezone.utc):
         return "overdue"
     return "active"
 

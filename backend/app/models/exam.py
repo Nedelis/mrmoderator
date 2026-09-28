@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from functools import partial
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -29,6 +30,6 @@ class ExamMaterial(Base):
     url = Column(String, nullable=True)
     file_path = Column(String, nullable=True)
     added_by = Column(Integer, ForeignKey("users.id"))
-    added_at = Column(DateTime, default=datetime.now)
+    added_at = Column(DateTime, default=partial(datetime.now, timezone.utc))
 
     exam = relationship("Exam", back_populates="materials")

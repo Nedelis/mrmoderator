@@ -8,10 +8,10 @@ app = FastAPI(title="Mister Moderator API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=SETTINGS.CORS_ORIGINS,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "X-Max-Init-Data"]
 )
 
 app.include_router(api_router, prefix="/api")

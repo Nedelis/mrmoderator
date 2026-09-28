@@ -1,5 +1,7 @@
+from functools import partial
+
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.database import Base
 
 
@@ -17,5 +19,5 @@ class Material(Base):
 
     download_url = Column(String, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=partial(datetime.now, timezone.utc))
     group_id = Column(String, ForeignKey("groups.id"), index=True)

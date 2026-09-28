@@ -1,14 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.material import Material
 from app.models.user import User
 from app.schemas.material import Material as MaterialSchema
 
 
 def _humanize(dt: datetime) -> str:
-    delta = datetime.now() - dt
+    delta = datetime.now(timezone.utc) - dt
     seconds = delta.total_seconds()
     if seconds < 60:
         return "только что"

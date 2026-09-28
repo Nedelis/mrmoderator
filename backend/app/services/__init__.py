@@ -9,6 +9,7 @@ from app.services import (
     mail_service,
     settings_service,
     notify_service,
+    notification_log_service
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "mail_service",
     "settings_service",
     "notify_service",
+    "notification_log_service"
 ]
