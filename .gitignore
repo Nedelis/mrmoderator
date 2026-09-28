@@ -1,3 +1,7 @@
+# Project Settings
+.vs/
+.continue/
+
 # Databases
 *.db
 *.sqlite
