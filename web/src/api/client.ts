@@ -142,6 +142,15 @@ export const api = {
         return request(`/reminders/${id}/remind`, { method: 'POST' });
     },
 
+    async markReminderCompleted(id: string, completed: boolean) {
+        if (USE_API_MOCK) return mockApi.toggleReminderCompleted(id, completed);
+        return request(`/reminders/${id}/complete`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed }),
+        });
+    },
+
     // ===== ДОЛГИ =====
     async createDebt(payload: {
         studentName: string;

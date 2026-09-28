@@ -43,6 +43,8 @@ export interface Reminder {
     type: 'personal' | 'group';
     priority: 'low' | 'medium' | 'high';
     targetStudentIds?: string[];    // для напоминаний конкретным студентам
+    /** id студентов, которые отметили напоминание выполненным (для себя) */
+    completedBy: string[];
 }
 
 export interface Debt {

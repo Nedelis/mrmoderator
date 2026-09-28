@@ -114,23 +114,32 @@ let STUDENTS: Student[] = [
 
 let REMINDERS: Reminder[] = [
     {
-        id: '1', title: 'Сдать лабу по ТРПО',
+        id: '1',
+        title: 'Сдать лабу по ТРПО',
         description: 'Загрузка отчёта в Moodle',
         deadline: `${isoPlusDays(0)}T23:59`,
-        type: 'group', priority: 'high',
+        type: 'group',
+        priority: 'high',
+        completedBy: [],
     },
     {
-        id: '2', title: 'Консультация перед экзаменом',
+        id: '2',
+        title: 'Консультация перед экзаменом',
         description: 'Ауд. 412, преподаватель Смирнов А.В.',
         deadline: `${isoPlusDays(1)}T14:30`,
-        type: 'personal', priority: 'medium',
+        type: 'personal',
+        priority: 'medium',
+        completedBy: [],
     },
     {
-        id: '3', title: 'Дописать реферат',
+        id: '3',
+        title: 'Дописать реферат',
         description: 'Только для Сидорова и Кузнецовой',
         deadline: `${isoPlusDays(3)}T23:59`,
-        type: 'group', priority: 'high',
+        type: 'group',
+        priority: 'high',
         targetStudentIds: ['3', '4'],
+        completedBy: [],
     },
 ];
 
@@ -249,26 +258,52 @@ export const mockApi = {
     },
 
     /**
-     * Отправка напоминания.
-     * Если у напоминания есть targetStudentIds — отправляется только им,
-     * иначе — всей группе.
-     */
+ * Отправка напоминания.
+ * Студенты, у которых это напоминание уже отмечено выполненным,
+ * уведомление НЕ получают.
+ * Если напоминание с targetStudentIds — отправляем только им
+ * (минус выполненные).
+ */
     async remindReminder(id: string) {
         await delay(700);
         const target = REMINDERS.find(r => r.id === id);
         if (!target) throw new Error('Напоминалка не найдена');
 
-        const recipients = target.targetStudentIds?.length
-            ? target.targetStudentIds.length
-            : STUDENTS.length;
+        const completed = new Set(target.completedBy ?? []);
+
+        let recipients: Student[];
+        if (target.targetStudentIds?.length) {
+            recipients = STUDENTS.filter(
+                s => target.targetStudentIds!.includes(s.id) && !completed.has(s.id)
+            );
+        } else {
+            recipients = STUDENTS.filter(s => !completed.has(s.id));
+        }
 
         return {
             ok: true,
             id,
             title: target.title,
-            sentTo: recipients,
+            sentTo: recipients.length,
             sentAt: new Date().toISOString(),
         };
+    },
+
+    /**
+ * Отметить/снять напоминание как выполненное для текущего пользователя.
+ * На бэке — добавить/удалить user.id из списка completedBy.
+ */
+    async toggleReminderCompleted(id: string, completed: boolean) {
+        await delay();
+        const userId = ME.id;
+        REMINDERS = REMINDERS.map(r => {
+            if (r.id !== id) return r;
+            const set = new Set(r.completedBy ?? []);
+            if (completed) set.add(userId);
+            else set.delete(userId);
+            return { ...r, completedBy: Array.from(set) };
+        });
+        return { ok: true, id, completed };
     },
 
     // ===== ДОЛГИ =====

@@ -9,7 +9,7 @@ import { formatDateTime, daysUntil } from '../utils/date';
 import type { Reminder, Student } from '../types/api';
 
 export default function Reminders() {
-    const { can } = useCurrentUser();
+    const { can, user } = useCurrentUser();
     const { showToast } = useToast();
     const { pending, run } = useAsyncAction();
 
@@ -110,16 +110,45 @@ export default function Reminders() {
         });
     };
 
+    const isCompletedByMe = (r: Reminder) =>
+        !!user && (r.completedBy ?? []).includes(user.id);
+
+    const handleToggleCompleted = async (r: Reminder) => {
+        const next = !isCompletedByMe(r);
+        await run(() => api.markReminderCompleted(r.id, next), {
+            successMessage: next ? 'Отмечено выполненным' : 'Отметка снята',
+            errorMessage: 'Не удалось изменить статус',
+            onSuccess: load,
+        });
+    };
+
+    /** Сколько человек получат уведомление — с учётом completedBy */
+    const recipientCount = (r: Reminder): number => {
+        const completed = new Set(r.completedBy ?? []);
+        if (r.targetStudentIds?.length) {
+            return r.targetStudentIds.filter(id => !completed.has(id)).length;
+        }
+        // Групповое — все, кроме тех, кто уже выполнил
+        const totalStudents = students.length || 0;
+        return Math.max(totalStudents - completed.size, 0);
+    };
+
     const handleRemind = async (r: Reminder) => {
         if (!canRemind) {
             showToast('У вашей роли нет прав на отправку напоминаний', 'error');
             return;
         }
 
+        const count = recipientCount(r);
+        if (count === 0) {
+            showToast('Все уже отметили это напоминание выполненным', 'info');
+            return;
+        }
+
         const isTargeted = r.targetStudentIds && r.targetStudentIds.length > 0;
         const label = isTargeted
-            ? `${r.targetStudentIds!.length} выбранным студентам`
-            : 'всем участникам группы';
+            ? `${count} студентам (остальные уже выполнили)`
+            : `всем участникам группы (${count})`;
 
         if (!confirm(`Отправить напоминание «${r.title}» ${label}?`)) return;
 
@@ -127,7 +156,7 @@ export default function Reminders() {
             successMessage: 'Напоминание отправлено',
             errorMessage: 'Ошибка отправки',
             onSuccess: (res: any) => {
-                if (res?.sentTo) {
+                if (typeof res?.sentTo === 'number') {
                     showToast(`Разослано ${res.sentTo} участникам`, 'success');
                 }
             },
@@ -142,7 +171,6 @@ export default function Reminders() {
         return true;
     });
 
-    // Кнопка «🔔» показывается только для групповых напоминаний
     const canRemindThis = (r: Reminder) => canRemind && r.type === 'group';
 
     return (
@@ -175,13 +203,19 @@ onClick = {() => setFilter(f)}
         const d = daysUntil(r.deadline);
         const cls = d < 0 ? 'red' : d <= 1 ? 'yellow' : 'blue';
         const isTargeted = r.targetStudentIds && r.targetStudentIds.length > 0;
+        const completed = isCompletedByMe(r);
+        const completedCount = (r.completedBy ?? []).length;
 
         return (
-            <div key= { r.id } className = "card" style = {{ marginBottom: 14 }
-    }>
-    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div
+                key= { r.id }
+        className = {`card reminder-item-card ${completed ? 'reminder-item-completed' : ''}`
+    }
+                style = {{ marginBottom: 14 }}
+              >
+    <div style={ { display: 'flex', gap: 12, alignItems: 'flex-start' } }>
         <div className={ `reminder-icon ${cls}` }>
-        { r.priority === 'high' ? '🔥' : '📌' }
+        { completed? '✅': r.priority === 'high' ? '🔥' : '📌' }
             </div>
             < div className = "reminder-content" style = {{ flex: 1 }}>
                 <div className="title" > { r.title } </div>
@@ -197,7 +231,12 @@ onClick = {() => setFilter(f)}
     : '👤 Личное'
 }
 </span>
-    </div>
+{
+    r.type === 'group' && completedCount > 0 && (
+        <span>✅ { completedCount } выполнили </span>
+                      )
+}
+</div>
     </div>
     < div style = {{ display: 'flex', gap: 6 }}>
     { canRemindThis(r) && (
@@ -213,15 +252,17 @@ title = "Отправить напоминание"
                     )}
 <button
                       className="btn btn-ghost"
-style = {{ padding: '6px 10px', fontSize: 12 }}
-onClick = {() =>
-showToast(`Напоминалка «${r.title}» — выполнена`, 'success')
-                      }
+style = {{
+    padding: '6px 10px',
+        fontSize: 12,
+            color: completed ? 'var(--muted)' : 'inherit',
+                      }}
+onClick = {() => handleToggleCompleted(r)}
 disabled = { pending }
-title = "Отметить выполненной"
+title = { completed? 'Вернуть в работу': 'Отметить выполненным' }
     >
-                      ✅
-</button>
+{ completed? '↩️': '✅' }
+    </button>
     < button
 className = "btn btn-ghost"
 style = {{ padding: '6px 10px', fontSize: 12 }}

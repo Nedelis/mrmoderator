@@ -31,8 +31,6 @@ interface CurrentUserContextValue {
     canAssign: (targetRoleId: RoleId) => boolean;
     /** Роли, которые доступны для назначения */
     assignableRoles: Role[];
-    /** Временный override роли (для дизайна) */
-    setRoleForPreview: (roleId: RoleId) => void;
     /** Админ ли текущий юзер */
     isAdmin: boolean;
     /** Перезагрузить юзера */
@@ -47,7 +45,6 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [needsOnboarding, setNeedsOnboarding] = useState(false);
-    const [previewRoleId, setPreviewRoleId] = useState<RoleId | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -72,9 +69,7 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
         load();
     }, [load]);
 
-    // Реальная роль с бэка, либо временная для превью
-    const effectiveRoleId = previewRoleId ?? user?.roleId ?? null;
-    const role = effectiveRoleId ? rolesById[effectiveRoleId] ?? null : null;
+    const role = user?.roleId ? rolesById[user.roleId] ?? null : null;
 
     const can = useCallback(
         (permission: Permission) => {
@@ -125,9 +120,8 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
             hasMenuItem,
             canAssign,
             assignableRoles,
-            setRoleForPreview: setPreviewRoleId,
-                isAdmin,
-                reload: load,
+            isAdmin,
+            reload: load,
       }
 }
     >
