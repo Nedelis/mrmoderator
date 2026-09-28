@@ -5,8 +5,8 @@ import { useToast } from '../components/Toast';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
-import { rules, validateObject } from '../lib/validation';
-import { formatDate, daysUntil, todayISO } from '../lib/date';
+import { rules, validateObject } from '../utils/validation';
+import { formatDate, daysUntil, todayISO } from '../utils/date';
 import type { Debt } from '../types/api';
 
 type DebtDisplayStatus = 'overdue' | 'soon' | 'active' | 'closed';

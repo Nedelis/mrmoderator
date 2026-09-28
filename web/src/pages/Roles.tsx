@@ -7,7 +7,7 @@ import { useCurrentUser } from '../contexts/CurrentUserContext';
 import { useRoles } from '../contexts/RolesContext';
 import { api } from '../api/client';
 import { permissionLabel } from '../config/permissionLabels';
-import { rules, validateObject } from '../lib/validation';
+import { rules, validateObject } from '../utils/validation';
 import type { RoleId, Student } from '../types/api';
 
 export default function Roles() {

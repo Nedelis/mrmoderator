@@ -5,8 +5,8 @@ import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useToast } from '../components/Toast';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
-import { rules, validateObject } from '../lib/validation';
-import { formatDate, daysUntil, todayISO } from '../lib/date';
+import { rules, validateObject } from '../utils/validation';
+import { formatDate, daysUntil, todayISO } from '../utils/date';
 import type { Task } from '../types/api';
 
 /** Статус задания с учётом текущей даты (done — вручную) */

@@ -2,14 +2,7 @@
   "ExpandedNodes": [
     "",
     "\\web",
-    "\\web\\src",
-    "\\web\\src\\api",
-    "\\web\\src\\config",
-    "\\web\\src\\contexts",
-    "\\web\\src\\hooks",
-    "\\web\\src\\lib",
-    "\\web\\src\\pages"
+    "\\web\\src"
   ],
-  "SelectedNode": "\\web\\src\\App.css",
   "PreviewInSolutionExplorer": false
 }

@@ -5,7 +5,7 @@ import { useToast } from '../components/Toast';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api, type Mailbox } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
-import { rules, validateObject } from '../lib/validation';
+import { rules, validateObject } from '../utils/validation';
 import type { MailItem } from '../types/api';
 
 export default function Mail() {

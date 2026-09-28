@@ -10,7 +10,7 @@ import type {
     ExamMaterial,
     Task,
 } from '../types/api';
-import { isoPlusDays } from '../lib/date';
+import { isoPlusDays } from '../utils/date';
 
 // ============================================================
 // ROLES

@@ -4,9 +4,9 @@ import { useToast } from '../components/Toast';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
-import { rules, validateObject } from '../lib/validation';
+import { rules, validateObject } from '../utils/validation';
 import type { Reminder } from '../types/api';
-import { formatDateTime, daysUntil } from '../lib/date';
+import { formatDateTime, daysUntil } from '../utils/date';
 export default function Reminders() {
     const { can } = useCurrentUser();
     const { showToast } = useToast();

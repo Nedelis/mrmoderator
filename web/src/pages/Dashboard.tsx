@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageWrapper from '../components/PageWrapper';
 import { api } from '../api/client';
-import { formatDate, formatDateTime, daysUntil } from '../lib/date';
+import { formatDate, formatDateTime, daysUntil } from '../utils/date';
 import type { Reminder, Debt, MailItem, Material } from '../types/api';
 
 export default function Dashboard() {

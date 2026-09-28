@@ -5,7 +5,7 @@ import { useToast } from '../components/Toast';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
-import { formatDate, daysUntil } from '../lib/date';
+import { formatDate, daysUntil } from '../utils/date';
 import type { Student, Debt, Reminder } from '../types/api';
 
 type DebtDisplayStatus = 'overdue' | 'soon' | 'active' | 'closed';
