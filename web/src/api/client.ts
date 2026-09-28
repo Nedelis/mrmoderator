@@ -24,7 +24,7 @@ export class NotRegisteredError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-    const initData = (window as any).WebApp?.initData || 'user={"id":"1"}';
+    const initData = (window as any).WebApp?.initData;
 
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
