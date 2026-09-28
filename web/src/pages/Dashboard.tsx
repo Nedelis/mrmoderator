@@ -102,7 +102,7 @@ export default function Dashboard() {
             < td > { d.subject } </td>
             < td > { formatDate(d.deadline)
 } </td>
-    < td > <span className={ `tag ${cls}` }> { label } < /span></td >
+    <td> <span className={ `tag ${cls}` }> { label } </span></td>
         </tr>
                 );
               })}
