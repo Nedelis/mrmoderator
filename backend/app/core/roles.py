@@ -1,27 +1,37 @@
 from typing import Final
 
+
+# ============================================================
+# ПРАВА
+# ============================================================
+
 PERMISSIONS: Final[dict[str, str]] = {
-    "reminder.create.personal": "Создавать личные напоминалки",
-    "reminder.create.group": "Создавать групповые напоминалки",
-    "reminder.remind": "Принудительные напоминания",
-    "debts.create.own": "Создавать долги себе",
-    "debts.edit": "Редактировать любые долги",
-    "debts.view.all": "Видеть долги всей группы",
-    "task.create.personal": "Создавать личные задания",
-    "task.create.group": "Создавать групповые задания",
-    "task.edit": "Редактировать групповые задания",
-    "task.delete": "Удалять групповые задания",
-    "task.remind": "Принудительные напоминания о заданиях",
-    "material.upload": "Загружать материалы",
-    "material.delete.own": "Удалять свои материалы",
-    "material.delete.any": "Удалять любые материалы",
-    "mail.forward": "Пересылать письма в группу",
-    "mail.configure": "Настраивать почтовые ящики",
-    "exam.addMaterial": "Добавлять материалы к экзаменам",
-    "roles.assign": "Назначать роли",
-    "group.edit": "Управлять составом группы",
-    "settings.edit": "Менять настройки",
+    "reminder.create.personal": "Создание личных напоминалок",
+    "reminder.create.group": "Создание групповых напоминалок",
+    "reminder.remind": "Отправка напоминаний",
+    "material.upload": "Загрузка материалов",
+    "material.delete.any": "Удаление любых материалов",
+    "material.delete.own": "Удаление своих материалов",
+    "mail.configure": "Настройка почтовых ящиков",
+    "mail.forward": "Пересылка писем в группу",
+    "debts.edit": "Редактирование и удаление долгов",
+    "debts.create.own": "Добавление своих долгов",
+    "debts.view.all": "Просмотр долгов всей группы",
+    "roles.assign": "Назначение ролей",
+    "group.edit": "Управление составом группы",
+    "exam.create": "Создание экзаменов",
+    "exam.addMaterial": "Добавление материалов к экзаменам",
+    "task.create.group": "Создание групповых заданий",
+    "task.create.personal": "Создание личных заданий",
+    "task.edit": "Редактирование групповых заданий",
+    "task.delete": "Удаление групповых заданий",
+    "task.remind": "Отправка напоминаний о заданиях",
 }
+
+
+# ============================================================
+# РОЛИ
+# ============================================================
 
 ROLES: Final[dict[str, dict]] = {
     "starosta": {
@@ -33,56 +43,107 @@ ROLES: Final[dict[str, dict]] = {
         "badgeClass": "role-starosta",
         "badgeIcon": "👑",
         "badgeText": "Высшая",
-        "menu": ["/", "/students", "/reminders", "/debts", "/tasks",
-                 "/materials", "/exams", "/mail", "/settings"],
-        "permissions": list(PERMISSIONS.keys()),
+        "menu": [
+            "/", "/my-stats", "/reminders", "/debts", "/exams",
+            "/tasks", "/materials", "/mail", "/roles",
+        ],
+        "permissions": [
+            "reminder.create.group",
+            "reminder.create.personal",
+            "reminder.remind",
+            "material.upload",
+            "material.delete.any",
+            "material.delete.own",
+            "mail.configure",
+            "mail.forward",
+            "debts.edit",
+            "debts.create.own",
+            "debts.view.all",
+            "roles.assign",
+            "group.edit",
+            "exam.create",
+            "exam.addMaterial",
+            "task.create.group",
+            "task.create.personal",
+            "task.edit",
+            "task.delete",
+            "task.remind",
+        ],
     },
     "zam": {
         "id": "zam",
-        "label": "Заместитель старосты",
+        "label": "Замстаросты",
         "shortLabel": "Зам",
-        "description": "Помощник старосты, ограничен в правах",
+        "description": "Полный доступ, кроме выдачи высших ролей и правки состава",
         "level": 3,
         "badgeClass": "role-zam",
         "badgeIcon": "🛡️",
-        "badgeText": "Средняя",
-        "menu": ["/", "/students", "/reminders", "/debts", "/tasks", "/materials"],
+        "badgeText": "Высокая",
+        "menu": [
+            "/", "/my-stats", "/reminders", "/debts", "/exams",
+            "/tasks", "/materials", "/mail", "/roles",
+        ],
         "permissions": [
-            "reminder.create.personal", "reminder.create.group", "reminder.remind",
-            "debts.create.own", "debts.view.all",
-            "task.create.personal", "task.create.group", "task.edit", "task.remind",
-            "material.upload", "material.delete.own",
+            "reminder.create.group",
+            "reminder.create.personal",
+            "reminder.remind",
+            "material.upload",
+            "material.delete.any",
+            "material.delete.own",
+            "mail.configure",
+            "mail.forward",
+            "debts.edit",
+            "debts.create.own",
+            "debts.view.all",
+            "roles.assign",
+            "exam.create",
             "exam.addMaterial",
+            "task.create.group",
+            "task.create.personal",
+            "task.edit",
+            "task.delete",
+            "task.remind",
         ],
     },
     "proforg": {
         "id": "proforg",
-        "label": "Профорг",
+        "label": "Профорг / Групорг",
         "shortLabel": "Профорг",
-        "description": "Отвечает за профсоюзную работу",
+        "description": "Материалы, объявления и личные задачи",
         "level": 2,
         "badgeClass": "role-proforg",
-        "badgeIcon": "🤝",
+        "badgeIcon": "📢",
         "badgeText": "Средняя",
-        "menu": ["/", "/reminders", "/materials", "/mail"],
+        "menu": [
+            "/my-stats", "/reminders", "/debts", "/exams",
+            "/tasks", "/materials", "/mail",
+        ],
         "permissions": [
-            "reminder.create.personal", "reminder.create.group",
-            "material.upload", "material.delete.own",
-            "mail.forward", "mail.configure",
+            "reminder.create.personal",
+            "material.upload",
+            "material.delete.own",
+            "mail.forward",
+            "debts.create.own",
+            "task.create.personal",
         ],
     },
     "student": {
         "id": "student",
         "label": "Студент",
         "shortLabel": "Студент",
-        "description": "Обычный участник группы",
+        "description": "Просмотр материалов и личные задачи",
         "level": 1,
         "badgeClass": "role-student",
-        "badgeIcon": "🎓",
+        "badgeIcon": "👤",
         "badgeText": "Базовая",
-        "menu": ["/", "/reminders", "/debts", "/tasks", "/materials", "/exams"],
+        "menu": [
+            "/my-stats", "/reminders", "/debts", "/exams",
+            "/tasks", "/materials",
+        ],
         "permissions": [
             "reminder.create.personal",
+            "material.upload",
+            "material.delete.own",
             "debts.create.own",
             "task.create.personal",
         ],
@@ -90,8 +151,41 @@ ROLES: Final[dict[str, dict]] = {
 }
 
 
+# ============================================================
+# ХЕЛПЕРЫ
+# ============================================================
+
+def get_role(role_id: str) -> dict | None:
+    """Возвращает конфиг роли или None."""
+    return ROLES.get(role_id)
+
+
 def has_permission(role_id: str, permission: str) -> bool:
+    """Есть ли у роли право."""
     role = ROLES.get(role_id)
     if not role:
         return False
     return permission in role["permissions"]
+
+
+def can_assign_role(actor_role_id: str, target_role_id: str) -> bool:
+    """
+    Может ли роль `actor` назначить роль `target`.
+    - Старосту нельзя назначить через UI (только через админа системы).
+    - Роли равного уровня назначать нельзя.
+    - Зам не может назначать роли с level >= своего.
+    """
+    if target_role_id == "starosta":
+        return False
+
+    actor = ROLES.get(actor_role_id)
+    target = ROLES.get(target_role_id)
+    if not actor or not target:
+        return False
+
+    return target["level"] < actor["level"]
+
+
+def assignable_roles(actor_role_id: str) -> list[dict]:
+    """Роли, доступные для назначения текущим актором."""
+    return [r for r in ROLES.values() if can_assign_role(actor_role_id, r["id"])]
