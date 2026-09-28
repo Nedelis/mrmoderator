@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     auth,
-    group,
     reminders,
     debts,
     tasks,
@@ -11,6 +10,7 @@ from app.api.v1 import (
     mail,
     settings,
     roles,
+    group
 )
 
 api_router = APIRouter()

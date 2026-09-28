@@ -13,15 +13,6 @@ def build_full_name(user: User) -> str:
     return " ".join(parts) or "Без имени"
 
 
-def build_initials(user: User) -> str:
-    parts = []
-    if user.last_name:
-        parts.append(user.last_name)
-    if user.first_name:
-        parts.append(f"{user.first_name[0]}.")
-    return " ".join(parts) or "Без имени"
-
-
 async def get_user_by_max_id(db: AsyncSession, max_user_id: str) -> User | None:
     result = await db.execute(select(User).where(User.max_user_id == max_user_id))
     return result.scalar_one_or_none()
@@ -48,11 +39,10 @@ def to_current_user(user: User, group_name: str) -> CurrentUser:
 
 
 def to_student(user: User, debts_count: int = 0) -> Student:
-    role = ROLES.get(user.role_id, {})
     return Student(
         id=str(user.id),
-        name=build_initials(user),
-        role=role.get("label", "Студент"),
+        name=build_full_name(user),
+        role=user.role_id,
         avg_score=None,
         attendance=None,
         debts=debts_count,

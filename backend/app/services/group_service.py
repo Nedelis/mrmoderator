@@ -1,12 +1,16 @@
 import secrets
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.group import Group
 from app.models.user import User
 from app.schemas.user import GroupInfo
+from app.models.debt import Debt
+from app.models.material import Material
+from app.models.reminder import Reminder
+from app.models.task import Task
 
 
 async def get_group(db: AsyncSession, group_id: str) -> Group | None:
@@ -86,3 +90,28 @@ async def save_chat_id(db: AsyncSession, group_id: str, chat_id: str) -> None:
     if group is not None:
         group.chat_id = chat_id
         await db.commit()
+
+
+async def leave_group(db: AsyncSession, user: User) -> None:
+    """
+    Мягкое удаление пользователя из группы.
+
+    - Удаляет все сущности, где user — автор (долги, задания, напоминания, материалы).
+    - Убирает user из группы (group_id = NULL, role_id = 'student').
+    - Сам user остаётся в БД (на случай возврата).
+    """
+    if not user.group_id:
+        raise ValueError("not_in_group")
+
+    await db.execute(delete(Debt).where(Debt.student_id == user.id))
+
+    await db.execute(delete(Task).where(Task.author_id == user.id))
+
+    await db.execute(delete(Reminder).where(Reminder.author_id == user.id))
+
+    await db.execute(delete(Material).where(Material.author_id == user.id))
+
+    user.group_id = None
+    user.role_id = "student"
+
+    await db.commit()
