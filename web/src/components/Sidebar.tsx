@@ -17,7 +17,6 @@ const ALL_MENU_ITEMS: { path: MenuItemPath; label: string; icon: string }[] = [
     { path: '/materials', label: 'Материалы', icon: '📁' },
     { path: '/mail', label: 'Почта', icon: '✉️' },
     { path: '/roles', label: 'Роли', icon: '👥' },
-    { path: '/settings', label: 'Настройки', icon: '⚙️' },
 ];
 
 export default function Sidebar() {

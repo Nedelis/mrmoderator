@@ -1,4 +1,4 @@
-import { useEffect, useState, FormEvent, ChangeEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
 import { useToast } from '../components/Toast';
@@ -6,7 +6,28 @@ import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
 import { rules, validateObject } from '../utils/validation';
+import { formatDateTime, formatDate } from '../utils/date';
 import type { Exam } from '../types/api';
+
+interface ExamForm {
+    subject: string;
+    type: 'exam' | 'consultation';
+    date: string;
+    time: string;
+    room: string;
+    teacher: string;
+    icon: string;
+}
+
+const emptyForm: ExamForm = {
+    subject: '',
+    type: 'exam',
+    date: '',
+    time: '',
+    room: '',
+    teacher: '',
+    icon: '📚',
+};
 
 export default function Exams() {
     const { can } = useCurrentUser();
@@ -14,16 +35,17 @@ export default function Exams() {
     const { pending, run } = useAsyncAction();
 
     const [exams, setExams] = useState<Exam[]>([]);
-    const [modalExam, setModalExam] = useState<Exam | null>(null);
+    const [examModalOpen, setExamModalOpen] = useState(false);
+    const [materialExam, setMaterialExam] = useState<Exam | null>(null);
 
-    const [form, setForm] = useState<{ title: string; url: string; file: File | null }>({
-        title: '',
-        url: '',
-        file: null,
-    });
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [examForm, setExamForm] = useState<ExamForm>(emptyForm);
+    const [examErrors, setExamErrors] = useState<Record<string, string>>({});
 
-    const canAdd = can('exam.addMaterial');
+    const [materialForm, setMaterialForm] = useState({ title: '', url: '' });
+    const [materialErrors, setMaterialErrors] = useState<Record<string, string>>({});
+
+    const canCreateExam = can('exam.create');
+    const canAddMaterial = can('exam.addMaterial');
 
     const load = () => api.getExams().then(setExams);
 
@@ -34,61 +56,80 @@ export default function Exams() {
     const examsList = exams.filter(e => e.type === 'exam');
     const consultationsList = exams.filter(e => e.type === 'consultation');
 
+    // ===== Создание экзамена =====
+    const openCreateExam = () => {
+        if (!canCreateExam) {
+            showToast('У вашей роли нет прав на создание экзаменов', 'error');
+            return;
+        }
+        setExamForm(emptyForm);
+        setExamErrors({});
+        setExamModalOpen(true);
+    };
+
+    const handleCreateExam = async (e: FormEvent) => {
+        e.preventDefault();
+
+        const errs = validateObject(examForm, {
+            subject: [rules.required('Введите название'), rules.minLen(2), rules.maxLen(120)],
+            date: [rules.date({ minYearOffset: 0, maxYearOffset: 1 })],
+            time: [rules.time()],
+        });
+
+        if (Object.keys(errs).length > 0) {
+            setExamErrors(errs);
+            return;
+        }
+
+        await run(
+            () => api.createExam(examForm),
+            {
+                successMessage: 'Экзамен добавлен',
+                errorMessage: 'Ошибка сохранения',
+                onSuccess: () => {
+                    setExamModalOpen(false);
+                    setExamForm(emptyForm);
+                    load();
+                },
+            }
+        );
+    };
+
+    // ===== Материалы к экзамену =====
     const openAddMaterial = (exam: Exam) => {
-        if (!canAdd) {
+        if (!canAddMaterial) {
             showToast('У вашей роли нет прав на добавление материалов', 'error');
             return;
         }
-        setModalExam(exam);
-        setForm({ title: '', url: '', file: null });
-        setErrors({});
+        setMaterialExam(exam);
+        setMaterialForm({ title: '', url: '' });
+        setMaterialErrors({});
     };
 
-    const closeModal = () => {
-        setModalExam(null);
-        setForm({ title: '', url: '', file: null });
-        setErrors({});
-    };
-
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] ?? null;
-        if (file && file.size > 50 * 1024 * 1024) {
-            showToast('Файл больше 50 МБ', 'error');
-            return;
-        }
-        setForm(prev => ({
-            ...prev,
-            file,
-            // Если файл выбран, а названия нет — подставляем имя файла
-            title: prev.title || file?.name || '',
-        }));
-    };
-
-    const handleSubmit = async (e: FormEvent) => {
+    const handleAddMaterial = async (e: FormEvent) => {
         e.preventDefault();
-        if (!modalExam) return;
+        if (!materialExam) return;
 
-        const errs = validateObject(form, {
+        const errs = validateObject(materialForm, {
             title: [rules.required('Введите название'), rules.minLen(3), rules.maxLen(120)],
         });
 
         if (Object.keys(errs).length > 0) {
-            setErrors(errs);
+            setMaterialErrors(errs);
             return;
         }
 
         await run(
             () =>
                 api.addExamMaterial({
-                    examId: modalExam.id,
-                    title: form.title.trim(),
-                    url: form.url.trim() || undefined,
-                    file: form.file ?? undefined,
+                    examId: materialExam.id,
+                    title: materialForm.title.trim(),
+                    url: materialForm.url.trim() || undefined,
                 }),
             {
-                successMessage: 'Материал добавлен к экзамену',
+                successMessage: 'Материал добавлен',
                 onSuccess: () => {
-                    closeModal();
+                    setMaterialExam(null);
                     load();
                 },
             }
@@ -96,10 +137,7 @@ export default function Exams() {
     };
 
     const handleDeleteMaterial = async (examId: string, materialId: string, title: string) => {
-        if (!canAdd) {
-            showToast('Нет прав', 'error');
-            return;
-        }
+        if (!canAddMaterial) return;
         if (!confirm(`Удалить материал «${title}»?`)) return;
         await run(() => api.deleteExamMaterial(examId, materialId), {
             successMessage: 'Материал удалён',
@@ -114,40 +152,36 @@ export default function Exams() {
         <div className="reminder-icon red" > { e.icon } </div>
             < div className = "reminder-content" style = {{ flex: 1 }}>
                 <div className="title" > { e.subject } </div>
-                    < div className = "desc" > Ауд. { e.room } · { e.teacher } </div>
-                        < div className = "meta" >
-                            <span>🕐 { e.date } </span>
-                                </div>
+                    < div className = "desc" >
+                    { e.room ? `Ауд. ${e.room}` : '' }
+{ e.room && e.teacher ? ' · ' : '' }
+{ e.teacher }
+</div>
+    < div className = "meta" >
+        <span>🕐 { formatDateTime(e.date) } </span>
+            </div>
 
 {
     e.materials.length > 0 && (
         <div style={ { marginTop: 12 } }>
-            <div style={ { fontSize: 12, color: 'var(--muted)', marginBottom: 6 } }>
-                Материалы:
-    </div>
-        < div style = {{ display: 'flex', flexDirection: 'column', gap: 6 }
+            <div style={ { fontSize: 12, color: 'var(--muted)', marginBottom: 6 } }> Материалы: </div>
+                < div style = {{ display: 'flex', flexDirection: 'column', gap: 6 }
 }>
 {
     e.materials.map(m => (
         <div
                     key= { m.id }
                     style = {{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '8px 12px',
-        background: 'var(--panel-2)',
-        borderRadius: 'var(--radius-sm)',
-        fontSize: 13,
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '8px 12px', background: 'var(--panel-2)',
+        borderRadius: 'var(--radius-sm)', fontSize: 13,
     }}
     >
     <span>📎</span>
         < span style = {{ flex: 1 }}> { m.title } </span>
-            < span style = {{ fontSize: 11, color: 'var(--muted)' }}>
-            { m.addedBy }
-                </span>
+            < span style = {{ fontSize: 11, color: 'var(--muted)' }}> { m.addedBy } </span>
 {
-    canAdd && (
+    canAddMaterial && (
         <button
                         className="icon-btn"
     onClick = {() => handleDeleteMaterial(e.id, m.id, m.title)
@@ -165,7 +199,7 @@ title = "Удалить"
           )}
 </div>
 {
-    canAdd && (
+    canAddMaterial && (
         <button
             className="btn btn-ghost"
     style = {{ padding: '6px 12px', fontSize: 12 }
@@ -181,12 +215,29 @@ disabled = { pending }
   );
 
 return (
-    <PageWrapper title= "Экзамены" subtitle = "Расписание сессии и консультаций" >
-        <div className="grid grid-2" >
-            <div className="card" >
-                <div className="card-header" >
-                    <h3>📅 Ближайшие экзамены </h3>
-                        </div>
+    <PageWrapper
+      title= "Экзамены"
+subtitle = "Расписание сессии и консультаций"
+actions = {
+    canCreateExam?(
+          <button className = "btn btn-primary" onClick = { openCreateExam } disabled = { pending } >
+            ➕ Добавить экзамен
+          </ button >
+        ) : null
+      }
+    >
+    <div className="grid grid-2" >
+        <div className="card" >
+            <div className="card-header" >
+                <h3>📅 Ближайшие экзамены </h3>
+                    </div>
+{
+    examsList.length === 0 && (
+        <div style={ { textAlign: 'center', color: 'var(--muted)', padding: 24, fontSize: 13 } }>
+            Экзаменов пока нет
+                </div>
+          )
+}
 { examsList.map(renderExam) }
 </div>
 
@@ -194,58 +245,130 @@ return (
         <div className="card-header" >
             <h3>💬 Консультации </h3>
                 </div>
+{
+    consultationsList.length === 0 && (
+        <div style={ { textAlign: 'center', color: 'var(--muted)', padding: 24, fontSize: 13 } }>
+            Консультаций пока нет
+                </div>
+          )
+}
 { consultationsList.map(renderExam) }
 </div>
     </div>
 
-    < Modal
-open = {!!modalExam}
-onClose = { closeModal }
-title = {`Добавить материал · ${modalExam?.subject ?? ''}`}
+{/* Модалка создания экзамена */ }
+<Modal
+        open={ examModalOpen }
+onClose = {() => setExamModalOpen(false)}
+title = "Новый экзамен"
+    >
+    <form onSubmit={ handleCreateExam } style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div>
+        <input
+              className={ `role-select ${examErrors.subject ? 'field-error' : ''}` }
+style = {{ width: '100%' }}
+placeholder = "Название предмета"
+value = { examForm.subject }
+onChange = { e => setExamForm({ ...examForm, subject: e.target.value })}
+            />
+{ examErrors.subject && <div className="field-error-msg" > { examErrors.subject } </div> }
+</div>
+
+    < select
+className = "role-select"
+value = { examForm.type }
+onChange = { e => setExamForm({ ...examForm, type: e.target.value as any })}
+          >
+    <option value="exam" > Экзамен </option>
+        < option value = "consultation" > Консультация </option>
+            </select>
+
+            < div style = {{ display: 'flex', gap: 10 }}>
+                <div style={ { flex: 1 } }>
+                    <input
+                className={ `role-select ${examErrors.date ? 'field-error' : ''}` }
+style = {{ width: '100%' }}
+type = "date"
+value = { examForm.date }
+onChange = { e => setExamForm({ ...examForm, date: e.target.value })}
+              />
+{ examErrors.date && <div className="field-error-msg" > { examErrors.date } </div> }
+</div>
+    < div style = {{ flex: 1 }}>
+        <input
+                className={ `role-select ${examErrors.time ? 'field-error' : ''}` }
+style = {{ width: '100%' }}
+type = "time"
+value = { examForm.time }
+onChange = { e => setExamForm({ ...examForm, time: e.target.value })}
+              />
+{ examErrors.time && <div className="field-error-msg" > { examErrors.time } </div> }
+</div>
+    </div>
+
+    < input
+className = "role-select"
+style = {{ width: '100%' }}
+placeholder = "Аудитория (например: 412)"
+value = { examForm.room }
+onChange = { e => setExamForm({ ...examForm, room: e.target.value })}
+          />
+
+    < input
+className = "role-select"
+style = {{ width: '100%' }}
+placeholder = "Преподаватель (например: Смирнов А.В.)"
+value = { examForm.teacher }
+onChange = { e => setExamForm({ ...examForm, teacher: e.target.value })}
+          />
+
+    < input
+className = "role-select"
+style = {{ width: '100%' }}
+placeholder = "Иконка (эмодзи, например 📚)"
+value = { examForm.icon }
+onChange = { e => setExamForm({ ...examForm, icon: e.target.value })}
+          />
+
+    < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button type="button" className = "btn btn-ghost" onClick = {() => setExamModalOpen(false)}>
+            Отмена
+            </button>
+            < button type = "submit" className = "btn btn-primary" disabled = { pending } >
+            { pending? '⏳ Сохраняем...': '✅ Добавить' }
+                </button>
+                </div>
+                </form>
+                </Modal>
+
+{/* Модалка материала */ }
+<Modal
+        open={ !!materialExam }
+onClose = {() => setMaterialExam(null)}
+title = {`Добавить материал · ${materialExam?.subject ?? ''}`}
       >
-    <form
-          onSubmit={ handleSubmit }
-style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}
-        >
-    <div>
-    <input
-              className={ `role-select ${errors.title ? 'field-error' : ''}` }
+    <form onSubmit={ handleAddMaterial } style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div>
+        <input
+              className={ `role-select ${materialErrors.title ? 'field-error' : ''}` }
 style = {{ width: '100%' }}
 placeholder = "Название материала"
-value = { form.title }
-onChange = { e => setForm({ ...form, title: e.target.value })}
+value = { materialForm.title }
+onChange = { e => setMaterialForm({ ...materialForm, title: e.target.value })}
             />
-{ errors.title && <div className="field-error-msg" > { errors.title } </div> }
+{ materialErrors.title && <div className="field-error-msg" > { materialErrors.title } </div> }
 </div>
 
     < input
 className = "role-select"
 style = {{ width: '100%' }}
 placeholder = "Ссылка (необязательно)"
-value = { form.url }
-onChange = { e => setForm({ ...form, url: e.target.value })}
+value = { materialForm.url }
+onChange = { e => setMaterialForm({ ...materialForm, url: e.target.value })}
           />
 
-    < div >
-    <label style={ { fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 6 } }>
-        Или загрузите файл(необязательно)
-            </label>
-            < input
-type = "file"
-className = "role-select"
-style = {{ width: '100%' }}
-onChange = { handleFileChange }
-    />
-{
-    form.file && (
-        <div style={ { fontSize: 11, color: 'var(--green)', marginTop: 4 } }>
-                📎 { form.file.name } ({(form.file.size / 1024).toFixed(1)} КБ)
-</div>
-            )}
-</div>
-
     < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-        <button type="button" className = "btn btn-ghost" onClick = { closeModal } >
+        <button type="button" className = "btn btn-ghost" onClick = {() => setMaterialExam(null)}>
             Отмена
             </button>
             < button type = "submit" className = "btn btn-primary" disabled = { pending } >

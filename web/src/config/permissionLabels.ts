@@ -1,7 +1,7 @@
 export const PERMISSION_LABELS: Record<string, string> = {
-    'reminder.create.group': 'Создание групповых напоминалок',
     'reminder.create.personal': 'Создание личных напоминалок',
-    'reminder.remind': 'Принудительные напоминания',
+    'reminder.create.group': 'Создание групповых напоминалок',
+    'reminder.remind': 'Отправка напоминаний',
     'material.upload': 'Загрузка материалов',
     'material.delete.any': 'Удаление любых материалов',
     'material.delete.own': 'Удаление своих материалов',
@@ -12,13 +12,13 @@ export const PERMISSION_LABELS: Record<string, string> = {
     'debts.view.all': 'Просмотр долгов всей группы',
     'roles.assign': 'Назначение ролей',
     'group.edit': 'Управление составом группы',
-    'settings.edit': 'Изменение настроек',
+    'exam.create': 'Создание экзаменов',
     'exam.addMaterial': 'Добавление материалов к экзаменам',
-    'task.create.group': 'Создание заданий для группы',
+    'task.create.group': 'Создание групповых заданий',
     'task.create.personal': 'Создание личных заданий',
-    'task.edit': 'Редактирование заданий группы',
-    'task.delete': 'Удаление заданий группы',
-    'task.remind': 'Принудительные напоминания о заданиях',
+    'task.edit': 'Редактирование групповых заданий',
+    'task.delete': 'Удаление групповых заданий',
+    'task.remind': 'Отправка напоминаний о заданиях',
 };
 
 export function permissionLabel(key: string): string {

@@ -5,14 +5,16 @@ import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
 import { rules, validateObject } from '../utils/validation';
-import type { Reminder } from '../types/api';
 import { formatDateTime, daysUntil } from '../utils/date';
+import type { Reminder, Student } from '../types/api';
+
 export default function Reminders() {
     const { can } = useCurrentUser();
     const { showToast } = useToast();
     const { pending, run } = useAsyncAction();
 
     const [reminders, setReminders] = useState<Reminder[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
     const [filter, setFilter] = useState('Все');
 
     const [title, setTitle] = useState('');
@@ -20,6 +22,7 @@ export default function Reminders() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [scope, setScope] = useState<'group' | 'personal' | 'selected'>('personal');
+    const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const canCreateGroup = can('reminder.create.group');
@@ -27,15 +30,35 @@ export default function Reminders() {
     const canCreateAny = canCreateGroup || canCreatePersonal;
     const canRemind = can('reminder.remind');
 
-    const load = () => api.getReminders().then(setReminders);
+    const load = () => {
+        api.getReminders().then(setReminders);
+        if (canCreateGroup) {
+            api.getStudents().then(setStudents);
+        }
+    };
 
     useEffect(() => {
         load();
     }, []);
 
     useEffect(() => {
-        if (!canCreateGroup && scope === 'group') setScope('personal');
+        if (!canCreateGroup && scope !== 'personal') setScope('personal');
     }, [canCreateGroup, scope]);
+
+    const toggleStudent = (id: string) => {
+        setSelectedStudentIds(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const resetForm = () => {
+        setTitle('');
+        setDescription('');
+        setDate('');
+        setTime('');
+        setSelectedStudentIds([]);
+        setErrors({});
+    };
 
     const handleCreate = async (e: FormEvent) => {
         e.preventDefault();
@@ -50,6 +73,10 @@ export default function Reminders() {
             }
         );
 
+        if (scope === 'selected' && selectedStudentIds.length === 0) {
+            errs.selectedStudents = 'Выберите хотя бы одного студента';
+        }
+
         if (Object.keys(errs).length > 0) {
             setErrors(errs);
             return;
@@ -63,15 +90,12 @@ export default function Reminders() {
                     date,
                     time,
                     scope,
+                    studentIds: scope === 'selected' ? selectedStudentIds : undefined,
                 }),
             {
                 successMessage: 'Напоминалка создана',
                 onSuccess: () => {
-                    setTitle('');
-                    setDescription('');
-                    setDate('');
-                    setTime('');
-                    setErrors({});
+                    resetForm();
                     load();
                 },
             }
@@ -88,13 +112,19 @@ export default function Reminders() {
 
     const handleRemind = async (r: Reminder) => {
         if (!canRemind) {
-            showToast('У вашей роли нет прав на принудительные напоминания', 'error');
+            showToast('У вашей роли нет прав на отправку напоминаний', 'error');
             return;
         }
-        if (!confirm(`Отправить напоминание «${r.title}» всем участникам группы?`)) return;
+
+        const isTargeted = r.targetStudentIds && r.targetStudentIds.length > 0;
+        const label = isTargeted
+            ? `${r.targetStudentIds!.length} выбранным студентам`
+            : 'всем участникам группы';
+
+        if (!confirm(`Отправить напоминание «${r.title}» ${label}?`)) return;
 
         await run(() => api.remindReminder(r.id), {
-            successMessage: 'Напоминание разослано',
+            successMessage: 'Напоминание отправлено',
             errorMessage: 'Ошибка отправки',
             onSuccess: (res: any) => {
                 if (res?.sentTo) {
@@ -104,17 +134,23 @@ export default function Reminders() {
         });
     };
 
-    const filters = ['Все', 'Личные', 'Групповые', 'Дедлайны', 'Экзамены'];
+    const filters = ['Все', 'Личные', 'Групповые'];
+
+    const visibleReminders = reminders.filter(r => {
+        if (filter === 'Личные') return r.type === 'personal';
+        if (filter === 'Групповые') return r.type === 'group';
+        return true;
+    });
+
+    // Кнопка «🔔» показывается только для групповых напоминаний
+    const canRemindThis = (r: Reminder) => canRemind && r.type === 'group';
 
     return (
-        <PageWrapper
-      title= "Напоминалки"
-    subtitle = "Личные и групповые уведомления"
-        >
-        <div style={ { display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' } }>
-        {
-            filters.map(f => (
-                <span
+        <PageWrapper title= "Напоминалки" subtitle = "Личные и групповые уведомления" >
+            <div style={ { display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' } }>
+            {
+                filters.map(f => (
+                    <span
             key= { f }
             className = {`tag ${f === filter ? 'tag-blue' : 'tag-gray'}`}
     style = {{ cursor: 'pointer' }
@@ -129,51 +165,62 @@ onClick = {() => setFilter(f)}
     < div className = "grid grid-2" >
         <div>
         {
-            reminders.length === 0 && (
-                <div
-              className="card"
-              style = {{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}
-            >
-    Напоминалок пока нет
-        </div>
+            visibleReminders.length === 0 && (
+                <div className="card" style = {{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}>
+                    Напоминалок пока нет
+                        </div>
           )}
 {
-    reminders.map(r => (
-        <div key= { r.id } className = "card" style = {{ marginBottom: 14 }}>
-            <div style={ { display: 'flex', gap: 12, alignItems: 'flex-start' } }>
-                <div className={ `reminder-icon ${r.priority === 'high' ? 'red' : 'yellow'}` }>
-                { r.priority === 'high' ? '🔥' : '📌' }
-                    </div>
-                    < div className = "reminder-content" style = {{ flex: 1 }}>
-                        <div className="title" > { r.title } </div>
-                            < div className = "desc" > { r.description } </div>
-                                < div className = "meta" >
-                                     <span>🕐 { formatDateTime(r.deadline) } </span>
-                                        < span > { r.type === 'group' ? '👥 Вся группа' : '👤 Личное' } </span>
-                                        </div>
-                                        </div>
-                                        < div style = {{ display: 'flex', gap: 6 }}>
-                                        { canRemind && r.type === 'group' && (
-                                                <button
-                      className="btn btn-ghost"
+    visibleReminders.map(r => {
+        const d = daysUntil(r.deadline);
+        const cls = d < 0 ? 'red' : d <= 1 ? 'yellow' : 'blue';
+        const isTargeted = r.targetStudentIds && r.targetStudentIds.length > 0;
+
+        return (
+            <div key= { r.id } className = "card" style = {{ marginBottom: 14 }
+    }>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div className={ `reminder-icon ${cls}` }>
+        { r.priority === 'high' ? '🔥' : '📌' }
+            </div>
+            < div className = "reminder-content" style = {{ flex: 1 }}>
+                <div className="title" > { r.title } </div>
+                    < div className = "desc" > { r.description } </div>
+                        < div className = "meta" >
+                            <span>🕐 { formatDateTime(r.deadline) } </span>
+                                <span>
+{
+    r.type === 'group'
+    ? isTargeted
+        ? `👥 ${r.targetStudentIds!.length} студентам`
+        : '👥 Вся группа'
+    : '👤 Личное'
+}
+</span>
+    </div>
+    </div>
+    < div style = {{ display: 'flex', gap: 6 }}>
+    { canRemindThis(r) && (
+            <button
+                        className="btn btn-ghost"
 style = {{ padding: '6px 10px', fontSize: 12 }}
 onClick = {() => handleRemind(r)}
 disabled = { pending }
-title = "Напомнить всем"
+title = "Отправить напоминание"
     >
-                      🔔
+                        🔔
 </button>
-                  )}
+                    )}
 <button
-                    className="btn btn-ghost"
+                      className="btn btn-ghost"
 style = {{ padding: '6px 10px', fontSize: 12 }}
 onClick = {() =>
 showToast(`Напоминалка «${r.title}» — выполнена`, 'success')
-                    }
+                      }
 disabled = { pending }
 title = "Отметить выполненной"
     >
-                    ✅
+                      ✅
 </button>
     < button
 className = "btn btn-ghost"
@@ -182,12 +229,13 @@ onClick = {() => handleDelete(r.id)}
 disabled = { pending }
 title = "Удалить"
     >
-                    🗑️
+                      🗑️
 </button>
     </div>
     </div>
     </div>
-          ))}
+            );
+          })}
 </div>
 
 {
@@ -196,11 +244,8 @@ title = "Удалить"
             <div className="card-header" >
                 <h3>➕ Быстрое создание </h3>
                     </div>
-                    < form
-    onSubmit = { handleCreate }
-    style = {{ display: 'flex', flexDirection: 'column', gap: 12 }
-}
-            >
+                    < form onSubmit = { handleCreate } style = {{ display: 'flex', flexDirection: 'column', gap: 12 }
+}>
     <div>
     <input
                   className={ `role-select ${errors.title ? 'field-error' : ''}` }
@@ -220,11 +265,7 @@ placeholder = "Описание"
 value = { description }
 onChange = { e => setDescription(e.target.value) }
     />
-{
-    errors.description && (
-        <div className="field-error-msg"> { errors.description } </div>
-                )
-}
+{ errors.description && <div className="field-error-msg"> { errors.description } </div> }
     </div>
 
     < div style = {{ display: 'flex', gap: 10 }}>
@@ -253,15 +294,69 @@ onChange = { e => setTime(e.target.value) }
     < select
 className = "role-select"
 value = { scope }
-onChange = { e => setScope(e.target.value as any) }
-    >
+onChange = { e => {
+    setScope(e.target.value as any);
+    setSelectedStudentIds([]);
+}}
+              >
 { canCreateGroup && <option value="group" > Для всей группы </option>}
+{ canCreateGroup && <option value="selected" > Для конкретных студентов </option> }
 { canCreatePersonal && <option value="personal" > Только для меня </option> }
-{ canCreateGroup && <option value="selected" > Выбрать студентов </option> }
 </select>
 
-    < button
-type = "submit"
+{
+    scope === 'selected' && (
+        <div
+                  style={
+        {
+            maxHeight: 220,
+                overflowY: 'auto',
+                    border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-sm)',
+                            padding: 8,
+                                background: 'var(--panel-2)',
+                  }
+    }
+                >
+    {
+        students.length === 0 ? (
+            <div style= {{ fontSize: 12, color: 'var(--muted)', padding: 8 }
+}>
+    Студенты не найдены
+        </div>
+                  ) : (
+    students.map(s => (
+        <label
+                        key= { s.id }
+                        style = {{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '8px 10px',
+        cursor: 'pointer',
+        borderRadius: 8,
+    }}
+                      >
+        <input
+                          type="checkbox"
+                          checked = { selectedStudentIds.includes(s.id) }
+                          onChange = {() => toggleStudent(s.id)}
+                        />
+        < span style = {{ fontSize: 13 }}> { s.name } </span>
+    </label>
+    ))
+                  )}
+</div>
+              )}
+
+{
+    errors.selectedStudents && (
+        <div className="field-error-msg" > { errors.selectedStudents } </div>
+              )
+}
+
+<button
+                type="submit"
 className = "btn btn-primary"
 style = {{ justifyContent: 'center' }}
 disabled = { pending }
@@ -275,17 +370,10 @@ disabled = { pending }
     <div className="card-header" >
         <h3>🔒 Создание напоминалок </h3>
             </div>
-            < p
-style = {{
-    color: 'var(--muted)',
-        fontSize: 13,
-            padding: 20,
-                textAlign: 'center',
-              }}
-            >
-    У вашей роли нет прав на создание напоминалок
-        </p>
-        </div>
+            < p style = {{ color: 'var(--muted)', fontSize: 13, padding: 20, textAlign: 'center' }}>
+                У вашей роли нет прав на создание напоминалок
+                    </p>
+                    </div>
         )}
 </div>
     </PageWrapper>

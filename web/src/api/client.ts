@@ -1,30 +1,51 @@
 import { mockApi, type Mailbox } from './mock';
-import type { Role, CurrentUser, ExamMaterial } from '../types/api';
+import type { Role, CurrentUser, ExamMaterial, Exam } from '../types/api';
 
-const USE_MOCK = false;
+const USE_MOCK = true;
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
+/** Ошибка «юзер не в группе» — кидаем на страницу 504 */
+export class NotRegisteredError extends Error {
+    constructor() {
+        super('not_in_group');
+        this.name = 'NotRegisteredError';
+    }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-    const initData = (window as any).WebApp?.initData
-        || 'user={"id":"1"}';
+    const initData = (window as any).WebApp?.initData || 'user={"id":"1"}';
 
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
         headers: {
-            'X-Max-Init-Data': initData,
             ...(options?.headers || {}),
+            'X-Max-Init-Data': initData,
         },
     });
 
     if (!res.ok) {
+        // Пробуем прочитать тело ошибки как JSON и достать code
+        let errBody: any = null;
+        try {
+            errBody = await res.clone().json();
+        } catch {
+            // не JSON — игнорируем
+        }
+
+        const code = errBody?.error?.code;
+        if (code === 'not_in_group') {
+            throw new NotRegisteredError();
+        }
+
         const errText = await res.text().catch(() => '');
         throw new Error(errText || `API error ${res.status}`);
     }
+
     return res.json();
 }
 
 export const api = {
-    // ==== ЧТЕНИЕ ====
+    // ===== ЧТЕНИЕ =====
     async getRoles(): Promise<Role[]> {
         if (USE_MOCK) return mockApi.getRoles();
         const data = await request<{ roles: Role[] }>('/roles');
@@ -72,7 +93,7 @@ export const api = {
         return request('/materials');
     },
 
-    async getExams() {
+    async getExams(): Promise<Exam[]> {
         if (USE_MOCK) return mockApi.getExams();
         return request('/exams');
     },
@@ -82,22 +103,30 @@ export const api = {
         return request('/tasks');
     },
 
-    async getSettings() {
-        if (USE_MOCK) return mockApi.getSettings();
-        return request('/settings');
-    },
-
-    // ==== НАПОМИНАЛКИ ====
+    // ===== НАПОМИНАЛКИ =====
     async createReminder(payload: {
         title: string;
         description: string;
         date: string;
         time: string;
-        scope: 'group' | 'personal' | 'selected';
+        scope: 'personal' | 'group' | 'selected';
+        studentIds?: string[];
     }) {
         if (USE_MOCK) return mockApi.createReminder(payload);
         return request('/reminders', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+    },
+
+    async updateReminder(
+        id: string,
+        payload: Partial<{ title: string; description: string }>
+    ) {
+        if (USE_MOCK) return mockApi.updateReminder(id, payload);
+        return request(`/reminders/${id}`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
@@ -108,22 +137,12 @@ export const api = {
         return request(`/reminders/${id}`, { method: 'DELETE' });
     },
 
-    async updateReminder(id: string, payload: Partial<{ title: string; description: string }>) {
-        if (USE_MOCK) return mockApi.updateReminder(id, payload);
-        return request(`/reminders/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-    },
-
-    /** Принудительно напомнить о напоминании всем участникам. */
     async remindReminder(id: string) {
         if (USE_MOCK) return mockApi.remindReminder(id);
         return request(`/reminders/${id}/remind`, { method: 'POST' });
     },
 
-    // ==== ДОЛГИ ====
+    // ===== ДОЛГИ =====
     async createDebt(payload: {
         studentName: string;
         subject: string;
@@ -138,12 +157,15 @@ export const api = {
         });
     },
 
-    async updateDebt(id: string, payload: Partial<{
-        studentName: string;
-        subject: string;
-        type: string;
-        deadline: string;
-    }>) {
+    async updateDebt(
+        id: string,
+        payload: Partial<{
+            studentName: string;
+            subject: string;
+            type: string;
+            deadline: string;
+        }>
+    ) {
         if (USE_MOCK) return mockApi.updateDebt(id, payload);
         return request(`/debts/${id}`, {
             method: 'PUT',
@@ -157,7 +179,7 @@ export const api = {
         return request(`/debts/${id}`, { method: 'DELETE' });
     },
 
-    // ==== ЗАДАНИЯ ====
+    // ===== ЗАДАНИЯ =====
     async createTask(payload: {
         title: string;
         description: string;
@@ -186,20 +208,19 @@ export const api = {
         return request(`/tasks/${id}`, { method: 'DELETE' });
     },
 
-    /** Принудительно напомнить о задании всем участникам. */
     async remindTask(id: string) {
         if (USE_MOCK) return mockApi.remindTask(id);
         return request(`/tasks/${id}/remind`, { method: 'POST' });
     },
 
-    // ==== МАТЕРИАЛЫ ====
-    async uploadMaterial(payload: { title: string; type: string; file?: File }) {
+    // ===== МАТЕРИАЛЫ =====
+    async uploadMaterial(payload: { title: string; type: string; url: string }) {
         if (USE_MOCK) return mockApi.uploadMaterial(payload);
-        const formData = new FormData();
-        formData.append('title', payload.title);
-        formData.append('type', payload.type);
-        if (payload.file) formData.append('file', payload.file);
-        return request('/materials', { method: 'POST', body: formData });
+        return request('/materials', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
     },
 
     async downloadMaterial(id: string) {
@@ -212,21 +233,37 @@ export const api = {
         return request(`/materials/${id}`, { method: 'DELETE' });
     },
 
-    // ==== ЭКЗАМЕНЫ ====
+    // ===== ЭКЗАМЕНЫ =====
+    async createExam(payload: {
+        subject: string;
+        type: 'exam' | 'consultation';
+        date: string;
+        time: string;
+        room?: string;
+        teacher?: string;
+        icon?: string;
+    }) {
+        if (USE_MOCK) return mockApi.createExam(payload);
+        return request('/exams', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+    },
+
     async addExamMaterial(payload: {
         examId: string;
         title: string;
         url?: string;
-        file?: File;
     }): Promise<ExamMaterial> {
         if (USE_MOCK) return mockApi.addExamMaterial(payload);
-        const formData = new FormData();
-        formData.append('title', payload.title);
-        if (payload.url) formData.append('url', payload.url);
-        if (payload.file) formData.append('file', payload.file);
         return request(`/exams/${payload.examId}/materials`, {
             method: 'POST',
-            body: formData,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: payload.title,
+                url: payload.url,
+            }),
         });
     },
 
@@ -237,7 +274,7 @@ export const api = {
         });
     },
 
-    // ==== ПОЧТА ====
+    // ===== ПОЧТА =====
     async forwardMail(id: string) {
         if (USE_MOCK) return mockApi.forwardMail(id);
         return request(`/mail/${id}/forward`, { method: 'POST' });
@@ -259,7 +296,11 @@ export const api = {
         });
     },
 
-    async addMailbox(payload: { email: string; label: string; autoForward?: boolean }) {
+    async addMailbox(payload: {
+        email: string;
+        label: string;
+        autoForward?: boolean;
+    }) {
         if (USE_MOCK) return mockApi.addMailbox(payload);
         return request('/mail/mailboxes', {
             method: 'POST',
@@ -273,7 +314,7 @@ export const api = {
         return request(`/mail/mailboxes/${id}`, { method: 'DELETE' });
     },
 
-    // ==== РОЛИ ====
+    // ===== РОЛИ =====
     async assignRole(payload: { studentId: string; roleId: string }) {
         if (USE_MOCK) return mockApi.assignRole(payload);
         return request('/roles/assign', {
@@ -283,20 +324,18 @@ export const api = {
         });
     },
 
-    /** Удалить участника (только староста). */
+    async renameMember(studentId: string, newName: string) {
+        if (USE_MOCK) return mockApi.renameMember(studentId, newName);
+        return request(`/group/members/${studentId}/name`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName }),
+        });
+    },
+
     async removeGroupMember(studentId: string) {
         if (USE_MOCK) return mockApi.removeGroupMember(studentId);
         return request(`/group/members/${studentId}`, { method: 'DELETE' });
-    },
-
-    // ==== НАСТРОЙКИ ====
-    async saveSettings(payload: Record<string, unknown>) {
-        if (USE_MOCK) return mockApi.saveSettings(payload);
-        return request('/settings', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
     },
 };
 

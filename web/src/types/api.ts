@@ -1,7 +1,3 @@
-// ============================================================
-// ТИПЫ ДАННЫХ, КОТОРЫЕ ПРИХОДЯТ С БЭКЕНДА
-// ============================================================
-
 export type RoleId = string;
 export type MenuItemPath = string;
 export type Permission = string;
@@ -34,18 +30,19 @@ export interface Student {
     id: string;
     name: string;
     role: string;
-    avgScore: number;
-    attendance: number;
-    debts: number;
+    avgScore?: number | null;
+    attendance?: number | null;
+    debts?: number | null;
 }
 
 export interface Reminder {
     id: string;
     title: string;
     description: string;
-    deadline: string;
+    deadline: string;               // ISO datetime
     type: 'personal' | 'group';
     priority: 'low' | 'medium' | 'high';
+    targetStudentIds?: string[];    // для напоминаний конкретным студентам
 }
 
 export interface Debt {
@@ -53,7 +50,7 @@ export interface Debt {
     studentName: string;
     subject: string;
     type: string;
-    deadline: string;
+    deadline: string;               // ISO date
     status: 'active' | 'overdue' | 'closed';
 }
 
@@ -66,15 +63,23 @@ export interface MailItem {
     autoForward: boolean;
 }
 
+export interface Mailbox {
+    id: string;
+    email: string;
+    label: string;
+    connected: boolean;
+    autoForward: boolean;
+}
+
 export interface Material {
     id: string;
     title: string;
     author: string;
     type: 'pdf' | 'video' | 'other';
     createdAt: string;
+    maxUrl?: string;                // ссылка на сообщение в MAX
 }
 
-/** Материал, привязанный к экзамену */
 export interface ExamMaterial {
     id: string;
     examId: string;
@@ -84,11 +89,10 @@ export interface ExamMaterial {
     addedAt: string;
 }
 
-/** Экзамен или консультация */
 export interface Exam {
     id: string;
     subject: string;
-    date: string;
+    date: string;                   // ISO datetime
     time: string;
     room: string;
     teacher: string;
@@ -97,12 +101,11 @@ export interface Exam {
     materials: ExamMaterial[];
 }
 
-/** Задание */
 export interface Task {
     id: string;
     title: string;
     description: string;
-    deadline: string;
+    deadline: string;               // ISO date
     type: 'group' | 'personal';
     status: 'active' | 'soon' | 'done' | 'overdue';
 }
