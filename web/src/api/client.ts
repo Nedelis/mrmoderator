@@ -1,11 +1,21 @@
 import { mockApi, type Mailbox } from './mock';
 import type { Role, CurrentUser, ExamMaterial } from '../types/api';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, options);
+    const initData = (window as any).WebApp?.initData
+        || 'user={"id":"1"}';
+
+    const res = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers: {
+            'X-Max-Init-Data': initData,
+            ...(options?.headers || {}),
+        },
+    });
+
     if (!res.ok) {
         const errText = await res.text().catch(() => '');
         throw new Error(errText || `API error ${res.status}`);

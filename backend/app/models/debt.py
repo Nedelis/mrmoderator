@@ -1,0 +1,18 @@
+from datetime import datetime
+from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
+from app.core.database import Base
+
+
+class Debt(Base):
+    __tablename__ = "debts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    student_name = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    deadline = Column(DateTime, nullable=False)
+    status = Column(String, default="active")
+
+    group_id = Column(String, ForeignKey("groups.id"), index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
