@@ -16,12 +16,12 @@ def init_bot() -> tuple[Bot, Dispatcher]:
 
     bot = Bot(token=token)
 
-    async def sender(chat_id: str, text: str) -> bool:
+    async def sender(user_id: str, text: str) -> bool:
         try:
-            await bot.send_message(chat_id=chat_id, text=text)
+            await bot.send_message(user_id=user_id, text=text)
             return True
         except Exception as e:
-            logger.error("Ошибка отправки в %s: %s", chat_id, e)
+            logger.error(f"Ошибка отправки в {user_id}: {e}")
             return False
 
     notify_service.register_sender(sender)
