@@ -2,42 +2,107 @@
 // ТИПЫ ДАННЫХ, КОТОРЫЕ ПРИХОДЯТ С БЭКЕНДА
 // ============================================================
 
-export type RoleId = string;       // бэк решает, какие id — сейчас 'starosta', 'zam' и т.д.
-export type MenuItemPath = string; // путь пункта меню, например '/settings'
-export type Permission = string;   // право, например 'material.upload'
+export type RoleId = string;
+export type MenuItemPath = string;
+export type Permission = string;
 
-/** Описание одной роли — приходит с бэка */
 export interface Role {
-  id: RoleId;
-  label: string;           // «Староста»
-  shortLabel: string;      // «Староста»
-  description: string;     // «Полный доступ...»
-  level: number;           // 4 > 3 > 2 > 1
-  badgeClass: string;      // CSS-класс: 'role-starosta'
-  badgeIcon: string;       // '👑'
-  badgeText: string;       // 'Высшая'
-  menu: MenuItemPath[];    // какие пункты меню доступны
-  permissions: Permission[]; // какие действия разрешены
+    id: RoleId;
+    label: string;
+    shortLabel: string;
+    description: string;
+    level: number;
+    badgeClass: string;
+    badgeIcon: string;
+    badgeText: string;
+    menu: MenuItemPath[];
+    permissions: Permission[];
 }
 
-/** Текущий пользователь — приходит с бэка */
 export interface CurrentUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  photoUrl?: string;
-  groupId: string;
-  groupName: string;       // 'ИУ7-42Б'
-  roleId: RoleId;          // ссылка на Role.id
+    id: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    photoUrl?: string;
+    groupId: string;
+    groupName: string;
+    roleId: RoleId;
 }
 
-/** Ответ на GET /api/roles */
-export interface RolesResponse {
-  roles: Role[];
+export interface Student {
+    id: string;
+    name: string;
+    role: string;
+    avgScore: number;
+    attendance: number;
+    debts: number;
 }
 
-/** Ответ на GET /api/me */
-export interface MeResponse {
-  user: CurrentUser;
+export interface Reminder {
+    id: string;
+    title: string;
+    description: string;
+    deadline: string;
+    type: 'personal' | 'group';
+    priority: 'low' | 'medium' | 'high';
+}
+
+export interface Debt {
+    id: string;
+    studentName: string;
+    subject: string;
+    type: string;
+    deadline: string;
+    status: 'active' | 'overdue' | 'closed';
+}
+
+export interface MailItem {
+    id: string;
+    from: string;
+    subject: string;
+    preview: string;
+    source: 'dean' | 'kafedra' | 'prepod';
+    autoForward: boolean;
+}
+
+export interface Material {
+    id: string;
+    title: string;
+    author: string;
+    type: 'pdf' | 'video' | 'other';
+    createdAt: string;
+}
+
+/** Материал, привязанный к экзамену */
+export interface ExamMaterial {
+    id: string;
+    examId: string;
+    title: string;
+    url?: string;
+    addedBy: string;
+    addedAt: string;
+}
+
+/** Экзамен или консультация */
+export interface Exam {
+    id: string;
+    subject: string;
+    date: string;
+    time: string;
+    room: string;
+    teacher: string;
+    icon: string;
+    type: 'exam' | 'consultation';
+    materials: ExamMaterial[];
+}
+
+/** Задание */
+export interface Task {
+    id: string;
+    title: string;
+    description: string;
+    deadline: string;
+    type: 'group' | 'personal';
+    status: 'active' | 'soon' | 'done' | 'overdue';
 }

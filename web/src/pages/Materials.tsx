@@ -1,233 +1,188 @@
 import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import PageWrapper from '../components/PageWrapper';
 import { useToast } from '../components/Toast';
+import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
 import { useCurrentUser } from '../contexts/CurrentUserContext';
 import type { Material } from '../types/api';
 
 export default function Materials() {
-  const { can } = useCurrentUser();
-  const { showToast } = useToast();
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [aiRunning, setAiRunning] = useState(false);
-  const [filter, setFilter] = useState('Все');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    const { can, user } = useCurrentUser();
+    const { showToast } = useToast();
+    const { pending, run } = useAsyncAction();
 
-  const canUpload = can('material.upload');
-  const canAi = can('material.ai');
+    const [materials, setMaterials] = useState<Material[]>([]);
+    const [filter, setFilter] = useState('Все');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const load = () => {
-    api.getMaterials().then(setMaterials);
-  };
+    const canUpload = can('material.upload');
+    const canDeleteAny = can('material.delete.any');
+    const canDeleteOwn = can('material.delete.own');
 
-  useEffect(() => {
-    load();
-  }, []);
+    const myFullName = user ? `${user.firstName} ${user.lastName}` : '';
 
-  const filters = ['Все', 'Лекции', 'Семинары', 'AI-конспекты', 'Мои загрузки'];
+    const canDelete = (m: Material) =>
+        canDeleteAny || (canDeleteOwn && m.author === myFullName);
 
-  const handleUploadClick = () => {
-    if (!canUpload) {
-      showToast('У вашей роли нет прав на загрузку материалов', 'error');
-      return;
-    }
-    fileInputRef.current?.click();
-  };
+    const load = () => api.getMaterials().then(setMaterials);
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    useEffect(() => {
+        load();
+    }, []);
 
-    setUploading(true);
-    try {
-      await api.uploadMaterial({
-        title: file.name,
-        type: file.type.startsWith('video') ? 'video' : 'pdf',
-        file,
-      });
-      showToast(`Файл «${file.name}» загружен`, 'success');
-      load();
-    } catch (err: any) {
-      showToast(err.message || 'Ошибка загрузки', 'error');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
+    const filters = ['Все', 'Лекции', 'Семинары', 'Мои загрузки'];
 
-  const handleAi = async () => {
-    if (!canAi) {
-      showToast('У вашей роли нет прав на AI-обработку', 'error');
-      return;
-    }
-    const target = materials[0];
-    if (!target) {
-      showToast('Нет материалов для обработки', 'error');
-      return;
-    }
-    setAiRunning(true);
-    try {
-      const res: any = await api.runAiProcessing({ materialId: target.id });
-      showToast(`AI: ${res.summary}`, 'success');
-      load();
-    } catch (err: any) {
-      showToast(err.message || 'Ошибка AI-обработки', 'error');
-    } finally {
-      setAiRunning(false);
-    }
-  };
+    const handleUploadClick = () => {
+        if (!canUpload) {
+            showToast('У вашей роли нет прав на загрузку материалов', 'error');
+            return;
+        }
+        fileInputRef.current?.click();
+    };
 
-  const handleDownload = async (id: string, title: string) => {
-    try {
-      await api.downloadMaterial(id);
-      showToast(`Файл «${title}» скачивается...`, 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Ошибка скачивания', 'error');
-    }
-  };
+    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-  const handleFilterClick = (f: string) => {
-    setFilter(f);
-    showToast(`Фильтр: ${f}`, 'info');
-  };
+        const MAX_SIZE = 50 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            showToast('Файл больше 50 МБ', 'error');
+            return;
+        }
 
-  return (
-    <PageWrapper
-      title="Материалы"
-      subtitle="Лекции, конспекты, записи и AI-обработка"
-      actions={
-        <>
-          <button
-            className="btn btn-ghost"
-            onClick={handleAi}
-            disabled={aiRunning || !canAi}
-          >
-            {aiRunning ? '⏳ Обработка...' : '🤖 AI-конспект'}
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={handleUploadClick}
-            disabled={uploading || !canUpload}
-          >
-            {uploading ? '⏳ Загрузка...' : '📤 Загрузить'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-        </>
+        await run(
+            () =>
+                api.uploadMaterial({
+                    title: file.name,
+                    type: file.type.startsWith('video') ? 'video' : 'pdf',
+                    file,
+                }),
+            {
+                successMessage: `Файл «${file.name}» загружен`,
+                errorMessage: 'Ошибка загрузки',
+                onSuccess: load,
+            }
+        );
+
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleDownload = (id: string, title: string) => {
+        run(() => api.downloadMaterial(id), {
+            successMessage: `Файл «${title}» скачивается...`,
+            errorMessage: 'Ошибка скачивания',
+        });
+    };
+
+    const handleDelete = async (m: Material) => {
+        if (!canDelete(m)) {
+            showToast('Нет прав на удаление этого материала', 'error');
+            return;
+        }
+        if (!confirm(`Удалить «${m.title}»?`)) return;
+        await run(() => api.deleteMaterial(m.id), {
+            successMessage: 'Материал удалён',
+            onSuccess: load,
+        });
+    };
+
+    return (
+        <PageWrapper
+      title= "Материалы"
+    subtitle = "Лекции, конспекты и записи"
+    actions = {
+        canUpload?(
+          <>
+        <button
+              className="btn btn-primary"
+    onClick = { handleUploadClick }
+    disabled = { pending }
+        >
+    { pending? '⏳ Загрузка...': '📤 Загрузить' }
+        </button>
+        < input
+    ref = { fileInputRef }
+    type = "file"
+    style = {{ display: 'none' }
+}
+onChange = { handleFileChange }
+accept = ".pdf,.doc,.docx,.ppt,.pptx,video/*,audio/*"
+    />
+    </>
+        ) : null
       }
     >
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {filters.map(f => (
-          <span
-            key={f}
-            className={`tag ${f === filter ? 'tag-blue' : 'tag-gray'}`}
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleFilterClick(f)}
+    <div style={ { display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' } }>
+    {
+        filters.map(f => (
+            <span
+            key= { f }
+            className = {`tag ${f === filter ? 'tag-blue' : 'tag-gray'}`}
+style = {{ cursor: 'pointer' }}
+onClick = {() => setFilter(f)}
           >
-            {f}
-          </span>
+{ f }
+    </span>
         ))}
-      </div>
+</div>
 
-      <div className="grid grid-2">
-        <div>
-          {materials.length === 0 && (
-            <div className="card" style={{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}>
-              Материалов пока нет
-            </div>
-          )}
-          {materials.map(m => (
+    < div className = "grid grid-1" >
+    {
+        materials.length === 0 && (
             <div
-              key={m.id}
-              className="card"
-              style={{ marginBottom: 14, display: 'flex', gap: 14, alignItems: 'center' }}
+            className="card"
+            style = {{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}
+          >
+    Материалов пока нет
+        </div>
+        )}
+{
+    materials.map(m => (
+        <div
+            key= { m.id }
+            className = "card"
+            style = {{ marginBottom: 14, display: 'flex', gap: 14, alignItems: 'center' }}
+          >
+    <div
+              className={
+    `reminder-icon ${m.type === 'pdf' ? 'red' : m.type === 'video' ? 'blue' : 'green'
+    }`
+}
             >
-              <div
-                className={`reminder-icon ${
-                  m.type === 'pdf' ? 'red' : m.type === 'video' ? 'blue' : 'green'
-                }`}
-              >
-                {m.type === 'pdf' ? '📄' : m.type === 'video' ? '🎬' : '🤖'}
-              </div>
-              <div className="reminder-content" style={{ flex: 1 }}>
-                <div className="title">{m.title}</div>
-                <div className="meta">
-                  <span>👤 {m.author}</span>
-                  <span>🕐 {m.createdAt}</span>
-                </div>
-              </div>
-              <button
+{ m.type === 'pdf' ? '📄' : m.type === 'video' ? '🎬' : '📎' }
+    </div>
+    < div className = "reminder-content" style = {{ flex: 1 }}>
+        <div className="title" > { m.title } </div>
+            < div className = "meta" >
+                <span>👤 { m.author } </span>
+                    <span>🕐 { m.createdAt } </span>
+                        </div>
+                        </div>
+                        < button
+className = "btn btn-ghost"
+style = {{ padding: '8px 12px' }}
+onClick = {() => handleDownload(m.id, m.title)}
+disabled = { pending }
+title = "Скачать"
+    >
+              ⬇️
+</button>
+{
+    canDelete(m) && (
+        <button
                 className="btn btn-ghost"
-                style={{ padding: '8px 12px' }}
-                onClick={() => handleDownload(m.id, m.title)}
-                title="Скачать"
-              >
-                ⬇️
-              </button>
-              {m.type === 'video' && canAi && (
-                <button
-                  className="btn btn-ghost"
-                  style={{ padding: '8px 12px' }}
-                  onClick={async () => {
-                    setAiRunning(true);
-                    try {
-                      const res: any = await api.runAiProcessing({ materialId: m.id });
-                      showToast(`AI: ${res.summary}`, 'success');
-                    } catch (err: any) {
-                      showToast(err.message || 'Ошибка AI', 'error');
-                    } finally {
-                      setAiRunning(false);
-                    }
-                  }}
-                  title="Сделать AI-конспект"
-                >
-                  🤖
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="card">
-          <div className="card-header">
-            <h3>🤖 AI-обработка</h3>
-          </div>
-          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 16 }}>
-            Загрузите аудио или видео лекции — AI автоматически распознает речь, структурирует
-            материал и создаст краткий конспект с тезисами.
-          </p>
-          <div
-            style={{
-              border: '2px dashed var(--border)',
-              borderRadius: 'var(--radius-sm)',
-              padding: 30,
-              textAlign: 'center',
-              marginBottom: 16,
-              cursor: canUpload ? 'pointer' : 'not-allowed',
-              opacity: canUpload ? 1 : 0.5,
-            }}
-            onClick={handleUploadClick}
-          >
-            <div style={{ fontSize: 32, marginBottom: 10 }}>☁️</div>
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              {canUpload ? 'Перетащите файл или нажмите для выбора' : 'Загрузка недоступна для вашей роли'}
-            </p>
-          </div>
-          <button
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center' }}
-            onClick={handleAi}
-            disabled={aiRunning || !canAi}
-          >
-            {aiRunning ? '⏳ Обработка...' : '✨ Запустить AI-обработку'}
-          </button>
-        </div>
-      </div>
+    style = {{ padding: '8px 12px', color: 'var(--red)' }
+}
+onClick = {() => handleDelete(m)}
+disabled = { pending }
+title = "Удалить"
+    >
+                🗑️
+</button>
+            )}
+</div>
+        ))}
+</div>
     </PageWrapper>
   );
 }

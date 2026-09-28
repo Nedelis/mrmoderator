@@ -711,3 +711,56 @@ body {
   }
   .toast { max-width: 100%; }
 }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.15s ease;
+}
+
+.modal {
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+    .modal-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+.modal-body {
+    padding: 20px 24px 24px;
+}
+
+/* ===== FIELD VALIDATION ===== */
+.field-error {
+    border-color: var(--red) !important;
+}
+
+.field-error-msg {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: -6px;
+    margin-bottom: 2px;
+}

@@ -74,17 +74,23 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
     [role]
   );
 
-  const canAssign = useCallback(
-    (targetRoleId: RoleId) => {
-      if (!role) return false;
-      const target = rolesById[targetRoleId];
-      if (!target) return false;
-      // Староста (уровень 4) может назначать любую, включая себя
-      if (role.id === 'starosta') return true;
-      return target.level < role.level;
-    },
-    [role, rolesById]
-  );
+    const canAssign = useCallback(
+        (targetRoleId: RoleId) => {
+            if (!role) return false;
+            const target = rolesById[targetRoleId];
+            if (!target) return false;
+
+            // Роль старосты нельзя выдать через UI — она фиксируется сервером
+            if (target.id === 'starosta') return false;
+
+            // Староста может назначать любую, кроме старосты
+            if (role.id === 'starosta') return true;
+
+            // Остальные — только роли ниже своего уровня
+            return target.level < role.level;
+        },
+        [role, rolesById]
+    );
 
   const assignableRoles = role
     ? roles.filter(r => canAssign(r.id))
