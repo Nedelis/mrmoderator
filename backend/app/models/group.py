@@ -12,5 +12,6 @@ class Group(Base):
     course = Column(Integer, default=1)
     semester = Column(Integer, default=1)
     chat_id = Column(String, nullable=True)
+    invite_code = Column(String, unique=True, index=True, nullable=True)
 
     students = relationship("User", back_populates="group")

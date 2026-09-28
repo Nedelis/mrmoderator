@@ -1,22 +1,43 @@
 import asyncio
-from maxapi import Bot, Dispatcher
-from maxapi.filters.command import CommandStart
-from maxapi.types import BotStarted, MessageCreated, InputMedia
-from app.core.config import SETTINGS
+import logging
 
-bot = Bot(SETTINGS.MAX_BOT_TOKEN.get_secret_value())
-dp = Dispatcher()
+from maxapi.methods.set_commands import SetCommands
+from maxapi.types import BotCommand
 
-@dp.bot_started()
-async def on_start(event: BotStarted):
-    await bot.send_message(chat_id=event.chat_id, text="Привет! Я Мистер Модератор.")
+from app.bot.setup import init_bot
 
-@dp.message_created(CommandStart())
-async def on_command(event: MessageCreated):
-    await event.message.answer("Команды скоро появятся. Пока просто привет!", [InputMedia(r"C:\Users\dimos\Downloads\Telegram Desktop\IMG_0775.MP4")])
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("bot")
 
-async def main():
+
+async def register_commands(bot) -> None:
+    """Регистрирует список команд для подсказок при вводе /."""
+    commands = [
+        BotCommand(name="start", description="Запустить бота"),
+        BotCommand(name="help", description="Список команд"),
+        BotCommand(name="creategroup", description="Создать группу"),
+        BotCommand(name="join", description="Вступить в группу по коду"),
+        BotCommand(name="invite", description="Код приглашения (староста)"),
+        BotCommand(name="setchat", description="Привязать чат (староста)"),
+        BotCommand(name="open", description="Открыть приложение"),
+        BotCommand(name="test_notify", description="Тест уведомления"),
+    ]
+    try:
+        await SetCommands(bot, commands).fetch()
+        logger.info("Список команд зарегистрирован")
+    except Exception as e:
+        logger.error("Не удалось зарегистрировать команды: %s", e)
+
+
+async def main() -> None:
+    bot, dp = init_bot()
+    await register_commands(bot)
+    logger.info("Бот запущен. Polling...")
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
