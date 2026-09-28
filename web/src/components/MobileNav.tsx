@@ -12,7 +12,6 @@ const ALL_MENU_ITEMS: { path: MenuItemPath; label: string; icon: string }[] = [
   { path: '/', label: 'Дашборд', icon: '🏠' },
   { path: '/my-stats', label: 'Личная статистика', icon: '📊' },
   { path: '/reminders', label: 'Напоминалки', icon: '🔔' },
-  { path: '/progress', label: 'Успеваемость', icon: '📈' },
   { path: '/debts', label: 'Долги', icon: '🔥' },
   { path: '/exams', label: 'Экзамены', icon: '📅' },
   { path: '/tasks', label: 'Задания', icon: '📝' },

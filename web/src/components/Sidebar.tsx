@@ -8,17 +8,16 @@ import type { MenuItemPath } from '../types/api';
 // Только описание пунктов — что показывать.
 // Видимость определяется через hasMenuItem из контекста.
 const ALL_MENU_ITEMS: { path: MenuItemPath; label: string; icon: string }[] = [
-  { path: '/', label: 'Дашборд', icon: '🏠' },
-  { path: '/my-stats', label: 'Личная статистика', icon: '📊' },
-  { path: '/reminders', label: 'Напоминалки', icon: '🔔' },
-  { path: '/progress', label: 'Успеваемость', icon: '📈' },
-  { path: '/debts', label: 'Долги', icon: '🔥' },
-  { path: '/exams', label: 'Экзамены', icon: '📅' },
-  { path: '/tasks', label: 'Задания', icon: '📝' },
-  { path: '/materials', label: 'Материалы', icon: '📁' },
-  { path: '/mail', label: 'Почта', icon: '✉️' },
-  { path: '/roles', label: 'Роли', icon: '👥' },
-  { path: '/settings', label: 'Настройки', icon: '⚙️' },
+    { path: '/', label: 'Дашборд', icon: '🏠' },
+    { path: '/my-stats', label: 'Личная статистика', icon: '📊' },
+    { path: '/reminders', label: 'Напоминалки', icon: '🔔' },
+    { path: '/debts', label: 'Долги', icon: '🔥' },
+    { path: '/exams', label: 'Экзамены', icon: '📅' },
+    { path: '/tasks', label: 'Задания', icon: '📝' },
+    { path: '/materials', label: 'Материалы', icon: '📁' },
+    { path: '/mail', label: 'Почта', icon: '✉️' },
+    { path: '/roles', label: 'Роли', icon: '👥' },
+    { path: '/settings', label: 'Настройки', icon: '⚙️' },
 ];
 
 export default function Sidebar() {

@@ -27,14 +27,14 @@ const ROLES: Role[] = [
         badgeIcon: '👑',
         badgeText: 'Высшая',
         menu: [
-            '/', '/my-stats', '/reminders', '/progress', '/debts', '/exams',
+            '/', '/my-stats', '/reminders', '/debts', '/exams',
             '/tasks', '/materials', '/mail', '/roles', '/settings',
         ],
         permissions: [
             'reminder.create.group', 'reminder.create.personal', 'reminder.remind',
             'material.upload', 'material.delete.any', 'material.delete.own',
             'mail.configure', 'mail.forward',
-            'debts.edit', 'debts.create.own', 'progress.view.all',
+            'debts.edit', 'debts.create.own', 'debts.view.all',
             'roles.assign', 'group.edit', 'settings.edit',
             'exam.addMaterial',
             'task.create.group', 'task.create.personal', 'task.edit', 'task.delete', 'task.remind',
@@ -50,14 +50,14 @@ const ROLES: Role[] = [
         badgeIcon: '🛡️',
         badgeText: 'Высокая',
         menu: [
-            '/', '/my-stats', '/reminders', '/progress', '/debts', '/exams',
+            '/', '/my-stats', '/reminders', '/debts', '/exams',
             '/tasks', '/materials', '/mail', '/roles', '/settings',
         ],
         permissions: [
             'reminder.create.group', 'reminder.create.personal', 'reminder.remind',
             'material.upload', 'material.delete.any', 'material.delete.own',
             'mail.configure', 'mail.forward',
-            'debts.edit', 'debts.create.own', 'progress.view.all',
+            'debts.edit', 'debts.create.own', 'debts.view.all',
             'roles.assign', 'settings.edit',
             'exam.addMaterial',
             'task.create.group', 'task.create.personal', 'task.edit', 'task.delete', 'task.remind',

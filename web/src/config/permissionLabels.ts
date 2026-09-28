@@ -1,4 +1,3 @@
-// Русские лейблы для прав.
 export const PERMISSION_LABELS: Record<string, string> = {
     'reminder.create.group': 'Создание групповых напоминалок',
     'reminder.create.personal': 'Создание личных напоминалок',
@@ -10,7 +9,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
     'mail.forward': 'Пересылка писем в группу',
     'debts.edit': 'Редактирование и удаление долгов',
     'debts.create.own': 'Добавление своих долгов',
-    'progress.view.all': 'Просмотр успеваемости всей группы',
+    'debts.view.all': 'Просмотр долгов всей группы',
     'roles.assign': 'Назначение ролей',
     'group.edit': 'Управление составом группы',
     'settings.edit': 'Изменение настроек',

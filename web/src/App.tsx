@@ -10,7 +10,6 @@ import { useCurrentUser } from './contexts/CurrentUserContext';
 import Dashboard from './pages/Dashboard';
 import MyStats from './pages/MyStats';  // ← ДОБАВЛЕНО
 import Reminders from './pages/Reminders';
-import Progress from './pages/Progress';
 import Debts from './pages/Debts';
 import Exams from './pages/Exams';
 import Tasks from './pages/Tasks';
@@ -92,7 +91,6 @@ export default function App() {
           />
           <Route path="/my-stats" element={<RequireMenu path="/my-stats"><MyStats /></RequireMenu>} />
           <Route path="/reminders" element={<RequireMenu path="/reminders"><Reminders /></RequireMenu>} />
-          <Route path="/progress" element={<RequireMenu path="/progress"><Progress /></RequireMenu>} />
           <Route path="/debts" element={<RequireMenu path="/debts"><Debts /></RequireMenu>} />
           <Route path="/exams" element={<RequireMenu path="/exams"><Exams /></RequireMenu>} />
           <Route path="/tasks" element={<RequireMenu path="/tasks"><Tasks /></RequireMenu>} />
