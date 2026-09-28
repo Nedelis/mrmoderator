@@ -133,4 +133,4 @@ def require(permission: str):
                 detail={"error": {"code": "permission_denied", "message": f"Нет права {permission}"}},
             )
         return user
-    return 
+    return checker
