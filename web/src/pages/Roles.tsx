@@ -85,7 +85,14 @@ export default function Roles() {
             () => api.assignRole({ studentId: target.id, roleId: selectedRoleId }),
             {
                 successMessage: `Роль «${selectedRole?.label}» назначена: ${target.name}`,
-                onSuccess: load,
+                onSuccess: () => {
+                    // Бэк может перетасовать роли (например, при передаче старосты).
+                    // Роль текущего юзера кэшируется в контексте — жёстко перезагружаем,
+                    // чтобы гарантированно перечитать /me и пересчитать доступные вкладки.
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 600);
+                },
             }
         );
     };

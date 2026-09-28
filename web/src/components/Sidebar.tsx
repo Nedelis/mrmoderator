@@ -62,7 +62,7 @@ export default function Sidebar() {
         <div className="sidebar-brand" >
             <div className="sidebar-logo" >🤖</div>
                 < div >
-                <h1>VK Max Bot </h1>
+                <h1>Мистер Модератор</h1>
                     < span > мини - приложение </span>
                     </div>
                     </div>
