@@ -9,10 +9,10 @@ from app.core.roles import ROLES
 from app.models.user import User
 from app.schemas.common import OkResponse, RemindResponse
 from app.schemas.reminder import (
-    Reminder,
-    CreateReminderRequest,
-    UpdateReminderRequest,
     CompleteReminderRequest,
+    CreateReminderRequest,
+    Reminder,
+    UpdateReminderRequest,
 )
 from app.services import reminder_service
 
@@ -56,7 +56,7 @@ async def update_reminder(
     db: AsyncSession = Depends(get_db),
 ):
     reminder = await reminder_service.get_reminder(db, reminder_id)
-    if reminder is None:
+    if reminder is None or reminder.group_id != user.group_id:
         raise HTTPException(404, "Напоминалка не найдена")
 
     is_author = reminder.author_id == user.id
@@ -75,7 +75,7 @@ async def delete_reminder(
     db: AsyncSession = Depends(get_db),
 ):
     reminder = await reminder_service.get_reminder(db, reminder_id)
-    if reminder is None:
+    if reminder is None or reminder.group_id != user.group_id:
         raise HTTPException(404, "Напоминалка не найдена")
 
     is_author = reminder.author_id == user.id
@@ -95,7 +95,7 @@ async def complete_reminder(
     db: AsyncSession = Depends(get_db),
 ):
     reminder = await reminder_service.get_reminder(db, reminder_id)
-    if reminder is None:
+    if reminder is None or reminder.group_id != user.group_id:
         raise HTTPException(404, "Напоминалка не найдена")
 
     await reminder_service.toggle_completed(db, reminder, user, data.completed)
@@ -109,7 +109,7 @@ async def remind_reminder(
     db: AsyncSession = Depends(get_db),
 ):
     reminder = await reminder_service.get_reminder(db, reminder_id)
-    if reminder is None:
+    if reminder is None or reminder.group_id != user.group_id:
         raise HTTPException(404, "Напоминалка не найдена")
 
     sent_to = await reminder_service.remind_all(db, reminder, reminder.group_id)

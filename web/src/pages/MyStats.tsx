@@ -40,14 +40,9 @@ export default function MyStats() {
 
     const load = () => {
         Promise.all([api.getStudents(), api.getDebts()]).then(([students, debts]) => {
-            const fullName = user ? `${user.firstName} ${user.lastName}` : '';
-            const found =
-                students.find(s => fullName.includes(s.name)) ||
-                students.find(s => s.name.includes(user?.firstName ?? '')) ||
-                null;
-
-            setMe(found);
-            setMyDebts(found ? debts.filter(d => d.studentName === found.name) : []);
+            // Сопоставляем по id: имя в списке участников и в долгах может быть в разном порядке
+            setMe(students.find(s => s.id === user?.id) ?? null);
+            setMyDebts(user ? debts.filter(d => d.studentId === user.id) : []);
         });
     };
 
@@ -68,74 +63,86 @@ export default function MyStats() {
 
     return (
         <PageWrapper
-      title= "Личная статистика"
-    subtitle = { me? `${me.name} · ${user?.groupName}` : 'Мои показатели'
-}
-actions = {
-        < button className = "btn btn-ghost" onClick = { handleRefresh } disabled = { pending } >
-{ pending? '⏳ Обновляем...': '🔄 Обновить' }
-    </button>
-      }
-    >
-    <div className="grid grid-3" style = {{ marginBottom: 20 }}>
-        <div className="card" >
-            <div
-            className="kpi-value"
-style = {{ color: activeDebts.length > 0 ? 'var(--red)' : 'var(--green)' }}
-          >
-{ activeDebts.length }
-    </div>
-    < div className = "kpi-label" > Активных долгов </div>
-        </div>
-        < div className = "card" >
-            <div className="kpi-value" style = {{ color: 'var(--red)' }}> { overdueCount } </div>
-                < div className = "kpi-label" > Просрочено </div>
+            title="Личная статистика"
+            subtitle={me ? `${me.name} · ${user?.groupName}` : 'Мои показатели'}
+            actions={
+                <button className="btn btn-ghost" onClick={handleRefresh} disabled={pending}>
+                    {pending ? '⏳ Обновляем...' : '🔄 Обновить'}
+                </button>
+            }
+        >
+            <div className="grid grid-3" style={{ marginBottom: 20 }}>
+                <div className="card">
+                    <div
+                        className="kpi-value"
+                        style={{ color: activeDebts.length > 0 ? 'var(--red)' : 'var(--green)' }}
+                    >
+                        {activeDebts.length}
                     </div>
-                    < div className = "card" >
-                        <div className="kpi-value" style = {{ color: 'var(--yellow)' }}> { soonCount } </div>
-                            < div className = "kpi-label" > Скоро дедлайн </div>
-                                </div>
-                                </div>
+                    <div className="kpi-label">Активных долгов</div>
+                </div>
+                <div className="card">
+                    <div className="kpi-value" style={{ color: 'var(--red)' }}>
+                        {overdueCount}
+                    </div>
+                    <div className="kpi-label">Просрочено</div>
+                </div>
+                <div className="card">
+                    <div className="kpi-value" style={{ color: 'var(--yellow)' }}>
+                        {soonCount}
+                    </div>
+                    <div className="kpi-label">Скоро дедлайн</div>
+                </div>
+            </div>
 
-                                < div className = "card" >
-                                    <div className="card-header" >
-                                        <h3>🔥 Мои долги </h3>
-                                            < Link to = "/debts" className = "link" > Все →</Link>
-                                                </div>
-{
-    myDebts.length === 0 ? (
-        <div style= {{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }
-}>
-            🎉 Долгов нет, так держать!
-    </div>
-        ) : (
-    <table className= "table" >
-    <thead>
-    <tr>
-    <th>Предмет </th>
-    < th > Тип </th>
-    < th > Дедлайн </th>
-    < th > Статус </th>
-    </tr>
-    </thead>
-    <tbody>
-{
-    myDebts.map(d => {
-        const st = computeDebtStatus(d);
-        return (
-            <tr key= { d.id } >
-            <td>{ d.subject } </td>
-            < td > { d.type } </td>
-            < td > { formatDate(d.deadline)
-} </td>
-    <td> <span className={ `tag ${STATUS_CLASS[st]}` }> { STATUS_LABEL[st]}</span></td>
-        </tr>
-                );
-              })}
-</tbody>
-    </table>
-        )}
-</div>
-    </PageWrapper>
-  );
+            <div className="card">
+                <div className="card-header">
+                    <h3>🔥 Мои долги</h3>
+                    <Link to="/debts" className="link">
+                        Все →
+                    </Link>
+                </div>
+                {myDebts.length === 0 ? (
+                    <div
+                        style={{
+                            padding: 30,
+                            textAlign: 'center',
+                            color: 'var(--muted)',
+                            fontSize: 13,
+                        }}
+                    >
+                        🎉 Долгов нет, так держать!
+                    </div>
+                ) : (
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Предмет</th>
+                                <th>Тип</th>
+                                <th>Дедлайн</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {myDebts.map(d => {
+                                const st = computeDebtStatus(d);
+                                return (
+                                    <tr key={d.id}>
+                                        <td>{d.subject}</td>
+                                        <td>{d.type}</td>
+                                        <td>{formatDate(d.deadline)}</td>
+                                        <td>
+                                            <span className={`tag ${STATUS_CLASS[st]}`}>
+                                                {STATUS_LABEL[st]}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </PageWrapper>
+    );
 }

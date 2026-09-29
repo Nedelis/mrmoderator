@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.settings import GroupSettings
 
-
 DEFAULT_SETTINGS = {
     "pushNotifications": True,
     "dailySummary": True,
@@ -15,9 +14,7 @@ DEFAULT_SETTINGS = {
 
 
 async def get_settings(db: AsyncSession, group_id: str) -> dict:
-    result = await db.execute(
-        select(GroupSettings).where(GroupSettings.group_id == group_id)
-    )
+    result = await db.execute(select(GroupSettings).where(GroupSettings.group_id == group_id))
     row = result.scalar_one_or_none()
     if row is None:
         return dict(DEFAULT_SETTINGS)
@@ -25,9 +22,7 @@ async def get_settings(db: AsyncSession, group_id: str) -> dict:
 
 
 async def save_settings(db: AsyncSession, group_id: str, payload: dict) -> dict:
-    result = await db.execute(
-        select(GroupSettings).where(GroupSettings.group_id == group_id)
-    )
+    result = await db.execute(select(GroupSettings).where(GroupSettings.group_id == group_id))
     row = result.scalar_one_or_none()
     if row is None:
         row = GroupSettings(group_id=group_id, payload=payload)

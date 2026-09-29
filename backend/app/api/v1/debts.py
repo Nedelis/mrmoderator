@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user, require
 from app.models.user import User
 from app.schemas.common import OkResponse
-from app.schemas.debt import Debt, CreateDebtRequest, UpdateDebtRequest
+from app.schemas.debt import CreateDebtRequest, Debt, UpdateDebtRequest
 from app.services import debt_service
 
 router = APIRouter(prefix="/debts", tags=["Долги"])
@@ -45,7 +45,7 @@ async def update_debt(
     db: AsyncSession = Depends(get_db),
 ):
     debt = await debt_service.get_debt(db, debt_id)
-    if debt is None:
+    if debt is None or debt.group_id != user.group_id:
         raise HTTPException(404, "Долг не найден")
     try:
         await debt_service.update_debt(db, debt, data)
@@ -61,7 +61,7 @@ async def delete_debt(
     db: AsyncSession = Depends(get_db),
 ):
     debt = await debt_service.get_debt(db, debt_id)
-    if debt is None:
+    if debt is None or debt.group_id != user.group_id:
         raise HTTPException(404, "Долг не найден")
     await debt_service.delete_debt(db, debt)
     return OkResponse()

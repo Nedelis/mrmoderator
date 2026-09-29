@@ -32,9 +32,7 @@ async def get_group_info(db: AsyncSession, group_id: str) -> GroupInfo:
     if group is None:
         return GroupInfo(name="Неизвестная группа", course=1, semester=1, students_count=0)
 
-    count_result = await db.execute(
-        select(func.count(User.id)).where(User.group_id == group_id)
-    )
+    count_result = await db.execute(select(func.count(User.id)).where(User.group_id == group_id))
     students_count = count_result.scalar_one()
 
     return GroupInfo(

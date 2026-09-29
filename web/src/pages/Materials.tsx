@@ -26,8 +26,7 @@ export default function Materials() {
     const canDeleteOwn = can('material.delete.own');
 
     const myFullName = user ? `${user.firstName} ${user.lastName}` : '';
-    const canDelete = (m: Material) =>
-        canDeleteAny || (canDeleteOwn && m.author === myFullName);
+    const canDelete = (m: Material) => canDeleteAny || (canDeleteOwn && m.author === myFullName);
 
     const load = () => api.getMaterials().then(setMaterials);
 
@@ -107,128 +106,135 @@ export default function Materials() {
 
     return (
         <PageWrapper
-      title= "Материалы"
-    subtitle = "Ссылки на сообщения с материалами в MAX"
-    actions = {
-        canUpload?(
-          <button className = "btn btn-primary" onClick = { openUpload } disabled = { pending } >
-            ➕ Добавить материал
-          </ button >
-        ) : null
-}
-    >
-    <div style={ { display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' } }>
-    {
-        filters.map(f => (
-            <span
-            key= { f }
-            className = {`tag ${f === filter ? 'tag-blue' : 'tag-gray'}`}
-style = {{ cursor: 'pointer' }}
-onClick = {() => setFilter(f)}
-          >
-{ f }
-    </span>
-        ))}
-</div>
-
-    < div className = "grid grid-1" >
-    {
-        materials.length === 0 && (
-            <div className="card" style = {{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}>
-                Материалов пока нет
-                    </div>
-        )}
-{
-    materials.map(m => (
-        <div
-            key= { m.id }
-            className = "card"
-            style = {{ marginBottom: 14, display: 'flex', gap: 14, alignItems: 'center' }}
-          >
-    <div className={ `reminder-icon ${m.type === 'pdf' ? 'red' : m.type === 'video' ? 'blue' : 'green'}` }>
-    { m.type === 'pdf' ? '📄' : m.type === 'video' ? '🎬' : '📎' }
-        </div>
-        < div className = "reminder-content" style = {{ flex: 1 }}>
-            <div className="title" > { m.title } </div>
-                < div className = "meta" >
-                    <span>👤 { m.author } </span>
-                        <span>🕐 { m.createdAt } </span>
-                            </div>
-                            </div>
-                            < button
-className = "btn btn-ghost"
-style = {{ padding: '8px 12px' }}
-onClick = {() => handleOpenInMax(m)}
-disabled = { pending }
-title = "Открыть в MAX"
-    >
-              ↗️
-</button>
-{
-    canDelete(m) && (
-        <button
-                className="btn btn-ghost"
-    style = {{ padding: '8px 12px', color: 'var(--red)' }
-}
-onClick = {() => handleDelete(m)}
-disabled = { pending }
-title = "Удалить"
-    >
-                🗑️
-</button>
-            )}
-</div>
-        ))}
-</div>
-
-    < Modal open = { modalOpen } onClose = {() => setModalOpen(false)} title = "Добавить материал" >
-        <form onSubmit={ handleSubmit } style = {{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-            <input
-              className={ `role-select ${errors.title ? 'field-error' : ''}` }
-style = {{ width: '100%' }}
-placeholder = "Название материала"
-value = { form.title }
-onChange = { e => setForm({ ...form, title: e.target.value })}
-            />
-{ errors.title && <div className="field-error-msg" > { errors.title } </div> }
-</div>
-
-    < select
-className = "role-select"
-value = { form.type }
-onChange = { e => setForm({ ...form, type: e.target.value })}
-          >
-    <option value="pdf" > PDF / документ </option>
-        < option value = "video" > Видео </option>
-            < option value = "other" > Другое </option>
-                </select>
-
-                < div >
-                <input
-              className={ `role-select ${errors.url ? 'field-error' : ''}` }
-style = {{ width: '100%' }}
-placeholder = "https://max.ru/c/..."
-value = { form.url }
-onChange = { e => setForm({ ...form, url: e.target.value })}
-            />
-{ errors.url && <div className="field-error-msg" > { errors.url } </div> }
-<div style={ { fontSize: 11, color: 'var(--muted)', marginTop: 6 } }>
-    Скопируйте ссылку на сообщение с материалом в чате MAX.
-              Бот сам перешлёт его в группу.
+            title="Материалы"
+            subtitle="Ссылки на сообщения с материалами в MAX"
+            actions={
+                canUpload ? (
+                    <button className="btn btn-primary" onClick={openUpload} disabled={pending}>
+                        ➕ Добавить материал
+                    </button>
+                ) : null
+            }
+        >
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+                {filters.map(f => (
+                    <span
+                        key={f}
+                        className={`tag ${f === filter ? 'tag-blue' : 'tag-gray'}`}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setFilter(f)}
+                    >
+                        {f}
+                    </span>
+                ))}
             </div>
-    </div>
 
-    < div style = {{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-        <button type="button" className = "btn btn-ghost" onClick = {() => setModalOpen(false)}>
-            Отмена
-            </button>
-            < button type = "submit" className = "btn btn-primary" disabled = { pending } >
-            { pending? '⏳ Сохраняем...': '✅ Добавить' }
-                </button>
-                </div>
+            <div className="grid grid-1">
+                {materials.length === 0 && (
+                    <div
+                        className="card"
+                        style={{ textAlign: 'center', color: 'var(--muted)', padding: 40 }}
+                    >
+                        Материалов пока нет
+                    </div>
+                )}
+                {materials.map(m => (
+                    <div
+                        key={m.id}
+                        className="card"
+                        style={{ marginBottom: 14, display: 'flex', gap: 14, alignItems: 'center' }}
+                    >
+                        <div
+                            className={`reminder-icon ${m.type === 'pdf' ? 'red' : m.type === 'video' ? 'blue' : 'green'}`}
+                        >
+                            {m.type === 'pdf' ? '📄' : m.type === 'video' ? '🎬' : '📎'}
+                        </div>
+                        <div className="reminder-content" style={{ flex: 1 }}>
+                            <div className="title">{m.title}</div>
+                            <div className="meta">
+                                <span>👤 {m.author}</span>
+                                <span>🕐 {m.createdAt}</span>
+                            </div>
+                        </div>
+                        <button
+                            className="btn btn-ghost"
+                            style={{ padding: '8px 12px' }}
+                            onClick={() => handleOpenInMax(m)}
+                            disabled={pending}
+                            title="Открыть в MAX"
+                        >
+                            ↗️
+                        </button>
+                        {canDelete(m) && (
+                            <button
+                                className="btn btn-ghost"
+                                style={{ padding: '8px 12px', color: 'var(--red)' }}
+                                onClick={() => handleDelete(m)}
+                                disabled={pending}
+                                title="Удалить"
+                            >
+                                🗑️
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Добавить материал">
+                <form
+                    onSubmit={handleSubmit}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                >
+                    <div>
+                        <input
+                            className={`role-select ${errors.title ? 'field-error' : ''}`}
+                            style={{ width: '100%' }}
+                            placeholder="Название материала"
+                            value={form.title}
+                            onChange={e => setForm({ ...form, title: e.target.value })}
+                        />
+                        {errors.title && <div className="field-error-msg">{errors.title}</div>}
+                    </div>
+
+                    <select
+                        className="role-select"
+                        value={form.type}
+                        onChange={e => setForm({ ...form, type: e.target.value })}
+                    >
+                        <option value="pdf">PDF / документ</option>
+                        <option value="video">Видео</option>
+                        <option value="other">Другое</option>
+                    </select>
+
+                    <div>
+                        <input
+                            className={`role-select ${errors.url ? 'field-error' : ''}`}
+                            style={{ width: '100%' }}
+                            placeholder="https://max.ru/c/..."
+                            value={form.url}
+                            onChange={e => setForm({ ...form, url: e.target.value })}
+                        />
+                        {errors.url && <div className="field-error-msg">{errors.url}</div>}
+                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
+                            Скопируйте ссылку на сообщение с материалом в чате MAX. Бот сам перешлёт
+                            его в группу.
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                        <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => setModalOpen(false)}
+                        >
+                            Отмена
+                        </button>
+                        <button type="submit" className="btn btn-primary" disabled={pending}>
+                            {pending ? '⏳ Сохраняем...' : '✅ Добавить'}
+                        </button>
+                    </div>
                 </form>
-                </Modal>
-                </PageWrapper>
-  );
+            </Modal>
+        </PageWrapper>
+    );
 }

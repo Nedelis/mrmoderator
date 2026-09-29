@@ -1,15 +1,16 @@
 from maxapi import Dispatcher
 from maxapi.filters.command import Command, CommandStart
 from maxapi.types import (
-    MessageCreated,
-    MessageCallback,
-    ButtonsPayload,
-    LinkButton,
-    CallbackButton,
     BotStarted,
+    ButtonsPayload,
+    CallbackButton,
+    LinkButton,
+    MessageCallback,
+    MessageCreated,
 )
 from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
 
+from app.core.config import SETTINGS
 from app.core.database import async_session
 from app.core.roles import ROLES
 from app.models.user import User
@@ -23,6 +24,7 @@ dp = Dispatcher()
 # ═══════════════════════════════════════════════════════════════
 # КЛАВИАТУРЫ
 # ═══════════════════════════════════════════════════════════════
+
 
 def main_menu_kb() -> ButtonsPayload:
     builder = InlineKeyboardBuilder()
@@ -47,10 +49,11 @@ def no_group_kb() -> ButtonsPayload:
 # Диплинк /start с payload (invite_XXX)
 # ═══════════════════════════════════════════════════════════════
 
+
 @dp.bot_started()
 async def on_bot_started(event: BotStarted):
-    """Обработка запуска бота через диплинк с payload invite_XXX."""
-    payload = getattr(event, "payload", None)
+    """Обработка запуска бота (в т.ч. через диплинк)."""
+    payload = event.payload  # ← сюда приходит "invite_ABC123"
 
     if not payload or not payload.startswith("invite_"):
         return
@@ -81,14 +84,12 @@ async def on_bot_started(event: BotStarted):
         group = await group_service.join_group_by_invite(db, user, invite_code)
         if group:
             await event.bot.send_message(
-                user_id=max_user_id,
+                chat_id=event.chat_id,
                 text=f"✅ Ты вступил в группу «{group.name}»!\nОткрой приложение: /open",
             )
         else:
-            await event.bot.send_message(
-                user_id=max_user_id,
-                text="❌ Неверный код приглашения.",
-            )
+            await event.bot.send_message(chat_id=event.chat_id, text="❌ Неверный код приглашения.")
+
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -137,8 +138,7 @@ async def cmd_start(event: MessageCreated):
         return
 
     await event.message.answer(
-        f"Привет, {first_name or 'друг'}! 👋\n\n"
-        "Ты в группе.\n\n" + commands_text,
+        f"Привет, {first_name or 'друг'}! 👋\n\nТы в группе.\n\n" + commands_text,
         attachments=[main_menu_kb()],
     )
 
@@ -146,6 +146,7 @@ async def cmd_start(event: MessageCreated):
 # ═══════════════════════════════════════════════════════════════
 # /help
 # ═══════════════════════════════════════════════════════════════
+
 
 @dp.message_created(Command("help"))
 async def cmd_help(event: MessageCreated):
@@ -164,6 +165,7 @@ async def cmd_help(event: MessageCreated):
 # ═══════════════════════════════════════════════════════════════
 # /creategroup
 # ═══════════════════════════════════════════════════════════════
+
 
 @dp.message_created(Command("creategroup"))
 async def cmd_creategroup(event: MessageCreated):
@@ -209,6 +211,7 @@ async def cmd_creategroup(event: MessageCreated):
 # /join
 # ═══════════════════════════════════════════════════════════════
 
+
 @dp.message_created(Command("join"))
 async def cmd_join(event: MessageCreated):
     sender = event.message.sender
@@ -235,14 +238,14 @@ async def cmd_join(event: MessageCreated):
             return
 
         await event.message.answer(
-            f"✅ Ты вступил в группу «{group.name}»!\n"
-            f"Теперь можешь открыть приложение: /open"
+            f"✅ Ты вступил в группу «{group.name}»!\nТеперь можешь открыть приложение: /open"
         )
 
 
 # ═══════════════════════════════════════════════════════════════
 # /invite
 # ═══════════════════════════════════════════════════════════════
+
 
 @dp.message_created(Command("invite"))
 async def cmd_invite(event: MessageCreated):
@@ -273,6 +276,7 @@ async def cmd_invite(event: MessageCreated):
 # /setchat
 # ═══════════════════════════════════════════════════════════════
 
+
 @dp.message_created(Command("setchat"))
 async def cmd_setchat(event: MessageCreated):
     sender = event.message.sender
@@ -298,6 +302,7 @@ async def cmd_setchat(event: MessageCreated):
 # /open
 # ═══════════════════════════════════════════════════════════════
 
+
 @dp.message_created(Command("open"))
 async def cmd_open(event: MessageCreated):
     sender = event.message.sender
@@ -319,6 +324,7 @@ async def cmd_open(event: MessageCreated):
 # ═══════════════════════════════════════════════════════════════
 # /test_notify
 # ═══════════════════════════════════════════════════════════════
+
 
 @dp.message_created(Command("test_notify"))
 async def cmd_test_notify(event: MessageCreated):
@@ -352,14 +358,14 @@ async def fallback_handler(event: MessageCreated):
         )
         return
 
-    await event.message.answer(
-        "Я понимаю только команды. Напиши /help, чтобы увидеть список."
-    )
+    # Если это обычный текст — подсказываем, что делать
+    await event.message.answer("Я понимаю только команды. Напиши /help, чтобы увидеть список.")
 
 
 # ═══════════════════════════════════════════════════════════════
 # CALLBACK-ОБРАБОТЧИКИ
 # ═══════════════════════════════════════════════════════════════
+
 
 @dp.message_callback()
 async def on_callback(event: MessageCallback):
@@ -376,10 +382,7 @@ async def on_callback(event: MessageCallback):
             group = await group_service.get_group(db, user_db.group_id)
             if group:
                 role_label = ROLES.get(user_db.role_id, {}).get("label", user_db.role_id)
-                await event.message.answer(
-                    f"📚 Группа: {group.name}\n"
-                    f"Твоя роль: {role_label}"
-                )
+                await event.message.answer(f"📚 Группа: {group.name}\nТвоя роль: {role_label}")
 
     elif payload == "invite":
         async with async_session() as db:
@@ -399,9 +402,7 @@ async def on_callback(event: MessageCallback):
             )
 
     elif payload == "create_group":
-        await event.message.answer(
-            "Напиши: /creategroup НАЗВАНИЕ\nНапример: /creategroup ИС-21"
-        )
+        await event.message.answer("Напиши: /creategroup НАЗВАНИЕ\nНапример: /creategroup ИС-21")
 
     elif payload == "join_group":
         await event.message.answer(

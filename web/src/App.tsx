@@ -19,25 +19,19 @@ function RequireMenu({ path, children }: { path: string; children: React.ReactNo
     const { hasMenuItem } = useCurrentUser();
     if (!hasMenuItem(path)) {
         return (
-            <div style= {{ padding: 40, textAlign: 'center', color: 'var(--muted)' }
-    }>
-        🔒 Доступ к этому разделу ограничен
-        </div>
-    );
-}
-return <>{ children } </>;
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+                🔒 Доступ к этому разделу ограничен
+            </div>
+        );
+    }
+    return <>{children}</>;
 }
 
 export default function App() {
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const { isReady } = useMaxBridge();
     const { loading: rolesLoading, error: rolesError } = useRoles();
-    const {
-        loading: userLoading,
-        error: userError,
-        user,
-        role,
-    } = useCurrentUser();
+    const { loading: userLoading, error: userError, user, role } = useCurrentUser();
     const location = useLocation();
 
     useEffect(() => {
@@ -47,85 +41,106 @@ export default function App() {
     if (!isReady || rolesLoading || userLoading) {
         return (
             <div
-        style= {{
-            display: 'flex',
-                alignItems: 'center',
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
-                        height: '100vh',
-                            background: 'var(--bg)',
-                                color: 'var(--text)',
-                                    fontSize: 16,
-        }
+                    height: '100vh',
+                    background: 'var(--bg)',
+                    color: 'var(--text)',
+                    fontSize: 16,
+                }}
+            >
+                Загрузка...
+            </div>
+        );
     }
-      >
-        Загрузка...
-    </div>
-    );
-}
 
-if (rolesError || userError) {
+    if (rolesError || userError) {
+        return (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--red)' }}>
+                Ошибка: {rolesError || userError}
+            </div>
+        );
+    }
+
+    // Если у юзера нет группы — показываем страницу 504
+    const notInGroup = !user || !user.groupId || user.groupId === '';
+
+    if (notInGroup) {
+        return <NotRegistered />;
+    }
+
+    if (!role) {
+        return (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+                Не удалось определить роль пользователя
+            </div>
+        );
+    }
+
     return (
-        <div style= {{ padding: 40, textAlign: 'center', color: 'var(--red)' }
-}>
-    Ошибка: { rolesError || userError }
-</div>
-    );
-  }
+        <div className="app-layout">
+            <Sidebar />
+            <MobileNav
+                open={mobileNavOpen}
+                onClose={() => setMobileNavOpen(false)}
+                onToggle={() => setMobileNavOpen(prev => !prev)}
+            />
 
-// Если у юзера нет группы — показываем страницу 504
-const notInGroup = !user || !user.groupId || user.groupId === '';
-
-if (notInGroup) {
-    return <NotRegistered />;
-}
-
-if (!role) {
-    return (
-        <div style= {{ padding: 40, textAlign: 'center', color: 'var(--muted)' }
-}>
-    Не удалось определить роль пользователя
+            <main className="main-content">
+                <Routes>
+                    <Route
+                        path="/"
+                        element={
+                            <RequireMenu path="/">
+                                <Dashboard />
+                            </RequireMenu>
+                        }
+                    />
+                    <Route
+                        path="/my-stats"
+                        element={
+                            <RequireMenu path="/my-stats">
+                                <MyStats />
+                            </RequireMenu>
+                        }
+                    />
+                    <Route
+                        path="/reminders"
+                        element={
+                            <RequireMenu path="/reminders">
+                                <Reminders />
+                            </RequireMenu>
+                        }
+                    />
+                    <Route
+                        path="/materials"
+                        element={
+                            <RequireMenu path="/materials">
+                                <Materials />
+                            </RequireMenu>
+                        }
+                    />
+                    <Route
+                        path="/mail"
+                        element={
+                            <RequireMenu path="/mail">
+                                <Mail />
+                            </RequireMenu>
+                        }
+                    />
+                    <Route
+                        path="/roles"
+                        element={
+                            <RequireMenu path="/roles">
+                                <Roles />
+                            </RequireMenu>
+                        }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </main>
         </div>
     );
-  }
-
-return (
-    <div className= "app-layout" >
-    <Sidebar />
-    < MobileNav
-open = { mobileNavOpen }
-onClose = {() => setMobileNavOpen(false)}
-onToggle = {() => setMobileNavOpen(prev => !prev)}
-      />
-
-    < main className = "main-content" >
-        <Routes>
-        <Route
-            path="/"
-element = {< RequireMenu path = "/" > <Dashboard /></RequireMenu >}
-          />
-    < Route
-path = "/my-stats"
-element = {< RequireMenu path = "/my-stats" > <MyStats /></RequireMenu >}
-          />
-    < Route
-path = "/reminders"
-element = {< RequireMenu path = "/reminders" > <Reminders /></RequireMenu >}
-          />
-    < Route
-path = "/materials"
-element = {< RequireMenu path = "/materials" > <Materials /></RequireMenu >}
-          />
-    < Route
-path = "/mail"
-element = {< RequireMenu path = "/mail" > <Mail /></RequireMenu >}
-          />
-    < Route
-path = "/roles"
-element = {< RequireMenu path = "/roles" > <Roles /></RequireMenu >}
-          />
-    < Route path = "*" element = {< Navigate to = "/" replace />} />
-        </Routes>
-        </main>
-        </div>
-  );
 }

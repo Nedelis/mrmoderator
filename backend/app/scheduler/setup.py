@@ -32,6 +32,7 @@ logger = logging.getLogger("scheduler")
 # Регистрация sender'а — чтобы notify_service умел отправлять
 # ────────────────────────────────────────────────────────────
 
+
 def _register_sender() -> None:
     token = SETTINGS.MAX_BOT_TOKEN.get_secret_value()
     if not token:
@@ -54,6 +55,7 @@ def _register_sender() -> None:
 # ────────────────────────────────────────────────────────────
 # Обёртки для логирования
 # ────────────────────────────────────────────────────────────
+
 
 async def _run_job(name: str, fn) -> None:
     logger.info("Запуск задачи: %s", name)
@@ -79,6 +81,7 @@ async def job_daily_summary() -> None:
 # ────────────────────────────────────────────────────────────
 # Главная функция
 # ────────────────────────────────────────────────────────────
+
 
 async def main() -> None:
     _register_sender()

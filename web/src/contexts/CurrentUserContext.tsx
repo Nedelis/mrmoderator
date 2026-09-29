@@ -1,20 +1,7 @@
-import {
-    createContext,
-    useContext,
-    useState,
-    useEffect,
-    useCallback,
-    type ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { api, NotRegisteredError } from '../api/client';
 import { useRoles } from './RolesContext';
-import type {
-    CurrentUser,
-    Role,
-    RoleId,
-    Permission,
-    MenuItemPath,
-} from '../types/api';
+import type { CurrentUser, Role, RoleId, Permission, MenuItemPath } from '../types/api';
 
 interface CurrentUserContextValue {
     user: CurrentUser | null;
@@ -69,7 +56,7 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
         load();
     }, [load]);
 
-    const role = user?.roleId ? rolesById[user.roleId] ?? null : null;
+    const role = user?.roleId ? (rolesById[user.roleId] ?? null) : null;
 
     const can = useCallback(
         (permission: Permission) => {
@@ -107,24 +94,23 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
 
     return (
         <CurrentUserContext.Provider
-      value= {{
-        user,
-            role,
-            loading,
-            error,
-            needsOnboarding,
-            can,
-            hasMenuItem,
-            canAssign,
-            assignableRoles,
-            isAdmin,
-            reload: load,
-      }
-}
-    >
-{ children }
-    </CurrentUserContext.Provider>
-  );
+            value={{
+                user,
+                role,
+                loading,
+                error,
+                needsOnboarding,
+                can,
+                hasMenuItem,
+                canAssign,
+                assignableRoles,
+                isAdmin,
+                reload: load,
+            }}
+        >
+            {children}
+        </CurrentUserContext.Provider>
+    );
 }
 
 export function useCurrentUser() {

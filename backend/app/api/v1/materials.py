@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, Form, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,7 +41,12 @@ async def upload_material(
 
     if url:
         return await material_service.create_material_with_url(
-            db, user, user.group_id, title, type, url,
+            db,
+            user,
+            user.group_id,
+            title,
+            type,
+            url,
         )
 
     # Если файла нет и url нет — это заглушка для регистрации материала,
@@ -59,9 +64,10 @@ async def download_material(
     Скачивание материала.
     Возвращает редирект на прямой URL или метаданные для MAX Bridge.
     """
-    info = await material_service.get_material_file_info(db, material_id)
-    if info is None:
+    material = await material_service.get_material(db, material_id)
+    if material is None or material.group_id != user.group_id:
         raise HTTPException(404, "Материал не найден")
+    info = await material_service.get_material_file_info(db, material_id)
 
     if info["download_url"]:
         return RedirectResponse(info["download_url"])
@@ -77,7 +83,7 @@ async def delete_material(
     db: AsyncSession = Depends(get_db),
 ):
     material = await material_service.get_material(db, material_id)
-    if material is None:
+    if material is None or material.group_id != user.group_id:
         raise HTTPException(404, "Материал не найден")
 
     can_any = has_permission(user.role_id, "material.delete.any")

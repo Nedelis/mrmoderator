@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-import logging
 from sqlalchemy import select
 
 from app.core.database import async_session
@@ -140,9 +139,7 @@ async def check_upcoming_deadlines() -> None:
                 logger.info("    Debt id=%s — уже отправлено, пропускаем", debt.id)
                 continue
 
-            student_result = await db.execute(
-                select(User).where(User.id == debt.student_id)
-            )
+            student_result = await db.execute(select(User).where(User.id == debt.student_id))
             student = student_result.scalar_one_or_none()
             if student is None:
                 logger.warning("    Студент id=%s не найден", debt.student_id)
@@ -241,9 +238,7 @@ async def check_overdue_debts() -> None:
                 logger.info("  Debt id=%s — уже отправлено, пропускаем", debt.id)
                 continue
 
-            student_result = await db.execute(
-                select(User).where(User.id == debt.student_id)
-            )
+            student_result = await db.execute(select(User).where(User.id == debt.student_id))
             student = student_result.scalar_one_or_none()
             if student is None:
                 logger.warning("  Студент id=%s не найден", debt.student_id)

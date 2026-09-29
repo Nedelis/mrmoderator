@@ -1,7 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.roles import ROLES
 from app.models.user import User
 from app.schemas.user import CurrentUser, Student
 

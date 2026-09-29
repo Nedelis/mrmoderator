@@ -3,56 +3,62 @@
 export type Rule = (v: any) => string | null;
 
 export const rules = {
-    required: (msg = 'Обязательное поле'): Rule => (v: any) => {
-        if (v === null || v === undefined) return msg;
-        if (typeof v === 'string' && !v.trim()) return msg;
-        return null;
-    },
+    required:
+        (msg = 'Обязательное поле'): Rule =>
+        (v: any) => {
+            if (v === null || v === undefined) return msg;
+            if (typeof v === 'string' && !v.trim()) return msg;
+            return null;
+        },
 
-    minLen: (n: number, msg?: string): Rule => (v: any) => {
-        if (typeof v !== 'string' || v.trim().length < n) {
-            return msg ?? `Минимум ${n} символов`;
-        }
-        return null;
-    },
-
-    maxLen: (n: number, msg?: string): Rule => (v: any) => {
-        if (typeof v === 'string' && v.trim().length > n) {
-            return msg ?? `Максимум ${n} символов`;
-        }
-        return null;
-    },
-
-    date: (opts?: {
-        minYearOffset?: number;
-        maxYearOffset?: number;
-        msg?: string;
-    }): Rule => (v: any) => {
-        const msg = opts?.msg ?? 'Укажите дату';
-        if (!v || typeof v !== 'string') return msg;
-
-        const d = new Date(v);
-        if (isNaN(d.getTime())) return 'Неверный формат даты';
-
-        const min = opts?.minYearOffset;
-        const max = opts?.maxYearOffset;
-        if (min !== undefined || max !== undefined) {
-            const currentYear = new Date().getFullYear();
-            const minYear = currentYear + (min ?? -Infinity);
-            const maxYear = currentYear + (max ?? Infinity);
-            const y = d.getFullYear();
-            if (y < minYear || y > maxYear) {
-                if (minYear === maxYear) return `Год должен быть ${minYear}`;
-                return `Год должен быть от ${minYear} до ${maxYear}`;
+    minLen:
+        (n: number, msg?: string): Rule =>
+        (v: any) => {
+            if (typeof v !== 'string' || v.trim().length < n) {
+                return msg ?? `Минимум ${n} символов`;
             }
-        }
-        return null;
-    },
+            return null;
+        },
 
-    time: (msg = 'Укажите время'): Rule => (v: any) => {
-        if (!v || typeof v !== 'string') return msg;
-        return /^\d{2}:\d{2}$/.test(v) ? null : 'Формат ЧЧ:ММ';
-    },
+    maxLen:
+        (n: number, msg?: string): Rule =>
+        (v: any) => {
+            if (typeof v === 'string' && v.trim().length > n) {
+                return msg ?? `Максимум ${n} символов`;
+            }
+            return null;
+        },
+
+    date:
+        (opts?: { minYearOffset?: number; maxYearOffset?: number; msg?: string }): Rule =>
+        (v: any) => {
+            const msg = opts?.msg ?? 'Укажите дату';
+            if (!v || typeof v !== 'string') return msg;
+
+            const d = new Date(v);
+            if (isNaN(d.getTime())) return 'Неверный формат даты';
+
+            const min = opts?.minYearOffset;
+            const max = opts?.maxYearOffset;
+            if (min !== undefined || max !== undefined) {
+                const currentYear = new Date().getFullYear();
+                const minYear = currentYear + (min ?? -Infinity);
+                const maxYear = currentYear + (max ?? Infinity);
+                const y = d.getFullYear();
+                if (y < minYear || y > maxYear) {
+                    if (minYear === maxYear) return `Год должен быть ${minYear}`;
+                    return `Год должен быть от ${minYear} до ${maxYear}`;
+                }
+            }
+            return null;
+        },
+
+    time:
+        (msg = 'Укажите время'): Rule =>
+        (v: any) => {
+            if (!v || typeof v !== 'string') return msg;
+            return /^\d{2}:\d{2}$/.test(v) ? null : 'Формат ЧЧ:ММ';
+        },
 };
 
 export function validate(value: any, checks: Rule[]): string | null {

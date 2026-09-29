@@ -1,10 +1,12 @@
 from datetime import datetime
+
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.task import Task
 from app.models.user import User
-from app.schemas.task import Task as TaskSchema, CreateTaskRequest, UpdateTaskRequest
+from app.schemas.task import CreateTaskRequest, UpdateTaskRequest
+from app.schemas.task import Task as TaskSchema
 from app.services import notify_service, user_service
 
 
@@ -46,7 +48,7 @@ async def create_task(
     group_id: str,
     data: CreateTaskRequest,
 ) -> TaskSchema:
-    deadline = datetime.strptime(data.deadline, "%Y-%m-%d")
+    deadline = datetime.fromisoformat(data.deadline)
     task = Task(
         title=data.title,
         description=data.description or "",
@@ -73,7 +75,7 @@ async def update_task(db: AsyncSession, task: Task, data: UpdateTaskRequest) -> 
     if data.description is not None:
         task.description = data.description
     if data.deadline is not None:
-        task.deadline = datetime.strptime(data.deadline, "%Y-%m-%d")
+        task.deadline = datetime.fromisoformat(data.deadline)
         task.status = _compute_status(task.deadline)
     if data.type is not None:
         task.type = data.type

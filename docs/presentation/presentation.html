@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Мистер Модератор — презентация</title>
+<!--
+  Исходник презентации. PDF собирается командой из корня репозитория:
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --no-pdf-header-footer \
+    --print-to-pdf=docs/presentation.pdf "file://$PWD/docs/presentation/presentation.html"
+  Места для заполнения помечены ⟨угловыми скобками⟩.
+-->
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --ink: #172033;
+    --muted: #5B6B82;
+    --line: #E3E8F0;
+    --soft: #F4F6FB;
+    --accent: #3A63F0;
+    --accent-soft: #E8EEFF;
+    --red: #D93F44;
+    --red-soft: #FDECEC;
+    --green: #1F9D63;
+    --green-soft: #E6F6EE;
+    --amber: #C77A0A;
+    --amber-soft: #FFF4E0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .slide {
+    width: 1280px; height: 720px;
+    padding: 56px 72px 48px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    display: flex; flex-direction: column;
+  }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+  .kicker { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { font-size: 40px; line-height: 1.15; font-weight: 750; letter-spacing: -.01em; margin-bottom: 28px; max-width: 1050px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  p, li { font-size: 18px; line-height: 1.45; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; line-height: 1.45; }
+  .num { position: absolute; right: 40px; bottom: 26px; font-size: 13px; color: #9AA6B8; }
+  .brand { position: absolute; left: 72px; bottom: 26px; font-size: 13px; color: #9AA6B8; }
+  .grid { display: grid; gap: 20px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: var(--soft); border-radius: 16px; padding: 22px 24px; }
+  .card.white { background: #fff; border: 1.5px solid var(--line); }
+  .card h2 { font-size: 18px; }
+  .card p, .card li { font-size: 16px; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  .big { font-size: 46px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+  .tag { display: inline-block; font-size: 13px; font-weight: 650; padding: 4px 10px; border-radius: 999px; }
+  .t-blue { background: var(--accent-soft); color: var(--accent); }
+  .t-red { background: var(--red-soft); color: var(--red); }
+  .t-green { background: var(--green-soft); color: var(--green); }
+  .t-amber { background: var(--amber-soft); color: var(--amber); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 0 12px 10px; border-bottom: 1.5px solid var(--line); }
+  td { font-size: 16px; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.35; }
+  tr:last-child td { border-bottom: none; }
+  code, .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: .92em; background: var(--soft); padding: 1px 6px; border-radius: 6px; }
+  .fill { color: var(--red); font-weight: 600; }
+
+  /* Титульный */
+  .title-slide { background: linear-gradient(135deg, #1D2B64 0%, #3A63F0 100%); color: #fff; justify-content: center; }
+  .title-slide h1 { font-size: 64px; margin-bottom: 18px; }
+  .title-slide p { font-size: 24px; opacity: .92; max-width: 900px; }
+  .title-slide .team { margin-top: 56px; font-size: 18px; opacity: .9; line-height: 1.7; }
+  .title-slide .num, .title-slide .brand { color: rgba(255,255,255,.6); }
+
+  /* Служебный */
+  .tech td { font-size: 15px; padding: 8px 12px; }
+  .tech td:first-child { width: 250px; color: var(--muted); font-weight: 600; }
+
+  /* Шаги сценария */
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .step { background: var(--soft); border-radius: 14px; padding: 18px 16px; position: relative; }
+  .step .n { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 15px; margin-bottom: 12px; }
+  .step h2 { font-size: 16px; margin-bottom: 6px; }
+  .step p { font-size: 14px; color: var(--muted); }
+  .where { font-size: 12px; font-weight: 650; margin-top: 10px; }
+
+  /* Телефоны */
+  .phones { display: flex; gap: 34px; justify-content: center; align-items: flex-start; }
+  .phone { width: 236px; }
+  .phone .frame { border: 8px solid #172033; border-radius: 30px; overflow: hidden; height: 470px; background: #fff; }
+  .phone img { width: 100%; display: block; }
+  .phone .cap { text-align: center; margin-top: 12px; font-size: 15px; font-weight: 600; }
+  .phone .cap span { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  /* Архитектура */
+  .arch { display: grid; grid-template-columns: 210px 60px 1fr 60px 230px; align-items: center; }
+  .box { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; background: #fff; }
+  .box b { display: block; font-size: 16px; margin-bottom: 3px; }
+  .box span { font-size: 13px; color: var(--muted); line-height: 1.35; display: block; }
+  .box.accent { border-color: var(--accent); background: var(--accent-soft); }
+  .arrow { text-align: center; color: var(--muted); font-size: 26px; }
+  .stack { display: grid; gap: 10px; }
+  .docker { border: 2px dashed #B9C4D6; border-radius: 18px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; }
+  .docker .lbl { position: absolute; top: -11px; left: 16px; background: #fff; padding: 0 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .docker .db { grid-column: 1 / -1; text-align: center; }
+
+  .formula { font-size: 21px; line-height: 1.5; background: var(--accent-soft); border-radius: 16px; padding: 22px 26px; margin-bottom: 26px; }
+  .formula b { color: var(--accent); }
+  .src { font-size: 12px; color: #8A97AB; margin-top: auto; padding-top: 12px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Служебный -->
+<section class="slide">
+  <div class="kicker">Служебный слайд · для технической проверки</div>
+  <h1 style="margin-bottom:20px">Техническая информация</h1>
+  <table class="tech">
+    <tr><td>Чат-бот в MAX</td><td><b>https://max.ru/t595_hakaton_max_bot</b></td></tr>
+    <tr><td>Репозиторий и commit</td><td>https://github.com/Nedelis/mrmoderator · commit <span class="fill">⟨COMMIT-HASH⟩</span></td></tr>
+    <tr><td>Мини-приложение</td><td><span class="fill">https://⟨ПУБЛИЧНЫЙ-АДРЕС⟩/</span> — открывается из бота кнопкой «🔗 Открыть приложение» или командой <code>/open</code></td></tr>
+    <tr><td>Собственный API</td><td><span class="fill">https://⟨ПУБЛИЧНЫЙ-АДРЕС⟩/api</span> · Swagger: <code>/api/docs</code> · спецификация: <code>docs/openapi.yaml</code></td></tr>
+    <tr><td>Тестовые учётные записи</td><td>Вход через аккаунт MAX, логины и пароли не нужны. Первый пользователь создаёт группу (<code>/creategroup</code>) и становится старостой, остальные вступают по <code>/join КОД</code>. Без MAX: демо-режим, тестовый староста создаётся автоматически</td></tr>
+    <tr><td>Переменные окружения</td><td><code>MAX_BOT_TOKEN=</code><span class="fill">⟨токен бота⟩</span> · <code>STRICT_AUTH=true</code> · <code>MAX_BOT_USERNAME=t595_hakaton_max_bot</code> · остальное — по умолчанию из <code>.env.example</code></td></tr>
+    <tr><td>Локальный запуск</td><td><code>cp .env.example .env</code> → вписать токен → <code>docker compose up -d --build</code> → http://localhost:8080</td></tr>
+    <tr><td>Основной сценарий</td><td><code>/start</code> → <code>/creategroup ИС-21</code> → <code>/invite</code> → второй аккаунт: <code>/join КОД</code> → <code>/open</code> → «Напоминания» → создать «Для всей группы» → 🔔 → второй аккаунт получает сообщение от бота</td></tr>
+  </table>
+  <div class="num">1</div>
+</section>
+
+<!-- 2. Титул -->
+<section class="slide title-slide">
+  <div class="kicker" style="color:rgba(255,255,255,.75)">Трек «Образовательные решения» · чат-бот + мини-приложение в MAX</div>
+  <h1>Мистер Модератор</h1>
+  <p>Цифровой помощник старосты: напоминания, долги и материалы группы в одном месте — а уведомления бот доставляет каждому лично</p>
+  <div class="team">
+    Команда: <b>⟨название команды⟩</b><br>
+    ⟨Имя Фамилия⟩ — ⟨роль⟩ · ⟨Имя Фамилия⟩ — ⟨роль⟩ · ⟨Имя Фамилия⟩ — ⟨роль⟩
+  </div>
+  <div class="num">2</div>
+</section>
+
+<!-- 3. Резюме -->
+<section class="slide">
+  <div class="kicker">Executive summary</div>
+  <h1>Снимаем со старосты роль «живого ретранслятора»</h1>
+  <div class="grid g4" style="flex:1">
+    <div class="card"><span class="tag t-red">Проблема</span><h2 style="margin-top:14px">1,5–2 часа в день</h2><p class="muted">староста тратит на пересылку объявлений и напоминания; важное тонет во флуде, о долгах узнают поздно</p></div>
+    <div class="card"><span class="tag t-blue">Решение</span><h2 style="margin-top:14px">Бот + мини-приложение в MAX</h2><p class="muted">группа, напоминалки, задания, долги, экзамены и материалы; бот сам пишет каждому участнику</p></div>
+    <div class="card"><span class="tag t-green">Эффект</span><h2 style="margin-top:14px">до 15 минут в день</h2><p class="muted">вместо часов на рутину; уведомления о дедлайнах и долгах — автоматически и адресно</p></div>
+    <div class="card"><span class="tag t-amber">Статус</span><h2 style="margin-top:14px">Работающий MVP</h2><p class="muted">бот, мини-приложение, API и планировщик уведомлений запускаются одной командой Docker</p></div>
+  </div>
+  <p class="muted small" style="margin-top:22px">Основано на собственном исследовании: 5 глубинных интервью с активом и опрос 120 студентов (40 — актив, 80 — рядовые студенты).</p>
+  <div class="num">3</div>
+</section>
+
+<!-- 4. ЦА и проблема -->
+<section class="slide">
+  <div class="kicker">Целевая аудитория и проблема</div>
+  <h1>Староста — единственная точка отказа в потоке учебной информации</h1>
+  <div class="formula">
+    <b>Староста или профорг</b> группы 1–4 курса вуза, когда объявления от преподавателей и кафедр приходят в разные каналы, <b>хочет</b> быстро донести их до группы и проконтролировать сроки, <b>но сталкивается</b> с ручной пересылкой и флудом в общем чате, <b>из-за чего</b> тратит часы на рутину, а одногруппники пропускают дедлайны и поздно узнают о долгах.
+  </div>
+  <div class="grid g4">
+    <div><div class="big" style="color:var(--red)">100%</div><p class="small muted" style="margin-top:8px">актива хотя бы раз пропускали важное из-за разрозненных каналов (40 из 40)</p></div>
+    <div><div class="big" style="color:var(--red)">80%</div><p class="small muted" style="margin-top:8px">студентов узнают об изменениях в расписании позже, чем хотели бы (64 из 80)</p></div>
+    <div><div class="big" style="color:var(--amber)">60%</div><p class="small muted" style="margin-top:8px">актива плохо видят картину задолженностей группы (24 из 40)</p></div>
+    <div><div class="big" style="color:var(--amber)">40%</div><p class="small muted" style="margin-top:8px">студентов лично узнавали о долге слишком поздно (32 из 80)</p></div>
+  </div>
+  <div class="src">Источник: собственный опрос (Яндекс.Формы, n = 120) и 5 глубинных интервью; методика — docs/research.md</div>
+  <div class="num">4</div>
+</section>
+
+<!-- 5. As Is → To Be -->
+<section class="slide">
+  <div class="kicker">As Is → To Be</div>
+  <h1>Что меняется в работе старосты</h1>
+  <table>
+    <tr><th style="width:24%">Задача</th><th style="width:38%">Сейчас</th><th>С «Мистером Модератором»</th></tr>
+    <tr><td><b>Донести объявление</b></td><td class="muted">Переслать в общий чат, где его пролистают</td><td>Напоминалка «Для всей группы» → 🔔 — бот пишет каждому лично</td></tr>
+    <tr><td><b>Напомнить о дедлайне</b></td><td class="muted">Вручную, накануне, если не забыл</td><td>Бот сам напоминает за 24 часа до срока — один раз, без спама</td></tr>
+    <tr><td><b>Контроль долгов</b></td><td class="muted">В голове или в заметках, по личкам</td><td>Реестр долгов группы, ежедневные напоминания должникам, утренняя сводка старосте</td></tr>
+    <tr><td><b>Материалы к сессии</b></td><td class="muted">Искать по перепискам и «Избранному»</td><td>Раздел «Материалы» и материалы, прикреплённые к экзаменам</td></tr>
+    <tr><td><b>Если староста выпал</b></td><td class="muted">Группа без информации</td><td>Роли зама и профорга: права делегируются, уведомления идут автоматически</td></tr>
+  </table>
+  <div class="num">5</div>
+</section>
+
+<!-- 6. Решение -->
+<section class="slide">
+  <div class="kicker">Решение</div>
+  <h1>Чат для коротких действий, мини-приложение — для работы со списками</h1>
+  <div class="grid g2" style="flex:1">
+    <div class="card white">
+      <span class="tag t-blue">Чат-бот</span>
+      <ul style="margin-top:16px">
+        <li><code>/creategroup</code> — группа за одну команду, создатель — староста</li>
+        <li>Ссылка-приглашение: одногруппник вступает в один переход (диплинк MAX)</li>
+        <li><code>/setchat</code> — привязка группового чата</li>
+        <li>Личные уведомления: дедлайн через 24 часа, просроченный долг, утренняя сводка старосте</li>
+        <li>Кнопка «Открыть приложение»</li>
+      </ul>
+    </div>
+    <div class="card white">
+      <span class="tag t-green">Мини-приложение</span>
+      <ul style="margin-top:16px">
+        <li>Дашборд группы: ближайшие напоминалки, долги, материалы</li>
+        <li>Напоминания, задания, долги и экзамены в одной ленте с фильтрами</li>
+        <li>«Напомнить всем» и отметка «выполнено»</li>
+        <li>Личная статистика студента по долгам</li>
+        <li>Роли: староста → зам → профорг → студент</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:18px">Возможности MAX: диплинк <code>?start=invite_…</code> для вступления, MAX Bridge (initData с проверкой подписи, кнопка «Назад»), отправка личных сообщений ботом.</p>
+  <div class="num">6</div>
+</section>
+
+<!-- 7. Сценарий -->
+<section class="slide">
+  <div class="kicker">Основной пользовательский сценарий</div>
+  <h1>От создания группы до уведомления у каждого — 5 шагов</h1>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h2>Создать группу</h2><p><code>/creategroup ИС-21</code> — староста получает код и ссылку-приглашение</p><div class="where t-blue tag">бот</div></div>
+    <div class="step"><div class="n">2</div><h2>Позвать группу</h2><p>Одногруппники переходят по ссылке или пишут <code>/join КОД</code></p><div class="where t-blue tag">бот</div></div>
+    <div class="step"><div class="n">3</div><h2>Поставить задачу</h2><p>Напоминалка, задание, экзамен или долг — в одной форме</p><div class="where t-green tag">мини-приложение</div></div>
+    <div class="step"><div class="n">4</div><h2>Напомнить всем</h2><p>Одна кнопка 🔔 — бот пишет каждому участнику лично</p><div class="where t-green tag">мини-приложение</div></div>
+    <div class="step"><div class="n">5</div><h2>Контроль</h2><p>Автонапоминания за 24 часа, должникам — ежедневно, старосте — утренняя сводка</p><div class="where t-amber tag">планировщик</div></div>
+  </div>
+  <div class="card" style="margin-top:26px">
+    <p><b>Результат для старосты:</b> информация доходит до каждого без ручной рассылки, долги и дедлайны группы видны на одном экране. <b>Для студента:</b> личное сообщение от бота вместо поиска объявления во флуде.</p>
+  </div>
+  <div class="num">7</div>
+</section>
+
+<!-- 8. Интерфейс -->
+<section class="slide">
+  <div class="kicker">Интерфейс мини-приложения</div>
+  <h1 style="margin-bottom:22px">Работает в мобильной и веб-версии MAX</h1>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="assets/dashboard.png" alt="Дашборд"></div><div class="cap">Дашборд<span>напоминалки и долги группы</span></div></div>
+    <div class="phone"><div class="frame"><img src="assets/reminders.png" alt="Напоминания"></div><div class="cap">Напоминания<span>всё в одной ленте, 🔔 — напомнить всем</span></div></div>
+    <div class="phone"><div class="frame"><img src="assets/stats.png" alt="Личная статистика"></div><div class="cap">Личная статистика<span>долги студента и сроки</span></div></div>
+    <div class="phone"><div class="frame"><img src="assets/roles.png" alt="Роли"></div><div class="cap">Роли<span>делегирование прав</span></div></div>
+  </div>
+  <div class="num">8</div>
+</section>
+
+<!-- 9. Эффект -->
+<section class="slide">
+  <div class="kicker">Ожидаемый эффект</div>
+  <h1>Что должно измениться и как это проверить</h1>
+  <table>
+    <tr><th style="width:34%">Показатель</th><th style="width:18%">Сейчас</th><th style="width:18%">Цель</th><th>Как измеряем</th></tr>
+    <tr><td><b>Время старосты на передачу информации</b></td><td class="muted">1,5–2 часа в день</td><td><span class="tag t-green">до 15 минут</span></td><td class="muted">Хронометраж у старост пилотных групп до и после</td></tr>
+    <tr><td><b>Задержка получения информации</b></td><td class="muted">часы</td><td><span class="tag t-green">минуты</span></td><td class="muted">Время от создания напоминалки до доставки (логи бота)</td></tr>
+    <tr><td><b>Доля пропущенных объявлений</b></td><td class="muted">100% актива пропускали</td><td><span class="tag t-green">≤ 10%</span></td><td class="muted">Опрос участников через 2 недели</td></tr>
+    <tr><td><b>Студенты, поздно узнавшие о долге</b></td><td class="muted">40%</td><td><span class="tag t-green">≤ 10%</span></td><td class="muted">Опрос + доля долгов, закрытых до дедлайна</td></tr>
+    <tr><td><b>Удержание старост</b></td><td class="muted">—</td><td><span class="tag t-blue">гипотеза</span></td><td class="muted">Доля групп, активных через 30 дней; NPS</td></tr>
+  </table>
+  <div class="src">Целевые значения — гипотезы команды, которые проверяются на пилоте.</div>
+  <div class="num">9</div>
+</section>
+
+<!-- 10. Архитектура -->
+<section class="slide">
+  <div class="kicker">Архитектура</div>
+  <h1 style="margin-bottom:34px">Один образ — три процесса, один HTTPS-адрес</h1>
+  <div class="arch">
+    <div class="stack">
+      <div class="box accent"><b>MAX</b><span>чат с ботом и мини-приложение (WebView)</span></div>
+      <div class="box"><b>HTTPS-туннель</b><span>ngrok / cloudflared → порт 8080</span></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="docker">
+      <div class="lbl">docker compose up</div>
+      <div class="box"><b>web</b><span>nginx: React 19 + TypeScript, прокси /api</span></div>
+      <div class="box"><b>api</b><span>FastAPI, проверка initData, права по ролям, миграции Alembic</span></div>
+      <div class="box"><b>bot</b><span>maxapi, long polling: группы, приглашения</span></div>
+      <div class="box"><b>scheduler</b><span>APScheduler: 24 ч до дедлайна, долги, сводка</span></div>
+      <div class="box db"><b>SQLite (volume)</b><span>переход на PostgreSQL — сменой DATABASE_URL</span></div>
+    </div>
+    <div class="arrow">↔</div>
+    <div class="box accent"><b>MAX Bot API</b><span>приём команд и отправка личных сообщений от бота, API и планировщика</span></div>
+  </div>
+  <div class="grid g3" style="margin-top:30px">
+    <p class="small muted"><b style="color:var(--ink)">Общие сервисы.</b> API, бот и планировщик вызывают одни и те же сервисы — правила едины во всех каналах.</p>
+    <p class="small muted"><b style="color:var(--ink)">Безопасность.</b> Подпись initData (HMAC-SHA256), доступ только к объектам своей группы, секреты — только в .env.</p>
+    <p class="small muted"><b style="color:var(--ink)">Воспроизводимость.</b> Зависимости закреплены, сборка с нуля — меньше минуты, OpenAPI 3.1 в репозитории.</p>
+  </div>
+  <div class="num">10</div>
+</section>
+
+<!-- 11. Данные -->
+<section class="slide">
+  <div class="kicker">Данные и интеграции</div>
+  <h1>Что настоящее, а что смоделировано в MVP</h1>
+  <table>
+    <tr><th style="width:28%">Данные / интеграция</th><th style="width:18%">Статус</th><th>Комментарий</th></tr>
+    <tr><td><b>MAX Bot API</b></td><td><span class="tag t-green">реальная</span></td><td class="muted">Команды бота, личные сообщения участникам</td></tr>
+    <tr><td><b>MAX Bridge, initData</b></td><td><span class="tag t-green">реальная</span></td><td class="muted">Пользователь определяется по подписанным данным MAX, подпись проверяется токеном бота</td></tr>
+    <tr><td><b>Группы, долги, напоминалки, экзамены</b></td><td><span class="tag t-green">вводят пользователи</span></td><td class="muted">Староста и участники заполняют сами; интеграции с ЭИОС вуза нет</td></tr>
+    <tr><td><b>Почта деканата и кафедр</b></td><td><span class="tag t-red">модель</span></td><td class="muted">Интерфейс и хранение ящиков без синхронизации IMAP — вне объёма MVP</td></tr>
+    <tr><td><b>Демо-режим</b></td><td><span class="tag t-amber">тестовые данные</span></td><td class="muted">Без MAX все запросы идут от автоматически созданного тестового старосты</td></tr>
+  </table>
+  <p class="small muted" style="margin-top:18px"><b style="color:var(--ink)">Персональные данные (152-ФЗ):</b> хранятся только id, имя и username из MAX, а также роль и группа. Телефоны, почты и оценки студентов не собираются. Данные группы видны только её участникам.</p>
+  <div class="num">11</div>
+</section>
+
+<!-- 12. Масштабирование -->
+<section class="slide">
+  <div class="kicker">Потенциал масштабирования</div>
+  <h1>Любой коллектив, где один человек доносит информацию до многих</h1>
+  <div class="grid g2" style="margin-bottom:22px">
+    <div class="card"><h2>Ядро — не меняется</h2><p class="muted small">Сценарий «создать → напомнить → проконтролировать», роли и права, модель «группа — участники — дедлайны», бот + мини-приложение, архитектура и планировщик уведомлений</p></div>
+    <div class="card"><h2>Переменная часть — адаптируется</h2><p class="muted small">Названия ролей (староста / классный руководитель / куратор), типы долгов и событий, расписание уведомлений, интеграции с ЭИОС, расписанием и почтой организации</p></div>
+  </div>
+  <table>
+    <tr><th style="width:6%">Этап</th><th style="width:30%">Куда</th><th>Что нужно для перехода</th></tr>
+    <tr><td><b>1</b></td><td>Группы одного факультета</td><td class="muted">Ничего — продукт готов; канал привлечения — профбюро и старостат</td></tr>
+    <tr><td><b>2</b></td><td>Весь вуз</td><td class="muted">Импорт расписания и списков групп из ЭИОС, почта деканата (IMAP), PostgreSQL</td></tr>
+    <tr><td><b>3</b></td><td>Другие вузы и колледжи СПО</td><td class="muted">Настройка ролей и типов событий; ~4 млн студентов в 3,2 тыс. колледжей</td></tr>
+    <tr><td><b>4</b></td><td>Школы, дополнительное образование</td><td class="muted">Роли «классный руководитель — родители — ученики», связка со «Сферумом» в MAX, согласия на обработку данных несовершеннолетних</td></tr>
+  </table>
+  <div class="src">Статистика по СПО — Минпросвещения России, 2026 (по материалам кейса).</div>
+  <div class="num">12</div>
+</section>
+
+<!-- 13. Пилот -->
+<section class="slide">
+  <div class="kicker">Пилотный запуск</div>
+  <h1>4 недели, 5–10 групп одного факультета</h1>
+  <div class="grid g3" style="flex:1">
+    <div class="card"><h2>Где и для кого</h2><p class="muted small"><span class="fill">⟨вуз, факультет⟩</span>, группы 1–2 курса — там старосты ещё выстраивают процессы. Старосты — первые пользователи, одногруппники приходят по их ссылке-приглашению.</p></div>
+    <div class="card"><h2>Как встраивается</h2><p class="muted small">Не заменяет общий чат и ЭИОС: староста переносит в бота только то, что требует внимания всех — дедлайны, переносы, долги. Первое знакомство — через профбюро и собрание старост.</p></div>
+    <div class="card"><h2>Что нужно</h2><p class="muted small">Сервер или облако РФ с HTTPS-доменом, токен бота MAX, контакт в профбюро или деканате, 1 человек поддержки на время пилота.</p></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card white"><h2>Метрики пилота</h2><ul class="small"><li class="small">Доля приглашённых, вступивших в группу в боте</li><li class="small">Групп с активным старостой через 2 и 4 недели</li><li class="small">Время старосты на рассылки: до / после</li><li class="small">Доля долгов, закрытых до дедлайна</li></ul></div>
+    <div class="card white"><h2>Следующие шаги</h2><ul class="small"><li class="small">Импорт расписания и списков групп из ЭИОС</li><li class="small">Реальная синхронизация почты деканата</li><li class="small">Запуск на весь факультет через старостат</li></ul></div>
+  </div>
+  <div class="num">13</div>
+</section>
+
+<!-- 14. Ограничения -->
+<section class="slide">
+  <div class="kicker">Ограничения, риски, допущения</div>
+  <h1>Что мы знаем о границах решения</h1>
+  <div class="grid g3" style="flex:1">
+    <div class="card"><span class="tag t-amber">Ограничения MVP</span><ul class="small" style="margin-top:14px"><li class="small">Почта — без синхронизации с серверами</li><li class="small">Материалы добавляются ссылками, без загрузки файлов</li><li class="small">Нет интеграции с ЭИОС: долги и расписание вводятся вручную</li><li class="small">SQLite — один экземпляр API</li></ul></div>
+    <div class="card"><span class="tag t-red">Риски</span><ul class="small" style="margin-top:14px"><li class="small">Не все студенты группы используют MAX — часть не получит уведомления</li><li class="small">Староста не поддерживает актуальность данных — ценность падает</li><li class="small">Избыток уведомлений → отписка; защита — однократные уведомления и лимит «раз в сутки»</li></ul></div>
+    <div class="card"><span class="tag t-blue">Допущения</span><ul class="small" style="margin-top:14px"><li class="small">Староста готов тратить несколько минут на внесение дедлайнов и долгов</li><li class="small">Личное сообщение от бота замечают лучше, чем пост в общем чате</li><li class="small">Результаты опроса (n = 120) переносимы на другие вузы — проверяется на пилоте</li></ul></div>
+  </div>
+  <div class="num">14</div>
+</section>
+
+<!-- 15. Источники -->
+<section class="slide">
+  <div class="kicker">Источники</div>
+  <h1>Использованные материалы</h1>
+  <ul style="max-width:1050px">
+    <li>Собственное исследование команды: 5 глубинных интервью с активом групп, онлайн-опрос n = 120 (40 — актив, 80 — студенты 1–4 курсов). Анкета: https://forms.yandex.ru/u/6ab7d93a84227cb5ab3ce17a. Методика и результаты — <code>docs/research.md</code></li>
+    <li>Кейс трека «Образовательные решения»: статистика Минпросвещения России (2025, 2026) и Единого годового отчёта VK за 2025 год</li>
+    <li>Документация MAX для разработчиков: чат-боты, мини-приложения, MAX Bridge, валидация initData — https://dev.max.ru/docs</li>
+    <li>Федеральный закон № 273-ФЗ «Об образовании в Российской Федерации»</li>
+    <li>Федеральный закон № 152-ФЗ «О персональных данных»</li>
+    <li>Техническая документация решения: <code>README.md</code>, <code>docs/architecture.md</code>, <code>docs/api.md</code>, <code>docs/openapi.yaml</code></li>
+  </ul>
+  <div class="num">15</div>
+</section>
+
+</body>
+</html>

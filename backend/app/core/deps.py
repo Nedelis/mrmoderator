@@ -6,13 +6,13 @@ from app.core.config import SETTINGS
 from app.core.database import get_db
 from app.core.roles import has_permission
 from app.core.security import validate_init_data
-from app.models.user import User
 from app.models.group import Group
-
+from app.models.user import User
 
 # =============================================================================
 # Получение текущего пользователя
 # =============================================================================
+
 
 async def _get_or_create_test_user(db: AsyncSession) -> User:
     TEST_MAX_ID = "test_user_001"
@@ -21,16 +21,12 @@ async def _get_or_create_test_user(db: AsyncSession) -> User:
     TEST_INVITE_CODE = "TESTINVITE"
 
     # 1. Ищем группу по ID
-    group_result = await db.execute(
-        select(Group).where(Group.id == TEST_GROUP_ID)
-    )
+    group_result = await db.execute(select(Group).where(Group.id == TEST_GROUP_ID))
     group = group_result.scalar_one_or_none()
 
     # 2. Если нет — ищем по invite_code (на случай, если ID другой, но код тот же)
     if group is None:
-        group_result = await db.execute(
-            select(Group).where(Group.invite_code == TEST_INVITE_CODE)
-        )
+        group_result = await db.execute(select(Group).where(Group.invite_code == TEST_INVITE_CODE))
         group = group_result.scalar_one_or_none()
 
     # 3. Если всё ещё нет — создаём
@@ -74,7 +70,7 @@ async def _get_or_create_user_from_init_data(
     """
     Реальная логика: валидирует initData от MAX и возвращает/создаёт пользователя.
     """
-    data = validate_init_data(init_data_raw)
+    data = await validate_init_data(init_data_raw)
     max_user_id = str(data["user"].get("id", ""))
 
     if not max_user_id:
@@ -115,7 +111,9 @@ async def get_current_user(
     if not x_max_init_data:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
-            detail={"error": {"code": "no_init_data", "message": "Заголовок X-Max-Init-Data обязателен"}},
+            detail={
+                "error": {"code": "no_init_data", "message": "Заголовок X-Max-Init-Data обязателен"}
+            },
         )
 
     return await _get_or_create_user_from_init_data(db, x_max_init_data)
@@ -125,12 +123,16 @@ async def get_current_user(
 # Проверка прав
 # =============================================================================
 
+
 def require(permission: str):
     async def checker(user: User = Depends(get_current_user)) -> User:
         if not has_permission(user.role_id, permission):
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
-                detail={"error": {"code": "permission_denied", "message": f"Нет права {permission}"}},
+                detail={
+                    "error": {"code": "permission_denied", "message": f"Нет права {permission}"}
+                },
             )
         return user
+
     return checker

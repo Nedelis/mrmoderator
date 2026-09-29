@@ -10,7 +10,7 @@ export function useAsyncAction() {
     const [pending, setPending] = useState(false);
 
     const run = useCallback(
-        async <T,>(
+        async <T>(
             fn: () => Promise<T>,
             options?: {
                 successMessage?: string;

@@ -13,11 +13,15 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN useradd --create-home --uid 1000 app && chown -R app:app /app
+# /app/data — точка монтирования volume с SQLite; права задаются здесь,
+# чтобы новый volume унаследовал владельца app
+RUN useradd --create-home --uid 1000 app \
+    && mkdir -p /app/data \
+    && chown -R app:app /app
 USER app
 
 EXPOSE 8000
 
-# По умолчанию поднимается API; бот запускается из того же образа
-# с командой `python -m app.bot.main` (см. docker-compose.yml)
+# По умолчанию: миграции + API. Бот и планировщик запускаются из того же образа
+# командами `python -m app.bot.main` и `python -m app.scheduler` (см. docker-compose.yml)
 CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
