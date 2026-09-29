@@ -122,6 +122,10 @@ const ROLES: Role[] = [
     },
 ];
 
+// ============================================================
+// ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ
+// ============================================================
+
 const ME: CurrentUser = {
     id: '1',
     firstName: 'Иван',
@@ -132,23 +136,38 @@ const ME: CurrentUser = {
     roleId: 'starosta',
 };
 
+// ============================================================
+// СТУДЕНТЫ (12 человек)
+// ============================================================
+
 let STUDENTS: Student[] = [
-    { id: '1', name: 'Иванов Д.', role: 'student' },
-    { id: '2', name: 'Петрова М.', role: 'student' },
-    { id: '3', name: 'Сидоров А.', role: 'proforg' },
-    { id: '4', name: 'Кузнецова М.', role: 'student' },
-    { id: '5', name: 'Иван Петров', role: 'starosta' },
+    { id: '1', name: 'Иван Петров', role: 'starosta' },
+    { id: '2', name: 'Иванов Д.', role: 'student' },
+    { id: '3', name: 'Петрова М.', role: 'student' },
+    { id: '4', name: 'Сидоров А.', role: 'proforg' },
+    { id: '5', name: 'Кузнецова М.', role: 'student' },
+    { id: '6', name: 'Смирнов К.', role: 'student' },
+    { id: '7', name: 'Волкова Е.', role: 'zam' },
+    { id: '8', name: 'Морозов П.', role: 'student' },
+    { id: '9', name: 'Лебедева А.', role: 'student' },
+    { id: '10', name: 'Новиков С.', role: 'student' },
+    { id: '11', name: 'Фёдорова Н.', role: 'student' },
+    { id: '12', name: 'Козлов Д.', role: 'student' },
 ];
+
+// ============================================================
+// НАПОМИНАНИЯ (8 штук)
+// ============================================================
 
 let REMINDERS: Reminder[] = [
     {
         id: '1',
         title: 'Сдать лабу по ТРПО',
-        description: 'Загрузка отчёта в Moodle',
+        description: 'Загрузка отчёта в Moodle, тема 3',
         deadline: `${isoPlusDays(0)}T23:59`,
         type: 'group',
         priority: 'high',
-        completedBy: [],
+        completedBy: ['2', '3'],
     },
     {
         id: '2',
@@ -166,15 +185,65 @@ let REMINDERS: Reminder[] = [
         deadline: `${isoPlusDays(3)}T23:59`,
         type: 'group',
         priority: 'high',
-        targetStudentIds: ['3', '4'],
+        targetStudentIds: ['4', '5'],
+        completedBy: ['5'],
+    },
+    {
+        id: '4',
+        title: 'Оплатить общежитие',
+        description: 'До конца месяца, касса №3',
+        deadline: `${isoPlusDays(5)}T18:00`,
+        type: 'group',
+        priority: 'medium',
+        completedBy: [],
+    },
+    {
+        id: '5',
+        title: 'Подготовить вопросы к семинару',
+        description: 'Тема: «Архитектура микросервисов»',
+        deadline: `${isoPlusDays(2)}T20:00`,
+        type: 'group',
+        priority: 'low',
+        completedBy: ['6', '7', '8'],
+    },
+    {
+        id: '6',
+        title: 'Купить билеты на конференцию',
+        description: 'Всем участникам с докладами',
+        deadline: `${isoPlusDays(7)}T12:00`,
+        type: 'group',
+        priority: 'medium',
+        targetStudentIds: ['1', '7', '9'],
+        completedBy: [],
+    },
+    {
+        id: '7',
+        title: 'Дописать лабораторную №4 по физике',
+        description: 'Оформление по ГОСТ, проверка у Петровой Е.С.',
+        deadline: `${isoPlusDays(-1)}T23:59`,
+        type: 'personal',
+        priority: 'high',
+        completedBy: [],
+    },
+    {
+        id: '8',
+        title: 'Собрать подписи для профкома',
+        description: 'Список на столе у профорга',
+        deadline: `${isoPlusDays(4)}T16:00`,
+        type: 'group',
+        priority: 'low',
         completedBy: [],
     },
 ];
 
+// ============================================================
+// ДОЛГИ (6 штук)
+// ============================================================
+
 let DEBTS: Debt[] = [
     {
         id: '1',
-        studentId: '3',
+        studentId: '4',
         studentName: 'Сидоров А.',
         subject: 'Матанализ',
         type: 'Экзамен',
@@ -183,7 +252,7 @@ let DEBTS: Debt[] = [
     },
     {
         id: '2',
-        studentId: '4',
+        studentId: '5',
         studentName: 'Кузнецова М.',
         subject: 'Физика',
         type: 'Зачёт',
@@ -192,14 +261,45 @@ let DEBTS: Debt[] = [
     },
     {
         id: '3',
-        studentId: '1',
+        studentId: '2',
         studentName: 'Иванов Д.',
         subject: 'ТРПО',
         type: 'Лаба',
         deadline: isoPlusDays(-15),
         status: 'closed',
     },
+    {
+        id: '4',
+        studentId: '8',
+        studentName: 'Морозов П.',
+        subject: 'Философия',
+        type: 'Реферат',
+        deadline: isoPlusDays(-7),
+        status: 'overdue',
+    },
+    {
+        id: '5',
+        studentId: '10',
+        studentName: 'Новиков С.',
+        subject: 'Английский язык',
+        type: 'Зачёт',
+        deadline: isoPlusDays(2),
+        status: 'active',
+    },
+    {
+        id: '6',
+        studentId: '12',
+        studentName: 'Козлов Д.',
+        subject: 'Теория вероятностей',
+        type: 'Контрольная',
+        deadline: isoPlusDays(10),
+        status: 'active',
+    },
 ];
+
+// ============================================================
+// ПОЧТА (6 писем)
+// ============================================================
 
 let MAIL: MailItem[] = [
     {
@@ -226,10 +326,44 @@ let MAIL: MailItem[] = [
         source: 'prepod',
         autoForward: false,
     },
+    {
+        id: '4',
+        from: 'Профком МГТУ',
+        subject: 'Путёвки в санаторий-профилакторий',
+        preview: 'Открыта запись на летний период. Количество мест ограничено...',
+        source: 'profkom',
+        autoForward: false,
+    },
+    {
+        id: '5',
+        from: 'Деканат ИУ7',
+        subject: 'Собрание по вопросам стипендии',
+        preview: 'В среду в 17:00 в ауд. 404 состоится собрание...',
+        source: 'dean',
+        autoForward: true,
+    },
+    {
+        id: '6',
+        from: 'Иванов П.П.',
+        subject: 'Консультация перед зачётом',
+        preview: 'Проведу в пятницу в 16:00, ауд. 505. Приходить со своими вопросами...',
+        source: 'prepod',
+        autoForward: false,
+    },
 ];
 
+// ============================================================
+// ПОЧТОВЫЕ ЯЩИКИ (4 штуки)
+// ============================================================
+
 let MAILBOXES: Mailbox[] = [
-    { id: 'dean', email: 'dean@iu7.ru', label: 'Деканат', connected: true, autoForward: true },
+    {
+        id: 'dean',
+        email: 'dean@iu7.ru',
+        label: 'Деканат',
+        connected: true,
+        autoForward: true,
+    },
     {
         id: 'kafedra',
         email: 'kaf@iu7.ru',
@@ -244,7 +378,18 @@ let MAILBOXES: Mailbox[] = [
         connected: false,
         autoForward: false,
     },
+    {
+        id: 'prepod',
+        email: 'smi@iu7.ru',
+        label: 'Смирнов А.В.',
+        connected: true,
+        autoForward: false,
+    },
 ];
+
+// ============================================================
+// МАТЕРИАЛЫ (7 штук)
+// ============================================================
 
 let MATERIALS: Material[] = [
     {
@@ -263,7 +408,51 @@ let MATERIALS: Material[] = [
         createdAt: '3 дня назад',
         maxUrl: 'https://max.ru/c/def456',
     },
+    {
+        id: '3',
+        title: 'Методичка по лабораторным работам',
+        author: 'Иванов П.П.',
+        type: 'pdf',
+        createdAt: 'неделю назад',
+        maxUrl: 'https://max.ru/c/ghi789',
+    },
+    {
+        id: '4',
+        title: 'Шпаргалка по матанализу',
+        author: 'Сидоров А.',
+        type: 'pdf',
+        createdAt: '5 дней назад',
+        maxUrl: 'https://max.ru/c/jkl012',
+    },
+    {
+        id: '5',
+        title: 'Запись консультации по ТРПО',
+        author: 'Смирнов А.В.',
+        type: 'video',
+        createdAt: 'вчера',
+        maxUrl: 'https://max.ru/c/mno345',
+    },
+    {
+        id: '6',
+        title: 'Список литературы к экзамену',
+        author: 'Петрова Е.С.',
+        type: 'pdf',
+        createdAt: 'сегодня',
+        maxUrl: 'https://max.ru/c/pqr678',
+    },
+    {
+        id: '7',
+        title: 'Разбор задач к контрольной',
+        author: 'Иван Петров',
+        type: 'pdf',
+        createdAt: '4 часа назад',
+        maxUrl: 'https://max.ru/c/stu901',
+    },
 ];
+
+// ============================================================
+// ЭКЗАМЕНЫ И КОНСУЛЬТАЦИИ (6 штук)
+// ============================================================
 
 let EXAMS: Exam[] = [
     {
@@ -323,6 +512,17 @@ let EXAMS: Exam[] = [
         ],
     },
     {
+        id: 'e4',
+        subject: 'Философия',
+        date: `${isoPlusDays(18)}T09:00`,
+        time: '09:00',
+        room: '210',
+        teacher: 'Кузнецов В.Д.',
+        icon: '📖',
+        type: 'exam',
+        materials: [],
+    },
+    {
         id: 'c1',
         subject: 'Матанализ',
         date: `${isoPlusDays(6)}T15:00`,
@@ -345,6 +545,10 @@ let EXAMS: Exam[] = [
         materials: [],
     },
 ];
+
+// ============================================================
+// ЗАДАНИЯ (8 штук)
+// ============================================================
 
 let TASKS: Task[] = [
     {
@@ -379,9 +583,49 @@ let TASKS: Task[] = [
         type: 'personal',
         status: 'overdue',
     },
+    {
+        id: 't5',
+        title: 'Презентация к семинару',
+        description: 'Тема на выбор, 10–15 слайдов',
+        deadline: isoPlusDays(2),
+        type: 'group',
+        status: 'soon',
+    },
+    {
+        id: 't6',
+        title: 'Конспект лекции по философии',
+        description: 'Тема: «Античная философия»',
+        deadline: isoPlusDays(1),
+        type: 'personal',
+        status: 'soon',
+    },
+    {
+        id: 't7',
+        title: 'Курсовая работа (черновик)',
+        description: 'Сдать научруку на проверку',
+        deadline: isoPlusDays(14),
+        type: 'personal',
+        status: 'active',
+    },
+    {
+        id: 't8',
+        title: 'Сдать нормативы по физкультуре',
+        description: 'Бег 100м, подтягивания, пресс',
+        deadline: isoPlusDays(5),
+        type: 'group',
+        status: 'active',
+    },
 ];
 
-const delay = (ms = 400) => new Promise(r => setTimeout(r, ms));
+// ============================================================
+// УТИЛИТЫ
+// ============================================================
+
+const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
+
+// ============================================================
+// API
+// ============================================================
 
 export const mockApi = {
     // ===== ЧТЕНИЕ =====
@@ -403,6 +647,7 @@ export const mockApi = {
         studentsCount: STUDENTS.length,
     }),
 
+    // ===== НАПОМИНАНИЯ =====
     async createReminder(payload: {
         title: string;
         description: string;
@@ -426,7 +671,7 @@ export const mockApi = {
                 payload.scope === 'selected' && payload.studentIds?.length
                     ? payload.studentIds
                     : undefined,
-            completedBy: [], // ← ДОБАВИТЬ
+            completedBy: [],
         };
         REMINDERS = [reminder, ...REMINDERS];
         return reminder;
@@ -434,26 +679,19 @@ export const mockApi = {
 
     async updateReminder(id: string, payload: Partial<Reminder>) {
         await delay();
-        REMINDERS = REMINDERS.map(r => (r.id === id ? { ...r, ...payload } : r));
+        REMINDERS = REMINDERS.map((r) => (r.id === id ? { ...r, ...payload } : r));
         return { ok: true, id, ...payload };
     },
 
     async deleteReminder(id: string) {
         await delay();
-        REMINDERS = REMINDERS.filter(r => r.id !== id);
+        REMINDERS = REMINDERS.filter((r) => r.id !== id);
         return { ok: true, id };
     },
 
-    /**
-     * Отправка напоминания.
-     * Студенты, у которых это напоминание уже отмечено выполненным,
-     * уведомление НЕ получают.
-     * Если напоминание с targetStudentIds — отправляем только им
-     * (минус выполненные).
-     */
     async remindReminder(id: string) {
         await delay(700);
-        const target = REMINDERS.find(r => r.id === id);
+        const target = REMINDERS.find((r) => r.id === id);
         if (!target) throw new Error('Напоминалка не найдена');
 
         const completed = new Set(target.completedBy ?? []);
@@ -461,10 +699,10 @@ export const mockApi = {
         let recipients: Student[];
         if (target.targetStudentIds?.length) {
             recipients = STUDENTS.filter(
-                s => target.targetStudentIds!.includes(s.id) && !completed.has(s.id)
+                (s) => target.targetStudentIds!.includes(s.id) && !completed.has(s.id)
             );
         } else {
-            recipients = STUDENTS.filter(s => !completed.has(s.id));
+            recipients = STUDENTS.filter((s) => !completed.has(s.id));
         }
 
         return {
@@ -476,14 +714,10 @@ export const mockApi = {
         };
     },
 
-    /**
-     * Отметить/снять напоминание как выполненное для текущего пользователя.
-     * На бэке — добавить/удалить user.id из списка completedBy.
-     */
     async toggleReminderCompleted(id: string, completed: boolean) {
         await delay();
         const userId = ME.id;
-        REMINDERS = REMINDERS.map(r => {
+        REMINDERS = REMINDERS.map((r) => {
             if (r.id !== id) return r;
             const set = new Set(r.completedBy ?? []);
             if (completed) set.add(userId);
@@ -504,7 +738,9 @@ export const mockApi = {
         await delay();
         const studentId = payload.studentId ?? ME.id;
         const studentName =
-            payload.studentName ?? STUDENTS.find(s => s.id === studentId)?.name ?? '';
+            payload.studentName ??
+            STUDENTS.find((s) => s.id === studentId)?.name ??
+            '';
         const debt: Debt = {
             id: `debt-${Date.now()}`,
             studentId,
@@ -529,13 +765,13 @@ export const mockApi = {
         }>
     ): Promise<{ ok: boolean }> {
         await delay();
-        DEBTS = DEBTS.map(d => (d.id === id ? { ...d, ...payload } : d));
+        DEBTS = DEBTS.map((d) => (d.id === id ? { ...d, ...payload } : d));
         return { ok: true };
     },
 
     async deleteDebt(id: string): Promise<{ ok: boolean }> {
         await delay();
-        DEBTS = DEBTS.filter(d => d.id !== id);
+        DEBTS = DEBTS.filter((d) => d.id !== id);
         return { ok: true };
     },
 
@@ -547,26 +783,30 @@ export const mockApi = {
         type: 'group' | 'personal';
     }): Promise<Task> {
         await delay();
-        const task: Task = { id: `task-${Date.now()}`, ...payload, status: 'active' };
+        const task: Task = {
+            id: `task-${Date.now()}`,
+            ...payload,
+            status: 'active',
+        };
         TASKS = [task, ...TASKS];
         return task;
     },
 
     async updateTask(id: string, payload: Partial<Task>) {
         await delay();
-        TASKS = TASKS.map(t => (t.id === id ? { ...t, ...payload } : t));
+        TASKS = TASKS.map((t) => (t.id === id ? { ...t, ...payload } : t));
         return { ok: true, id, ...payload };
     },
 
     async deleteTask(id: string) {
         await delay();
-        TASKS = TASKS.filter(t => t.id !== id);
+        TASKS = TASKS.filter((t) => t.id !== id);
         return { ok: true, id };
     },
 
     async remindTask(id: string) {
         await delay(700);
-        const target = TASKS.find(t => t.id === id);
+        const target = TASKS.find((t) => t.id === id);
         return {
             ok: true,
             id,
@@ -577,11 +817,11 @@ export const mockApi = {
     },
 
     // ===== МАТЕРИАЛЫ =====
-    /**
-     * Материалы добавляются только ссылкой на сообщение в MAX.
-     * Файл лежит в чате, бот перешлёт его в группу.
-     */
-    async uploadMaterial(payload: { title: string; type: string; url: string }): Promise<Material> {
+    async uploadMaterial(payload: {
+        title: string;
+        type: string;
+        url: string;
+    }): Promise<Material> {
         await delay();
         const material: Material = {
             id: `mat-${Date.now()}`,
@@ -597,13 +837,13 @@ export const mockApi = {
 
     async deleteMaterial(id: string) {
         await delay();
-        MATERIALS = MATERIALS.filter(m => m.id !== id);
+        MATERIALS = MATERIALS.filter((m) => m.id !== id);
         return { ok: true, id };
     },
 
     async downloadMaterial(id: string) {
         await delay();
-        const m = MATERIALS.find(x => x.id === id);
+        const m = MATERIALS.find((x) => x.id === id);
         return { ok: true, id, maxUrl: m?.maxUrl };
     },
 
@@ -647,16 +887,20 @@ export const mockApi = {
             addedBy: `${ME.firstName} ${ME.lastName}`,
             addedAt: 'Только что',
         };
-        EXAMS = EXAMS.map(e =>
-            e.id === payload.examId ? { ...e, materials: [...e.materials, material] } : e
+        EXAMS = EXAMS.map((e) =>
+            e.id === payload.examId
+                ? { ...e, materials: [...e.materials, material] }
+                : e
         );
         return material;
     },
 
     async deleteExamMaterial(examId: string, materialId: string) {
         await delay();
-        EXAMS = EXAMS.map(e =>
-            e.id === examId ? { ...e, materials: e.materials.filter(m => m.id !== materialId) } : e
+        EXAMS = EXAMS.map((e) =>
+            e.id === examId
+                ? { ...e, materials: e.materials.filter((m) => m.id !== materialId) }
+                : e
         );
         return { ok: true, examId, materialId };
     },
@@ -673,12 +917,18 @@ export const mockApi = {
     },
 
     async configureMailboxes(payload: {
-        mailboxes: Array<{ id: string; connected: boolean; autoForward: boolean }>;
+        mailboxes: Array<{
+            id: string;
+            connected: boolean;
+            autoForward: boolean;
+        }>;
     }) {
         await delay();
-        MAILBOXES = MAILBOXES.map(m => {
-            const upd = payload.mailboxes.find(u => u.id === m.id);
-            return upd ? { ...m, connected: upd.connected, autoForward: upd.autoForward } : m;
+        MAILBOXES = MAILBOXES.map((m) => {
+            const upd = payload.mailboxes.find((u) => u.id === m.id);
+            return upd
+                ? { ...m, connected: upd.connected, autoForward: upd.autoForward }
+                : m;
         });
         return { ok: true };
     },
@@ -702,48 +952,46 @@ export const mockApi = {
 
     async removeMailbox(id: string) {
         await delay();
-        MAILBOXES = MAILBOXES.filter(m => m.id !== id);
+        MAILBOXES = MAILBOXES.filter((m) => m.id !== id);
         return { ok: true, id };
     },
 
     // ===== РОЛИ / ГРУППА =====
     async assignRole(payload: { studentId: string; roleId: string }) {
         await delay();
-        STUDENTS = STUDENTS.map(s =>
+        STUDENTS = STUDENTS.map((s) =>
             s.id === payload.studentId ? { ...s, role: payload.roleId } : s
         );
-        return { ok: true, ...payload, assignedAt: new Date().toISOString() };
+        return {
+            ok: true,
+            ...payload,
+            assignedAt: new Date().toISOString(),
+        };
     },
 
     async renameMember(studentId: string, newName: string) {
         await delay();
-        const oldName = STUDENTS.find(s => s.id === studentId)?.name ?? '';
-        STUDENTS = STUDENTS.map(s => (s.id === studentId ? { ...s, name: newName } : s));
+        const oldName = STUDENTS.find((s) => s.id === studentId)?.name ?? '';
+        STUDENTS = STUDENTS.map((s) =>
+            s.id === studentId ? { ...s, name: newName } : s
+        );
         return { ok: true, oldName, newName };
     },
 
     async removeGroupMember(studentId: string) {
         await delay();
-        STUDENTS = STUDENTS.filter(s => s.id !== studentId);
+        STUDENTS = STUDENTS.filter((s) => s.id !== studentId);
         return { ok: true, removed: studentId };
     },
 
-    /**
-     * Покинуть группу. Удаляем пользователя из списка, сбрасываем группу.
-     * После вызова — reload() в контексте вернёт юзера без группы,
-     * и App покажет страницу 504.
-     */
     async leaveGroup() {
         await delay();
         const myName = `${ME.firstName} ${ME.lastName}`;
-
-        // Убираем себя из списка студентов
-        STUDENTS = STUDENTS.filter(s => s.id !== ME.id && s.name !== myName);
-
-        // Сбрасываем группу у текущего юзера
+        STUDENTS = STUDENTS.filter(
+            (s) => s.id !== ME.id && s.name !== myName
+        );
         ME.groupId = '';
         ME.groupName = '';
-
         return { ok: true };
     },
 };

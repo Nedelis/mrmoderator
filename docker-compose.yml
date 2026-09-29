@@ -5,12 +5,13 @@ x-backend: &backend
   env_file: .env
   volumes:
     - sqlite_data:/app/data
+  environment:
+    DATABASE_URL: sqlite+aiosqlite:////app/data/mrmod.db
+    USE_TEST_DATA: ${USE_TEST_DATA:-false}
 
 services:
   api:
     <<: *backend
-    environment:
-      DATABASE_URL: sqlite+aiosqlite:////app/data/mrmod.db
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 10s
@@ -22,8 +23,6 @@ services:
 
   bot:
     <<: *backend
-    environment:
-      DATABASE_URL: sqlite+aiosqlite:////app/data/mrmod.db
     command: ["python", "-m", "app.bot.main"]
     depends_on:
       api:
@@ -31,8 +30,6 @@ services:
 
   scheduler:
     <<: *backend
-    environment:
-      DATABASE_URL: sqlite+aiosqlite:////app/data/mrmod.db
     command: ["python", "-m", "app.scheduler"]
     depends_on:
       api:

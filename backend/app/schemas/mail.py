@@ -4,15 +4,13 @@ from pydantic import Field
 
 from app.schemas.base import BaseSchema
 
-MailSource = Literal["dean", "kafedra", "prepod"]
-
 
 class MailItem(BaseSchema):
     id: str
     from_: str = Field(alias="from")
     subject: str
     preview: str
-    source: MailSource
+    source: str
     auto_forward: bool
 
 

@@ -1,9 +1,9 @@
 from typing import Awaitable, Callable
 
-_send_message_fn: Callable[[str, str], Awaitable[bool]] | None = None
+_send_message_fn: Callable[[int, str], Awaitable[bool]] | None = None
 
 
-def register_sender(fn: Callable[[str, str], Awaitable[bool]]) -> None:
+def register_sender(fn: Callable[[int, str], Awaitable[bool]]) -> None:
     global _send_message_fn
     _send_message_fn = fn
 

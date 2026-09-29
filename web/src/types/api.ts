@@ -61,7 +61,7 @@ export interface MailItem {
     from: string;
     subject: string;
     preview: string;
-    source: 'dean' | 'kafedra' | 'prepod';
+    source: string;
     autoForward: boolean;
 }
 

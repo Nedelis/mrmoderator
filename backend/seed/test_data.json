@@ -1,0 +1,693 @@
+{
+  "groups": [
+    {
+      "id": "iu7-42b",
+      "name": "ИУ7-42Б",
+      "course": 2,
+      "semester": 4,
+      "chat_id": null,
+      "invite_code": "IU7TEST"
+    }
+  ],
+
+  "users": [
+    {
+      "id": 1,
+      "max_user_id": "test_user_001",
+      "first_name": "Иван",
+      "last_name": "Петров",
+      "username": "ivan_petrov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "starosta",
+      "display_name": "Иван Петров"
+    },
+    {
+      "id": 2,
+      "max_user_id": "434583486",
+      "first_name": "Дмитрий",
+      "last_name": "Иванов",
+      "username": "dmitry_ivanov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Иванов Д."
+    },
+    {
+      "id": 3,
+      "max_user_id": "434583487",
+      "first_name": "Мария",
+      "last_name": "Петрова",
+      "username": "maria_petrova",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Петрова М."
+    },
+    {
+      "id": 4,
+      "max_user_id": "434583488",
+      "first_name": "Алексей",
+      "last_name": "Сидоров",
+      "username": "alexey_sidorov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "proforg",
+      "display_name": "Сидоров А."
+    },
+    {
+      "id": 5,
+      "max_user_id": "434583489",
+      "first_name": "Мария",
+      "last_name": "Кузнецова",
+      "username": "maria_kuznetsova",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Кузнецова М."
+    },
+    {
+      "id": 6,
+      "max_user_id": "434583490",
+      "first_name": "Кирилл",
+      "last_name": "Смирнов",
+      "username": "kirill_smirnov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Смирнов К."
+    },
+    {
+      "id": 7,
+      "max_user_id": "434583491",
+      "first_name": "Елена",
+      "last_name": "Волкова",
+      "username": "elena_volkova",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "zam",
+      "display_name": "Волкова Е."
+    },
+    {
+      "id": 8,
+      "max_user_id": "434583492",
+      "first_name": "Павел",
+      "last_name": "Морозов",
+      "username": "pavel_morozov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Морозов П."
+    },
+    {
+      "id": 9,
+      "max_user_id": "434583493",
+      "first_name": "Анна",
+      "last_name": "Лебедева",
+      "username": "anna_lebedeeva",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Лебедева А."
+    },
+    {
+      "id": 10,
+      "max_user_id": "434583494",
+      "first_name": "Сергей",
+      "last_name": "Новиков",
+      "username": "sergey_novikov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Новиков С."
+    },
+    {
+      "id": 11,
+      "max_user_id": "434583495",
+      "first_name": "Наталья",
+      "last_name": "Фёдорова",
+      "username": "natalya_fedorova",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Фёдорова Н."
+    },
+    {
+      "id": 12,
+      "max_user_id": "434583496",
+      "first_name": "Дмитрий",
+      "last_name": "Козлов",
+      "username": "dmitry_kozlov",
+      "photo_url": null,
+      "group_id": "iu7-42b",
+      "role_id": "student",
+      "display_name": "Козлов Д."
+    }
+  ],
+
+  "reminders": [
+    {
+      "id": 1,
+      "title": "Сдать лабу по ТРПО",
+      "description": "Загрузка отчёта в Moodle, тема 3",
+      "deadline": "2026-09-30T23:59:00",
+      "type": "group",
+      "priority": "high",
+      "author_id": 1,
+      "group_id": "iu7-42b",
+      "target_student_ids": [],
+      "completed_by": ["2", "3"]
+    },
+    {
+      "id": 2,
+      "title": "Консультация перед экзаменом",
+      "description": "Ауд. 412, преподаватель Смирнов А.В.",
+      "deadline": "2026-10-01T14:30:00",
+      "type": "personal",
+      "priority": "medium",
+      "author_id": 1,
+      "group_id": "iu7-42b",
+      "target_student_ids": [],
+      "completed_by": []
+    },
+    {
+      "id": 3,
+      "title": "Дописать реферат",
+      "description": "Только для Сидорова и Кузнецовой",
+      "deadline": "2026-10-03T23:59:00",
+      "type": "group",
+      "priority": "high",
+      "author_id": 1,
+      "group_id": "iu7-42b",
+      "target_student_ids": ["4", "5"],
+      "completed_by": ["5"]
+    },
+    {
+      "id": 4,
+      "title": "Оплатить общежитие",
+      "description": "До конца месяца, касса №3",
+      "deadline": "2026-10-05T18:00:00",
+      "type": "group",
+      "priority": "medium",
+      "author_id": 1,
+      "group_id": "iu7-42b",
+      "target_student_ids": [],
+      "completed_by": []
+    },
+    {
+      "id": 5,
+      "title": "Подготовить вопросы к семинару",
+      "description": "Тема: «Архитектура микросервисов»",
+      "deadline": "2026-10-02T20:00:00",
+      "type": "group",
+      "priority": "low",
+      "author_id": 7,
+      "group_id": "iu7-42b",
+      "target_student_ids": [],
+      "completed_by": ["6", "7", "8"]
+    },
+    {
+      "id": 6,
+      "title": "Купить билеты на конференцию",
+      "description": "Всем участникам с докладами",
+      "deadline": "2026-10-07T12:00:00",
+      "type": "group",
+      "priority": "medium",
+      "author_id": 1,
+      "group_id": "iu7-42b",
+      "target_student_ids": ["1", "7", "9"],
+      "completed_by": []
+    },
+    {
+      "id": 7,
+      "title": "Дописать лабораторную №4 по физике",
+      "description": "Оформление по ГОСТ, проверка у Петровой Е.С.",
+      "deadline": "2026-09-28T23:59:00",
+      "type": "personal",
+      "priority": "high",
+      "author_id": 2,
+      "group_id": "iu7-42b",
+      "target_student_ids": [],
+      "completed_by": []
+    },
+    {
+      "id": 8,
+      "title": "Собрать подписи для профкома",
+      "description": "Список на столе у профорга",
+      "deadline": "2026-10-04T16:00:00",
+      "type": "group",
+      "priority": "low",
+      "author_id": 4,
+      "group_id": "iu7-42b",
+      "target_student_ids": [],
+      "completed_by": []
+    }
+  ],
+
+  "debts": [
+    {
+      "id": 1,
+      "student_id": 4,
+      "student_name": "Сидоров А.",
+      "subject": "Матанализ",
+      "type": "Экзамен",
+      "deadline": "2026-09-26T10:00:00",
+      "status": "overdue",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 2,
+      "student_id": 5,
+      "student_name": "Кузнецова М.",
+      "subject": "Физика",
+      "type": "Зачёт",
+      "deadline": "2026-10-04T14:00:00",
+      "status": "active",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 3,
+      "student_id": 2,
+      "student_name": "Иванов Д.",
+      "subject": "ТРПО",
+      "type": "Лаба",
+      "deadline": "2026-09-14T23:59:00",
+      "status": "closed",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 4,
+      "student_id": 8,
+      "student_name": "Морозов П.",
+      "subject": "Философия",
+      "type": "Реферат",
+      "deadline": "2026-09-22T18:00:00",
+      "status": "overdue",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 5,
+      "student_id": 10,
+      "student_name": "Новиков С.",
+      "subject": "Английский язык",
+      "type": "Зачёт",
+      "deadline": "2026-10-01T12:00:00",
+      "status": "active",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 6,
+      "student_id": 12,
+      "student_name": "Козлов Д.",
+      "subject": "Теория вероятностей",
+      "type": "Контрольная",
+      "deadline": "2026-10-09T10:00:00",
+      "status": "active",
+      "group_id": "iu7-42b"
+    }
+  ],
+
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Лаба №3 по ТРПО",
+      "description": "Реализовать REST API на FastAPI",
+      "deadline": "2026-10-02T23:59:00",
+      "type": "group",
+      "status": "active",
+      "author_id": 1,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 2,
+      "title": "ДЗ по матанализу",
+      "description": "Интегралы, задачи 1–15",
+      "deadline": "2026-10-06T23:59:00",
+      "type": "personal",
+      "status": "soon",
+      "author_id": 1,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 3,
+      "title": "Отчёт по физике",
+      "description": "Лаба №2, оформление по ГОСТ",
+      "deadline": "2026-09-24T23:59:00",
+      "type": "group",
+      "status": "done",
+      "author_id": 1,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 4,
+      "title": "Реферат по истории",
+      "description": "Тема: «Развитие ЭВМ в СССР»",
+      "deadline": "2026-09-27T23:59:00",
+      "type": "personal",
+      "status": "overdue",
+      "author_id": 2,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 5,
+      "title": "Презентация к семинару",
+      "description": "Тема на выбор, 10–15 слайдов",
+      "deadline": "2026-10-01T20:00:00",
+      "type": "group",
+      "status": "soon",
+      "author_id": 7,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 6,
+      "title": "Конспект лекции по философии",
+      "description": "Тема: «Античная философия»",
+      "deadline": "2026-09-30T20:00:00",
+      "type": "personal",
+      "status": "soon",
+      "author_id": 3,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 7,
+      "title": "Курсовая работа (черновик)",
+      "description": "Сдать научруку на проверку",
+      "deadline": "2026-10-13T23:59:00",
+      "type": "personal",
+      "status": "active",
+      "author_id": 2,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 8,
+      "title": "Сдать нормативы по физкультуре",
+      "description": "Бег 100м, подтягивания, пресс",
+      "deadline": "2026-10-04T18:00:00",
+      "type": "group",
+      "status": "active",
+      "author_id": 1,
+      "group_id": "iu7-42b"
+    }
+  ],
+
+  "materials": [
+    {
+      "id": 1,
+      "title": "Лекция 10. Тестирование ПО",
+      "author_id": 1,
+      "type": "pdf",
+      "max_file_id": null,
+      "max_message_id": "msg_001",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/abc123",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 2,
+      "title": "Запись семинара по физике",
+      "author_id": 3,
+      "type": "video",
+      "max_file_id": null,
+      "max_message_id": "msg_002",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/def456",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 3,
+      "title": "Методичка по лабораторным работам",
+      "author_id": 1,
+      "type": "pdf",
+      "max_file_id": null,
+      "max_message_id": "msg_003",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/ghi789",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 4,
+      "title": "Шпаргалка по матанализу",
+      "author_id": 4,
+      "type": "pdf",
+      "max_file_id": null,
+      "max_message_id": "msg_004",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/jkl012",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 5,
+      "title": "Запись консультации по ТРПО",
+      "author_id": 1,
+      "type": "video",
+      "max_file_id": null,
+      "max_message_id": "msg_005",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/mno345",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 6,
+      "title": "Список литературы к экзамену",
+      "author_id": 3,
+      "type": "pdf",
+      "max_file_id": null,
+      "max_message_id": "msg_006",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/pqr678",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 7,
+      "title": "Разбор задач к контрольной",
+      "author_id": 1,
+      "type": "pdf",
+      "max_file_id": null,
+      "max_message_id": "msg_007",
+      "max_chat_id": null,
+      "download_url": "https://max.ru/c/stu901",
+      "group_id": "iu7-42b"
+    }
+  ],
+
+  "exams": [
+    {
+      "id": 1,
+      "subject": "Матанализ",
+      "date": "2026-10-06T10:00:00",
+      "time": "10:00",
+      "room": "412",
+      "teacher": "Смирнов А.В.",
+      "icon": "🔢",
+      "type": "exam",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 2,
+      "subject": "Физика",
+      "date": "2026-10-09T14:00:00",
+      "time": "14:00",
+      "room": "301",
+      "teacher": "Петрова Е.С.",
+      "icon": "⚛️",
+      "type": "exam",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 3,
+      "subject": "ТРПО (зачёт)",
+      "date": "2026-10-13T12:00:00",
+      "time": "12:00",
+      "room": "505",
+      "teacher": "Иванов П.П.",
+      "icon": "💻",
+      "type": "exam",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 4,
+      "subject": "Философия",
+      "date": "2026-10-17T09:00:00",
+      "time": "09:00",
+      "room": "210",
+      "teacher": "Кузнецов В.Д.",
+      "icon": "📖",
+      "type": "exam",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 5,
+      "subject": "Матанализ",
+      "date": "2026-10-05T15:00:00",
+      "time": "15:00",
+      "room": "412",
+      "teacher": "Смирнов А.В.",
+      "icon": "💬",
+      "type": "consultation",
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 6,
+      "subject": "Физика",
+      "date": "2026-10-08T13:00:00",
+      "time": "13:00",
+      "room": "301",
+      "teacher": "Петрова Е.С.",
+      "icon": "💬",
+      "type": "consultation",
+      "group_id": "iu7-42b"
+    }
+  ],
+
+  "exam_materials": [
+    {
+      "id": 1,
+      "exam_id": 1,
+      "title": "Список вопросов",
+      "url": "https://max.ru/c/questions1",
+      "file_path": null,
+      "added_by": 1,
+      "added_at": "2026-09-25T10:00:00"
+    },
+    {
+      "id": 2,
+      "exam_id": 1,
+      "title": "Конспект лекций",
+      "url": "https://max.ru/c/lectures1",
+      "file_path": null,
+      "added_by": 1,
+      "added_at": "2026-09-26T12:00:00"
+    },
+    {
+      "id": 3,
+      "exam_id": 3,
+      "title": "Методичка по лабам",
+      "url": "https://max.ru/c/method1",
+      "file_path": null,
+      "added_by": 1,
+      "added_at": "2026-09-23T09:00:00"
+    },
+    {
+      "id": 4,
+      "exam_id": 2,
+      "title": "Список формул",
+      "url": "https://max.ru/c/formulas1",
+      "file_path": null,
+      "added_by": 3,
+      "added_at": "2026-09-27T15:00:00"
+    }
+  ],
+
+  "mail_items": [
+    {
+      "id": 1,
+      "sender": "Деканат ИУ7",
+      "subject": "График ликвидации задолженностей",
+      "preview": "Уважаемые студенты, публикуем график пересдач на май...",
+      "source": "dean",
+      "auto_forward": true,
+      "forwarded_at": null,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 2,
+      "sender": "Кафедра ИУ7",
+      "subject": "Перенос лекции по ТРПО",
+      "preview": "Лекция 12 мая переносится в ауд. 501 в 15:40...",
+      "source": "kafedra",
+      "auto_forward": true,
+      "forwarded_at": null,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 3,
+      "sender": "Смирнов А.В.",
+      "subject": "Материалы к экзамену",
+      "preview": "Выложил список вопросов и литературу в общий доступ...",
+      "source": "prepod",
+      "auto_forward": false,
+      "forwarded_at": null,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 4,
+      "sender": "Профком МГТУ",
+      "subject": "Путёвки в санаторий-профилакторий",
+      "preview": "Открыта запись на летний период. Количество мест ограничено...",
+      "source": "profkom",
+      "auto_forward": false,
+      "forwarded_at": null,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 5,
+      "sender": "Деканат ИУ7",
+      "subject": "Собрание по вопросам стипендии",
+      "preview": "В среду в 17:00 в ауд. 404 состоится собрание...",
+      "source": "dean",
+      "auto_forward": true,
+      "forwarded_at": null,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 6,
+      "sender": "Иванов П.П.",
+      "subject": "Консультация перед зачётом",
+      "preview": "Проведу в пятницу в 16:00, ауд. 505. Приходить со своими вопросами...",
+      "source": "prepod",
+      "auto_forward": false,
+      "forwarded_at": null,
+      "group_id": "iu7-42b"
+    }
+  ],
+
+  "mailboxes": [
+    {
+      "id": 1,
+      "email": "dean@iu7.ru",
+      "label": "Деканат",
+      "connected": true,
+      "auto_forward": true,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 2,
+      "email": "kaf@iu7.ru",
+      "label": "Кафедра ИУ7",
+      "connected": true,
+      "auto_forward": false,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 3,
+      "email": "prof@bmstu.ru",
+      "label": "Профком",
+      "connected": false,
+      "auto_forward": false,
+      "group_id": "iu7-42b"
+    },
+    {
+      "id": 4,
+      "email": "smi@iu7.ru",
+      "label": "Смирнов А.В.",
+      "connected": true,
+      "auto_forward": false,
+      "group_id": "iu7-42b"
+    }
+  ],
+
+  "group_settings": [
+    {
+      "id": 1,
+      "group_id": "iu7-42b",
+      "payload": {
+        "pushNotifications": true,
+        "dailySummary": true,
+        "debtNotifications": true,
+        "newMaterials": false,
+        "twoFactor": true,
+        "auditLog": true
+      }
+    }
+  ]
+}

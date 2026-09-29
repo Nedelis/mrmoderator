@@ -1,0 +1,857 @@
+# =============================================================================
+# DATA-API.yaml — конфигурация для платформы проверки хакатона
+# =============================================================================
+# Решение: «Мистер Модератор» — чат-бот и мини-приложение для старост
+# студенческих групп в мессенджере MAX.
+# Трек: «Образовательные решения».
+#
+# Файл описывает API для автоматической проверки: базовый адрес, обязательные
+# проверки, тестовые учётные записи, тестовые данные и ожидаемые ответы.
+# =============================================================================
+
+# ─── 1. Версия конфигурации ──────────────────────────────────────────────────
+config_version: "1.0.0"
+
+# ─── 2. Наименование решения и идентификатор команды ─────────────────────────
+solution:
+  name: "Мистер Модератор"
+  team_id: "mrmoderator"
+  description: >
+    Чат-бот и мини-приложение в MAX для старост и актива студенческих групп:
+    напоминания, задания, долги, экзамены и учебные материалы группы в одном
+    месте, а уведомления доставляет бот — лично каждому участнику.
+
+# ─── 3. Базовый адрес API ────────────────────────────────────────────────────
+# Перед сдачей заменить <PUBLIC_URL> на актуальный HTTPS-адрес туннеля
+# (например, https://abc123.ngrok.app). Через nginx мини-приложение и API
+# доступны на одном домене, API — под /api.
+base_url: "https://<PUBLIC_URL>/api"
+
+# ─── 4. Обязательные проверки ────────────────────────────────────────────────
+# Эндпоинты, покрывающие основную функциональность решения.
+# Чекер прогоняет их под соответствующими ролями.
+required_checks:
+  anonymous:
+    - health
+  starosta:
+    - get_me
+    - get_roles
+    - get_group
+    - get_students
+    - get_reminders
+    - create_reminder
+    - update_reminder
+    - complete_reminder
+    - remind_reminder
+    - delete_reminder
+    - get_debts
+    - create_debt
+    - update_debt
+    - delete_debt
+    - get_tasks
+    - create_task
+    - update_task
+    - remind_task
+    - delete_task
+    - get_materials
+    - upload_material
+    - download_material
+    - delete_material
+    - get_exams
+    - create_exam
+    - add_exam_material
+    - delete_exam_material
+    - get_mail
+    - get_mailboxes
+    - add_mailbox
+    - remove_mailbox
+    - assign_role
+    - rename_member
+    - remove_group_member
+  student:
+    - get_me
+    - get_group
+    - get_students
+    - get_reminders
+    - create_reminder
+    - complete_reminder
+    - get_debts
+    - create_debt
+    - get_tasks
+    - create_task
+    - get_materials
+    - get_exams
+    - leave_group
+
+# ─── 5. Эндпоинты ────────────────────────────────────────────────────────────
+# Для каждого: method, path, role, expected_status, схема ответа.
+# Идентификаторы в ответах — строки, в путях — числа.
+# Даты в ответах — ISO 8601 без TZ (UTC), в запросах — YYYY-MM-DD / HH:mm.
+endpoints:
+
+  # ─── Служебное ──────────────────────────────────────────────────────────
+
+  - id: health
+    method: GET
+    path: "/health"
+    role: anonymous
+    expected_status: [200]
+    response:
+      type: application/json
+      required: [status]
+      properties:
+        status: { type: string }
+
+  - id: get_me
+    method: GET
+    path: "/me"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      required: [user]
+      properties:
+        user:
+          type: object
+          required: [id, firstName, lastName, username, groupId, groupName, roleId]
+          properties:
+            id: { type: string }
+            firstName: { type: string }
+            lastName: { type: string }
+            username: { type: string }
+            photoUrl: { type: string, nullable: true }
+            groupId: { type: string }
+            groupName: { type: string }
+            roleId:
+              type: string
+              enum: [starosta, zam, proforg, student]
+
+  - id: get_roles
+    method: GET
+    path: "/roles"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          items:
+            type: object
+            required: [id, label, level, permissions, menu]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              shortLabel: { type: string }
+              description: { type: string }
+              level: { type: integer }
+              badgeClass: { type: string }
+              badgeIcon: { type: string }
+              badgeText: { type: string }
+              menu: { type: array, items: { type: string } }
+              permissions: { type: array, items: { type: string } }
+
+  # ─── Группа ─────────────────────────────────────────────────────────────
+
+  - id: get_group
+    method: GET
+    path: "/group"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      required: [name, course, semester, studentsCount]
+      properties:
+        name: { type: string }
+        course: { type: integer }
+        semester: { type: integer }
+        studentsCount: { type: integer }
+
+  - id: get_students
+    method: GET
+    path: "/students"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, name, role]
+        properties:
+          id: { type: string }
+          name: { type: string }
+          role: { type: string }
+          avgScore: { type: number, nullable: true }
+          attendance: { type: integer, nullable: true }
+          debts: { type: integer, nullable: true }
+
+  - id: leave_group
+    method: POST
+    path: "/group/leave"
+    role: any_authenticated
+    body: null
+    expected_status: [200, 400, 403, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    notes: "Староста выйти не может — сначала передаёт роль (403)."
+
+  # ─── Напоминалки ────────────────────────────────────────────────────────
+
+  - id: get_reminders
+    method: GET
+    path: "/reminders"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, title, description, deadline, type, priority]
+        properties:
+          id: { type: string }
+          title: { type: string }
+          description: { type: string }
+          deadline: { type: string, format: date-time }
+          type:
+            type: string
+            enum: [personal, group]
+          priority:
+            type: string
+            enum: [low, medium, high]
+          targetStudentIds: { type: array, items: { type: string } }
+          completedBy: { type: array, items: { type: string } }
+
+  - id: create_reminder
+    method: POST
+    path: "/reminders"
+    role: starosta
+    body:
+      type: application/json
+      required: [title, date, time, scope]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        date: { type: string, format: date }
+        time: { type: string, pattern: "^\\d{2}:\\d{2}$" }
+        scope:
+          type: string
+          enum: [personal, group, selected]
+        studentIds: { type: array, items: { type: string } }
+    expected_status: [201, 400, 403, 422, 401]
+    response:
+      type: application/json
+      required: [id, title]
+      properties:
+        id: { type: string }
+        title: { type: string }
+
+  - id: update_reminder
+    method: PUT
+    path: "/reminders/{reminder_id}"
+    path_params:
+      reminder_id: { type: integer }
+    role: starosta
+    body:
+      type: application/json
+      properties:
+        title: { type: string }
+        description: { type: string }
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  - id: complete_reminder
+    method: PUT
+    path: "/reminders/{reminder_id}/complete"
+    path_params:
+      reminder_id: { type: integer }
+    role: any_authenticated
+    body:
+      type: application/json
+      required: [completed]
+      properties:
+        completed: { type: boolean }
+    expected_status: [200, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  - id: remind_reminder
+    method: POST
+    path: "/reminders/{reminder_id}/remind"
+    path_params:
+      reminder_id: { type: integer }
+    role: starosta
+    body: null
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok, id, sentTo, sentAt]
+      properties:
+        ok: { type: boolean }
+        id: { type: string }
+        title: { type: string }
+        sentTo: { type: integer }
+        sentAt: { type: string, format: date-time }
+
+  - id: delete_reminder
+    method: DELETE
+    path: "/reminders/{reminder_id}"
+    path_params:
+      reminder_id: { type: integer }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  # ─── Долги ──────────────────────────────────────────────────────────────
+
+  - id: get_debts
+    method: GET
+    path: "/debts"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, studentId, studentName, subject, type, deadline, status]
+        properties:
+          id: { type: string }
+          studentId: { type: string }
+          studentName: { type: string }
+          subject: { type: string }
+          type: { type: string }
+          deadline: { type: string, format: date-time }
+          status:
+            type: string
+            enum: [active, overdue, closed]
+
+  - id: create_debt
+    method: POST
+    path: "/debts"
+    role: starosta
+    body:
+      type: application/json
+      required: [studentId, subject, type, deadline]
+      properties:
+        studentId: { type: string }
+        subject: { type: string }
+        type: { type: string }
+        deadline: { type: string, format: date }
+    expected_status: [201, 400, 403, 404, 422, 401]
+    response:
+      type: application/json
+      required: [id, studentId, studentName]
+      properties:
+        id: { type: string }
+        studentId: { type: string }
+        studentName: { type: string }
+        subject: { type: string }
+        status: { type: string }
+
+  - id: update_debt
+    method: PUT
+    path: "/debts/{debt_id}"
+    path_params:
+      debt_id: { type: integer }
+    role: starosta
+    body:
+      type: application/json
+      properties:
+        studentId: { type: string }
+        subject: { type: string }
+        type: { type: string }
+        deadline: { type: string }
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  - id: delete_debt
+    method: DELETE
+    path: "/debts/{debt_id}"
+    path_params:
+      debt_id: { type: integer }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  # ─── Задания ────────────────────────────────────────────────────────────
+
+  - id: get_tasks
+    method: GET
+    path: "/tasks"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, title, description, deadline, type, status]
+        properties:
+          id: { type: string }
+          title: { type: string }
+          description: { type: string }
+          deadline: { type: string, format: date-time }
+          type:
+            type: string
+            enum: [personal, group]
+          status:
+            type: string
+            enum: [active, soon, done, overdue]
+
+  - id: create_task
+    method: POST
+    path: "/tasks"
+    role: starosta
+    body:
+      type: application/json
+      required: [title, deadline, type]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        deadline: { type: string, format: date }
+        type:
+          type: string
+          enum: [personal, group]
+    expected_status: [201, 400, 403, 422, 401]
+    response:
+      type: application/json
+      required: [id, title]
+      properties:
+        id: { type: string }
+        title: { type: string }
+
+  - id: update_task
+    method: PUT
+    path: "/tasks/{task_id}"
+    path_params:
+      task_id: { type: integer }
+    role: starosta
+    body:
+      type: application/json
+      properties:
+        title: { type: string }
+        description: { type: string }
+        deadline: { type: string }
+        type:
+          type: string
+          enum: [personal, group]
+    expected_status: [200, 400, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  - id: remind_task
+    method: POST
+    path: "/tasks/{task_id}/remind"
+    path_params:
+      task_id: { type: integer }
+    role: starosta
+    body: null
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok, id, sentTo, sentAt]
+      properties:
+        ok: { type: boolean }
+        id: { type: string }
+        title: { type: string }
+        sentTo: { type: integer }
+        sentAt: { type: string, format: date-time }
+
+  - id: delete_task
+    method: DELETE
+    path: "/tasks/{task_id}"
+    path_params:
+      task_id: { type: integer }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  # ─── Материалы ──────────────────────────────────────────────────────────
+
+  - id: get_materials
+    method: GET
+    path: "/materials"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, title, author, type, createdAt]
+        properties:
+          id: { type: string }
+          title: { type: string }
+          author: { type: string }
+          type:
+            type: string
+            enum: [pdf, video, other]
+          createdAt: { type: string }
+
+  - id: upload_material
+    method: POST
+    path: "/materials"
+    role: starosta
+    body:
+      type: application/json
+      required: [title, type, url]
+      properties:
+        title: { type: string }
+        type: { type: string }
+        url: { type: string, format: uri }
+    expected_status: [201, 400, 403, 422, 401]
+    response:
+      type: application/json
+      required: [id, title]
+      properties:
+        id: { type: string }
+        title: { type: string }
+
+  - id: download_material
+    method: GET
+    path: "/materials/{material_id}/download"
+    path_params:
+      material_id: { type: integer }
+    role: any_authenticated
+    expected_status: [200, 307, 401, 404]
+    response:
+      type: any
+      notes: "307 — редирект на прямую ссылку; 200 — JSON с метаданными файла в MAX."
+
+  - id: delete_material
+    method: DELETE
+    path: "/materials/{material_id}"
+    path_params:
+      material_id: { type: integer }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  # ─── Экзамены ───────────────────────────────────────────────────────────
+
+  - id: get_exams
+    method: GET
+    path: "/exams"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, subject, date, time, room, teacher, icon, type, materials]
+        properties:
+          id: { type: string }
+          subject: { type: string }
+          date: { type: string }
+          time: { type: string }
+          room: { type: string }
+          teacher: { type: string }
+          icon: { type: string }
+          type:
+            type: string
+            enum: [exam, consultation]
+          materials: { type: array }
+
+  - id: create_exam
+    method: POST
+    path: "/exams"
+    role: starosta
+    body:
+      type: application/json
+      required: [subject, date, time]
+      properties:
+        subject: { type: string }
+        date: { type: string, format: date }
+        time: { type: string }
+        room: { type: string }
+        teacher: { type: string }
+        icon: { type: string }
+        type:
+          type: string
+          enum: [exam, consultation]
+    expected_status: [201, 400, 403, 422, 401]
+    response:
+      type: application/json
+      required: [id, subject]
+      properties:
+        id: { type: string }
+        subject: { type: string }
+
+  - id: add_exam_material
+    method: POST
+    path: "/exams/{exam_id}/materials"
+    path_params:
+      exam_id: { type: integer }
+    role: starosta
+    body:
+      type: application/json
+      required: [title]
+      properties:
+        title: { type: string }
+        url: { type: string, format: uri, nullable: true }
+    expected_status: [201, 403, 404, 422, 401]
+    response:
+      type: application/json
+      required: [id, examId, title]
+      properties:
+        id: { type: string }
+        examId: { type: string }
+        title: { type: string }
+
+  - id: delete_exam_material
+    method: DELETE
+    path: "/exams/{exam_id}/materials/{material_id}"
+    path_params:
+      exam_id: { type: integer }
+      material_id: { type: integer }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  # ─── Почта ──────────────────────────────────────────────────────────────
+
+  - id: get_mail
+    method: GET
+    path: "/mail"
+    role: any_authenticated
+    expected_status: [200, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, from, subject, preview, source, autoForward]
+        properties:
+          id: { type: string }
+          from: { type: string }
+          subject: { type: string }
+          preview: { type: string }
+          source:
+            type: string
+            enum: [dean, kafedra, prepod]
+          autoForward: { type: boolean }
+
+  - id: get_mailboxes
+    method: GET
+    path: "/mail/mailboxes"
+    role: starosta
+    expected_status: [200, 403, 401]
+    response:
+      type: application/json
+      items:
+        type: object
+        required: [id, email, label, connected, autoForward]
+        properties:
+          id: { type: string }
+          email: { type: string }
+          label: { type: string }
+          connected: { type: boolean }
+          autoForward: { type: boolean }
+
+  - id: add_mailbox
+    method: POST
+    path: "/mail/mailboxes"
+    role: starosta
+    body:
+      type: application/json
+      required: [email, label]
+      properties:
+        email: { type: string, format: email }
+        label: { type: string }
+        autoForward: { type: boolean }
+    expected_status: [201, 400, 403, 422, 401]
+    response:
+      type: application/json
+      required: [id, email, label]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        label: { type: string }
+
+  - id: remove_mailbox
+    method: DELETE
+    path: "/mail/mailboxes/{mailbox_id}"
+    path_params:
+      mailbox_id: { type: integer }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+  # ─── Роли и участники ───────────────────────────────────────────────────
+
+  - id: assign_role
+    method: POST
+    path: "/roles/assign"
+    role: starosta
+    body:
+      type: application/json
+      required: [studentId, roleId]
+      properties:
+        studentId: { type: string }
+        roleId:
+          type: string
+          enum: [zam, proforg, student, starosta]
+    expected_status: [200, 403, 404, 422, 401]
+    response:
+      type: application/json
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    notes: "roleId=starosta — передача роли: текущий староста становится студентом."
+
+  - id: rename_member
+    method: PATCH
+    path: "/group/members/{student_id}/name"
+    path_params:
+      student_id: { type: string }
+    role: starosta
+    body:
+      type: application/json
+      required: [name]
+      properties:
+        name: { type: string }
+    expected_status: [200, 403, 404, 422, 401]
+    response:
+      type: application/json
+      required: [ok, oldName, newName]
+      properties:
+        ok: { type: boolean }
+        oldName: { type: string }
+        newName: { type: string }
+
+  - id: remove_group_member
+    method: DELETE
+    path: "/group/members/{student_id}"
+    path_params:
+      student_id: { type: string }
+    role: starosta
+    expected_status: [200, 403, 404, 401]
+    response:
+      type: application/json
+      required: [ok, removed]
+      properties:
+        ok: { type: boolean }
+        removed: { type: string }
+
+# ─── 6. Тестовые учётные записи ──────────────────────────────────────────────
+# Проверка идёт в demo-режиме (STRICT_AUTH=false): заголовок X-Max-Init-Data
+# игнорируется, все запросы выполняются от тестового пользователя.
+# Для реальных сценариев используется один из id ниже (см. seed/test_data.json).
+test_credentials:
+  starosta:
+    description: "Староста группы ИУ7-42Б. Используется по умолчанию при STRICT_AUTH=false."
+    max_user_id: "test_user_001"
+    user_id: 1
+    group_id: "iu7-42b"
+    role_id: "starosta"
+  student:
+    description: "Студент группы ИУ7-42Б."
+    max_user_id: "434583486"
+    user_id: 2
+    group_id: "iu7-42b"
+    role_id: "student"
+  zam:
+    description: "Замстаросты группы ИУ7-42Б."
+    max_user_id: "434583491"
+    user_id: 7
+    group_id: "iu7-42b"
+    role_id: "zam"
+  proforg:
+    description: "Профорг группы ИУ7-42Б."
+    max_user_id: "434583488"
+    user_id: 4
+    group_id: "iu7-42b"
+    role_id: "proforg"
+
+# ─── 7. Тестовые данные ──────────────────────────────────────────────────────
+test_data:
+  file: "backend/seed/test_data.json"
+  format: "json"
+  description: >
+    Группа iu7-42b «ИУ7-42Б», 12 пользователей (староста, зам, профорг,
+    9 студентов), 8 напоминаний, 6 долгов, 8 заданий, 7 материалов,
+    6 экзаменов, 4 материала к экзаменам, 6 писем, 4 почтовых ящика,
+    настройки группы. Загружается при USE_TEST_DATA=true.
+  tables:
+    - groups
+    - users
+    - reminders
+    - debts
+    - tasks
+    - materials
+    - exams
+    - exam_materials
+    - mail_items
+    - mailboxes
+    - group_settings
+
+# ─── 8. Роли пользователей ───────────────────────────────────────────────────
+roles:
+  - id: anonymous
+    description: "Без авторизации. Доступен только GET /api/health."
+  - id: any_authenticated
+    description: >
+      Любой пользователь группы. При STRICT_AUTH=true — с валидным
+      X-Max-Init-Data; при STRICT_AUTH=false — тестовый староста.
+  - id: student
+    description: "Студент (level 1). Просмотр группы и своих данных, личные напоминания и задания."
+  - id: proforg
+    description: "Профорг (level 2). Студент + материалы и почта."
+  - id: zam
+    description: "Замстаросты (level 3). Профорг + управление напоминаниями, заданиями, долгами, ролями."
+  - id: starosta
+    description: "Староста (level 4). Полный доступ к управлению группой."
+
+# ─── 9. Ожидаемые статус-коды ────────────────────────────────────────────────
+expected_status_codes:
+  success: [200, 201, 307]
+  client_error: [400, 401, 403, 404, 422]
+  server_error: [500]
+  notes:
+    200: "Успех"
+    201: "Объект создан (POST)"
+    307: "Временный редирект (скачивание материала на прямую ссылку)"
+    400: "Некорректные данные: неверная дата, пользователь не в группе"
+    401: "Нет или невалиден X-Max-Init-Data (только при STRICT_AUTH=true)"
+    403: "Не хватает прав роли"
+    404: "Объект не найден или принадлежит другой группе"
+    422: "Ошибка валидации тела запроса (Pydantic)"
+    500: "Внутренняя ошибка сервера"

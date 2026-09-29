@@ -1,0 +1,684 @@
+{
+  "debts": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "student_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": false,
+      "fk": "users.id"
+    },
+    {
+      "name": "student_name",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "subject",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "deadline",
+      "type": "DATETIME",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "status",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "exams": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "subject",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "date",
+      "type": "DATETIME",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "time",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "room",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "teacher",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "icon",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    }
+  ],
+  "exam_materials": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "exam_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": "exams.id"
+    },
+    {
+      "name": "title",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "url",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "file_path",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "added_by",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": "users.id"
+    },
+    {
+      "name": "added_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "groups": [
+    {
+      "name": "id",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "name",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "course",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "semester",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "chat_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "invite_code",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "mail_items": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "sender",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "subject",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "preview",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "source",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "auto_forward",
+      "type": "BOOLEAN",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "forwarded_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "mailboxes": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "email",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "label",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "connected",
+      "type": "BOOLEAN",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "auto_forward",
+      "type": "BOOLEAN",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    }
+  ],
+  "materials": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "title",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "author_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": "users.id"
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "max_file_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "max_message_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "max_chat_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "download_url",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    }
+  ],
+  "notifications_log": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "entity_type",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "entity_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "user_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "kind",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "sent_at",
+      "type": "DATETIME",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "reminders": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "title",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "description",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "deadline",
+      "type": "DATETIME",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "priority",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "author_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": "users.id"
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "target_student_ids",
+      "type": "JSON",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "completed_by",
+      "type": "JSON",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "group_settings": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    },
+    {
+      "name": "payload",
+      "type": "JSON",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "tasks": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "title",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "description",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "deadline",
+      "type": "DATETIME",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "status",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "author_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "pk": false,
+      "fk": "users.id"
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ],
+  "users": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "pk": true,
+      "fk": null
+    },
+    {
+      "name": "max_user_id",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "first_name",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "last_name",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "username",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "photo_url",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "group_id",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": "groups.id"
+    },
+    {
+      "name": "role_id",
+      "type": "VARCHAR",
+      "nullable": false,
+      "pk": false,
+      "fk": null
+    },
+    {
+      "name": "display_name",
+      "type": "VARCHAR",
+      "nullable": true,
+      "pk": false,
+      "fk": null
+    }
+  ]
+}

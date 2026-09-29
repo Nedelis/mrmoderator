@@ -16,3 +16,4 @@ class Material(BaseSchema):
 class UploadMaterialRequest(BaseSchema):
     title: str
     type: MaterialType
+    url: str | None

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +7,7 @@ from app.core.deps import get_current_user, require
 from app.core.roles import has_permission
 from app.models.user import User
 from app.schemas.common import OkResponse
-from app.schemas.material import Material
+from app.schemas.material import Material, UploadMaterialRequest
 from app.services import material_service
 
 router = APIRouter(prefix="/materials", tags=["Материалы"])
@@ -25,33 +25,28 @@ async def list_materials(
 
 @router.post("", response_model=Material, status_code=status.HTTP_201_CREATED)
 async def upload_material(
-    title: str = Form(...),
-    type: str = Form(...),
-    url: str | None = Form(None),
+    data: UploadMaterialRequest,
     user: User = Depends(require("material.upload")),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Загрузка материала.
-    В новой логике файл уже лежит в MAX — мы принимаем метаданные.
-    Если есть url — сохраняем прямую ссылку.
+    Добавление материала по ссылке.
+    Файл лежит в MAX/облаке — сохраняем метаданные и ссылку.
     """
     if not user.group_id:
         raise HTTPException(400, "Пользователь не в группе")
 
-    if url:
-        return await material_service.create_material_with_url(
-            db,
-            user,
-            user.group_id,
-            title,
-            type,
-            url,
-        )
+    if not data.url:
+        raise HTTPException(400, "Нужно передать url")
 
-    # Если файла нет и url нет — это заглушка для регистрации материала,
-    # который уже лежит в чате. Фронт передаёт метаданные.
-    raise HTTPException(400, "Нужно передать url или зарегистрировать материал через бота")
+    return await material_service.create_material_with_url(
+        db,
+        user,
+        user.group_id,
+        data.title,
+        data.type,
+        data.url,
+    )
 
 
 @router.get("/{material_id}/download")

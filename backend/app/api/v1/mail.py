@@ -45,7 +45,14 @@ async def configure_mailboxes(
     user: User = Depends(require("mail.configure")),
     db: AsyncSession = Depends(get_db),
 ):
-    # Заглушка
+    if not user.group_id:
+        raise HTTPException(400, "Пользователь не в группе")
+
+    await mail_service.configure_mailboxes(
+        db,
+        user.group_id,
+        data.mailboxes,
+    )
     return OkResponse()
 
 
