@@ -26,12 +26,17 @@ export class NotRegisteredError extends Error {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const initData = (window as any).WebApp?.initData;
 
+    const headers: Record<string, string> = {
+        ...((options?.headers as Record<string, string>) || {}),
+    };
+
+    if (initData && typeof initData === 'string' && initData.length > 0) {
+        headers['X-Max-Init-Data'] = initData;
+    }
+
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
-        headers: {
-            ...(options?.headers || {}),
-            'X-Max-Init-Data': initData,
-        },
+        headers,
     });
 
     if (!res.ok) {

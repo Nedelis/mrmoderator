@@ -6,7 +6,7 @@
 |---|---|---|
 | Локально через nginx | http://localhost:8080/api/docs | http://localhost:8080/api/openapi.json |
 | Локально напрямую в API | http://localhost:8000/api/docs | http://localhost:8000/api/openapi.json |
-| Публично | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/docs` | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/openapi.json` |
+| Публично | `https://discreetly-enjoyable-koi.cloudpub.ru/api/docs` | `https://https://discreetly-enjoyable-koi.cloudpub.ru/api/openapi.json` |
 
 Как обновить `openapi.yaml` после изменений в API:
 
@@ -21,7 +21,7 @@ docker compose exec -T api python -m app.export_openapi > docs/openapi.yaml
 - **Идентификаторы** в ответах — строки (`"id": "1"`), в путях — числа.
 - **Авторизация:** заголовок `X-Max-Init-Data` со строкой `WebApp.initData` из MAX Bridge.
   - `STRICT_AUTH=true` — заголовок обязателен, подпись проверяется токеном бота; иначе `401`.
-  - `STRICT_AUTH=false` (демо, по умолчанию) — заголовок не нужен, все запросы выполняются от тестового старосты «Тест Тестов» (`id=1`) в группе `TEST-GROUP-01`. Группа и пользователь создаются при первом запросе.
+  - `STRICT_AUTH=false` (демо-режим, по умолчанию) — заголовок не нужен, все запросы выполняются от тестового старосты. Если включён `USE_TEST_DATA=true`, это **Иван Петров** (`id=1`) в группе **`iu7-42b` «ИУ7-42Б»** с загруженными тестовыми данными (12 студентов, напоминания, долги, задания). Если `USE_TEST_DATA=false`, создаётся «Тест Тестов» в группе `TEST-GROUP-01`.
 
 ### Коды ответов
 
@@ -104,7 +104,7 @@ docker compose exec -T api python -m app.export_openapi > docs/openapi.yaml
 | POST | `/api/exams/{id}/materials` | `exam.addMaterial` | Прикрепить материал (форма: `title`, `url`) |
 | DELETE | `/api/exams/{id}/materials/{materialId}` | `exam.addMaterial` | Открепить материал |
 | GET | `/api/materials` | — | Учебные материалы группы |
-| POST | `/api/materials` | `material.upload` | Добавить материал (форма: `title`, `type`, `url`) |
+| POST | `/api/materials` | `material.upload` | Добавить материал (JSON: `title`, `type`, `url`) |
 | GET | `/api/materials/{id}/download` | — | Редирект на файл или метаданные файла в MAX |
 | DELETE | `/api/materials/{id}` | `material.delete.any` / `material.delete.own` | Удалить |
 
@@ -128,7 +128,7 @@ docker compose exec -T api python -m app.export_openapi > docs/openapi.yaml
 
 ## Примеры
 
-Команды рассчитаны на демо-режим (`STRICT_AUTH=false`). Для публичного адреса замените `http://localhost:8080` на адрес туннеля.
+Команды рассчитаны на демо-режим (`STRICT_AUTH=false`, `USE_TEST_DATA=true`). Для публичного адреса замените `http://localhost:8080` на адрес туннеля.
 
 ```bash
 # Кто я
@@ -136,7 +136,7 @@ curl http://localhost:8080/api/me
 ```
 
 ```json
-{"user":{"id":"1","firstName":"Тест","lastName":"Тестов","username":"test_user","photoUrl":null,"groupId":"TEST-GROUP-01","groupName":"Тестовая группа","roleId":"starosta"}}
+{"user":{"id":"1","firstName":"Иван","lastName":"Петров","username":"ivan_petrov","photoUrl":null,"groupId":"iu7-42b","groupName":"ИУ7-42Б","roleId":"starosta"}}
 ```
 
 ```bash
@@ -147,14 +147,14 @@ curl -X POST http://localhost:8080/api/reminders \
 ```
 
 ```json
-{"id":"1","title":"Сдать реферат","description":"по истории","deadline":"2026-10-05T18:00:00","type":"group","priority":"medium","targetStudentIds":[],"completedBy":[]}
+{"id":"9","title":"Сдать реферат","description":"по истории","deadline":"2026-10-05T18:00:00","type":"group","priority":"medium","targetStudentIds":[],"completedBy":[]}
 ```
 
 ```bash
-# Долг участнику с id=1
+# Долг участнику с id=2 (Иванов Д.)
 curl -X POST http://localhost:8080/api/debts \
   -H 'Content-Type: application/json' \
-  -d '{"studentId":"1","subject":"Матанализ","type":"Экзамен","deadline":"2026-09-20"}'
+  -d '{"studentId":"2","subject":"Матанализ","type":"Экзамен","deadline":"2026-09-20"}'
 ```
 
 ```bash
@@ -163,10 +163,10 @@ curl -X POST http://localhost:8080/api/reminders/1/remind
 ```
 
 ```json
-{"ok":true,"id":"1","title":"Сдать реферат","sentTo":0,"sentAt":"2026-09-29T12:40:00Z"}
+{"ok":true,"id":"1","title":"Сдать лабу по ТРПО","sentTo":0,"sentAt":"2026-09-29T12:40:00Z"}
 ```
 
-`sentTo` — сколько личных сообщений доставлено. У тестового пользователя нет настоящего аккаунта MAX, поэтому в демо-режиме это `0`; у реальных участников, вступивших через бота, сообщения приходят в чат с ботом.
+`sentTo` — сколько личных сообщений доставлено. У тестовых пользователей фейковые `max_user_id`, поэтому в демо-режиме это `0`; у реальных участников, вступивших через бота (`STRICT_AUTH=true`), сообщения приходят в чат с ботом.
 
 ```bash
 # Ошибка: нет обязательных полей → 422; неверная дата → 400; чужой объект → 404

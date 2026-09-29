@@ -6,15 +6,13 @@
 
 ## Публичные адреса
 
-> Заполняется перед сдачей. Адрес туннеля меняется при каждом перезапуске ngrok, если не используется постоянный домен.
-
 | Что | Адрес |
 |---|---|
 | Чат-бот в MAX | https://max.ru/t595_hakaton_max_bot |
-| Мини-приложение (HTTPS) | `https://envelope-eldercare-earplugs.ngrok-free.dev/` |
-| API | `https://envelope-eldercare-earplugs.ngrok-free.dev/api` |
-| Swagger UI | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/docs` |
-| Проверка работоспособности | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/health` |
+| Мини-приложение (HTTPS) | `https://discreetly-enjoyable-koi.cloudpub.ru/` |
+| API | `https://discreetly-enjoyable-koi.cloudpub.ru/api` |
+| Swagger UI | `https://discreetly-enjoyable-koi.cloudpub.ru/api/docs` |
+| Проверка работоспособности | `https://discreetly-enjoyable-koi.cloudpub.ru/api/health` |
 | Репозиторий и commit hash | https://github.com/Nedelis/mrmoderator — `60279fe3e01b3857103dce939df6898fc0545159` |
 
 ## Назначение
@@ -88,14 +86,12 @@ docker compose up -d --build
 MAX открывает мини-приложение только по HTTPS. Все компоненты доступны через один порт `web` (8080), поэтому хватает одного туннеля:
 
 ```bash
-ngrok http 8080
+clo publish http 8080
 ```
 
 1. Скопировать выданный `https://…` адрес в раздел [«Публичные адреса»](#публичные-адреса).
 2. На платформе MAX для партнёров указать этот адрес как URL мини-приложения бота.
 3. В `.env` поставить `STRICT_AUTH=true` и перезапустить API: `docker compose up -d api` — теперь каждый пользователь MAX работает со своей группой.
-
-> У бесплатного ngrok перед сайтом может показываться страница-предупреждение, которую WebView MAX не пропускает. Если мини-приложение не открывается — используйте постоянный домен ngrok или `cloudflared tunnel --url http://localhost:8080`.
 
 ## Переменные окружения
 
@@ -139,7 +135,7 @@ ngrok http 8080
 |---|---|---|
 | **MAX Bot API** | Команды бота, отправка уведомлений | Нет — внешний сервис. Нужен `MAX_BOT_TOKEN` и доступ в интернет |
 | **MAX Bridge** (`st.max.ru/js/max-web-app.js`) | Данные пользователя (initData), кнопка «Назад», размер окна | Нет — работает внутри клиента MAX. Вне MAX приложение переходит в демо-режим |
-| **HTTPS-туннель** (ngrok / cloudflared) | Публичный HTTPS-адрес для мини-приложения | Нет — запускается на хосте рядом с Docker |
+| **HTTPS-туннель** (Cloudpub) | Публичный HTTPS-адрес для мини-приложения | Нет — запускается на хосте рядом с Docker |
 | **Почта (IMAP)** | Сбор писем деканата | **Не реализовано** в MVP — см. ограничения |
 
 ## Работа с данными
@@ -247,7 +243,6 @@ ngrok http 8080
 - **SQLite** рассчитан на один экземпляр `api`; для горизонтального масштабирования — PostgreSQL.
 - **`USE_TEST_DATA=true` стирает БД при каждом рестарте.** Не используйте на реальных данных.
 - Автотестов нет; ESLint выдаёт замечания по правилам хуков React (`set-state-in-effect`, `exhaustive-deps`) — на работу не влияют.
-- Бесплатный ngrok даёт новый адрес при каждом запуске — после перезапуска туннеля адрес мини-приложения в MAX нужно обновить.
 
 ## Остановка и повторный запуск
 

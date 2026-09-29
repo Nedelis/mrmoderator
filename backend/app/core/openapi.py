@@ -287,7 +287,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
         routes=app.routes,
     )
     schema["servers"] = [
-        {"url": "/", "description": "Текущий хост (через nginx: https://envelope-eldercare-earplugs.ngrok-free.dev/)"},
+        {"url": "/", "description": "Текущий хост (через nginx: https://discreetly-enjoyable-koi.cloudpub.ru/)"},
         {"url": "http://localhost:8080", "description": "Локальный запуск через Docker (nginx)"},
         {"url": "http://localhost:8000", "description": "Локальный запуск через Docker (API)"},
     ]

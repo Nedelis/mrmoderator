@@ -127,8 +127,8 @@
   <table class="tech">
     <tr><td>Чат-бот в MAX</td><td><b>https://max.ru/t595_hakaton_max_bot</b></td></tr>
       <tr><td>Репозиторий и commit</td><td>https://github.com/Nedelis/mrmoderator · commit <span class="fill">60279fe3e01b3857103dce939df6898fc0545159</span> (от самого последнего коммита до обновления презентации)</td></tr>
-    <tr><td>Мини-приложение</td><td><span class="fill">https://envelope-eldercare-earplugs.ngrok-free.dev/</span> — открывается из бота кнопкой «🔗 Открыть приложение» или командой <code>/open</code></td></tr>
-    <tr><td>Собственный API</td><td><span class="fill">https://envelope-eldercare-earplugs.ngrok-free.dev/api</span> · Swagger: <code>/api/docs</code> · спецификация: <code>docs/openapi.yaml</code></td></tr>
+    <tr><td>Мини-приложение</td><td><span class="fill">https://discreetly-enjoyable-koi.cloudpub.ru/</span> — открывается из бота кнопкой «🔗 Открыть приложение» или командой <code>/open</code></td></tr>
+    <tr><td>Собственный API</td><td><span class="fill">https://discreetly-enjoyable-koi.cloudpub.ru/</span> · Swagger: <code>/api/docs</code> · спецификация: <code>docs/openapi.yaml</code></td></tr>
     <tr><td>Тестовые учётные записи</td><td>Вход через аккаунт MAX, логины и пароли не нужны. Первый пользователь создаёт группу (<code>/creategroup</code>) и становится старостой, остальные вступают по <code>/join КОД</code>. Без MAX: демо-режим, тестовый староста создаётся автоматически</td></tr>
     <tr><td>Переменные окружения</td><td><code>MAX_BOT_TOKEN=</code><span class="fill">⟨токен бота⟩</span> · <code>STRICT_AUTH=false</code> (демо-режим; для работы с реальными аккаунтами MAX — <code>true</code>) · остальное — по умолчанию из <code>.env.example</code></td></tr>
     <tr><td>Локальный запуск</td><td><code>cp .env.example .env</code> → вписать токен → <code>docker compose up -d --build</code> → http://localhost:8080</td></tr>
@@ -278,7 +278,7 @@
   <div class="arch">
     <div class="stack">
       <div class="box accent"><b>MAX</b><span>чат с ботом и мини-приложение (WebView)</span></div>
-      <div class="box"><b>HTTPS-туннель</b><span>ngrok / cloudflared → порт 8080</span></div>
+      <div class="box"><b>HTTPS-туннель</b><span>Cloudpub → порт 8080</span></div>
     </div>
     <div class="arrow">→</div>
     <div class="docker">
