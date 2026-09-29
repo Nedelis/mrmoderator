@@ -1,6 +1,15 @@
 import type {
-    Role, CurrentUser, Student, Reminder, Debt, MailItem, Mailbox,
-    Material, Exam, ExamMaterial, Task,
+    Role,
+    CurrentUser,
+    Student,
+    Reminder,
+    Debt,
+    MailItem,
+    Mailbox,
+    Material,
+    Exam,
+    ExamMaterial,
+    Task,
 } from '../types/api';
 import { isoPlusDays } from '../utils/date';
 
@@ -20,14 +29,26 @@ const ROLES: Role[] = [
         badgeText: 'Высшая',
         menu: ['/', '/my-stats', '/reminders', '/materials', '/mail', '/roles'],
         permissions: [
-            'reminder.create.group', 'reminder.create.personal', 'reminder.remind',
-            'material.upload', 'material.delete.any', 'material.delete.own',
-            'mail.configure', 'mail.forward',
-            'debts.edit', 'debts.create.own', 'debts.view.all',
-            'roles.assign', 'group.edit',
-            'exam.create', 'exam.addMaterial',
-            'task.create.group', 'task.create.personal',
-            'task.edit', 'task.delete', 'task.remind',
+            'reminder.create.group',
+            'reminder.create.personal',
+            'reminder.remind',
+            'material.upload',
+            'material.delete.any',
+            'material.delete.own',
+            'mail.configure',
+            'mail.forward',
+            'debts.edit',
+            'debts.create.own',
+            'debts.view.all',
+            'roles.assign',
+            'group.edit',
+            'exam.create',
+            'exam.addMaterial',
+            'task.create.group',
+            'task.create.personal',
+            'task.edit',
+            'task.delete',
+            'task.remind',
         ],
     },
     {
@@ -41,14 +62,25 @@ const ROLES: Role[] = [
         badgeText: 'Высокая',
         menu: ['/', '/my-stats', '/reminders', '/materials', '/mail', '/roles'],
         permissions: [
-            'reminder.create.group', 'reminder.create.personal', 'reminder.remind',
-            'material.upload', 'material.delete.any', 'material.delete.own',
-            'mail.configure', 'mail.forward',
-            'debts.edit', 'debts.create.own', 'debts.view.all',
+            'reminder.create.group',
+            'reminder.create.personal',
+            'reminder.remind',
+            'material.upload',
+            'material.delete.any',
+            'material.delete.own',
+            'mail.configure',
+            'mail.forward',
+            'debts.edit',
+            'debts.create.own',
+            'debts.view.all',
             'roles.assign',
-            'exam.create', 'exam.addMaterial',
-            'task.create.group', 'task.create.personal',
-            'task.edit', 'task.delete', 'task.remind',
+            'exam.create',
+            'exam.addMaterial',
+            'task.create.group',
+            'task.create.personal',
+            'task.edit',
+            'task.delete',
+            'task.remind',
         ],
     },
     {
@@ -63,7 +95,8 @@ const ROLES: Role[] = [
         menu: ['/my-stats', '/reminders', '/materials', '/mail'],
         permissions: [
             'reminder.create.personal',
-            'material.upload', 'material.delete.own',
+            'material.upload',
+            'material.delete.own',
             'mail.forward',
             'debts.create.own',
             'task.create.personal',
@@ -81,7 +114,8 @@ const ROLES: Role[] = [
         menu: ['/my-stats', '/reminders', '/materials'],
         permissions: [
             'reminder.create.personal',
-            'material.upload', 'material.delete.own',
+            'material.upload',
+            'material.delete.own',
             'debts.create.own',
             'task.create.personal',
         ],
@@ -138,54 +172,213 @@ let REMINDERS: Reminder[] = [
 ];
 
 let DEBTS: Debt[] = [
-    { id: '1', studentName: 'Сидоров А.', subject: 'Матанализ', type: 'Экзамен', deadline: isoPlusDays(-3), status: 'overdue' },
-    { id: '2', studentName: 'Кузнецова М.', subject: 'Физика', type: 'Зачёт', deadline: isoPlusDays(5), status: 'active' },
-    { id: '3', studentName: 'Иванов Д.', subject: 'ТРПО', type: 'Лаба', deadline: isoPlusDays(-15), status: 'closed' },
+    {
+        id: '1',
+        studentId: '3',
+        studentName: 'Сидоров А.',
+        subject: 'Матанализ',
+        type: 'Экзамен',
+        deadline: isoPlusDays(-3),
+        status: 'overdue',
+    },
+    {
+        id: '2',
+        studentId: '4',
+        studentName: 'Кузнецова М.',
+        subject: 'Физика',
+        type: 'Зачёт',
+        deadline: isoPlusDays(5),
+        status: 'active',
+    },
+    {
+        id: '3',
+        studentId: '1',
+        studentName: 'Иванов Д.',
+        subject: 'ТРПО',
+        type: 'Лаба',
+        deadline: isoPlusDays(-15),
+        status: 'closed',
+    },
 ];
 
 let MAIL: MailItem[] = [
-    { id: '1', from: 'Деканат ИУ7', subject: 'График ликвидации задолженностей', preview: 'Уважаемые студенты, публикуем график пересдач на май...', source: 'dean', autoForward: true },
-    { id: '2', from: 'Кафедра ИУ7', subject: 'Перенос лекции по ТРПО', preview: 'Лекция 12 мая переносится в ауд. 501 в 15:40...', source: 'kafedra', autoForward: true },
-    { id: '3', from: 'Смирнов А.В.', subject: 'Материалы к экзамену', preview: 'Выложил список вопросов и литературу в общий доступ...', source: 'prepod', autoForward: false },
+    {
+        id: '1',
+        from: 'Деканат ИУ7',
+        subject: 'График ликвидации задолженностей',
+        preview: 'Уважаемые студенты, публикуем график пересдач на май...',
+        source: 'dean',
+        autoForward: true,
+    },
+    {
+        id: '2',
+        from: 'Кафедра ИУ7',
+        subject: 'Перенос лекции по ТРПО',
+        preview: 'Лекция 12 мая переносится в ауд. 501 в 15:40...',
+        source: 'kafedra',
+        autoForward: true,
+    },
+    {
+        id: '3',
+        from: 'Смирнов А.В.',
+        subject: 'Материалы к экзамену',
+        preview: 'Выложил список вопросов и литературу в общий доступ...',
+        source: 'prepod',
+        autoForward: false,
+    },
 ];
 
 let MAILBOXES: Mailbox[] = [
     { id: 'dean', email: 'dean@iu7.ru', label: 'Деканат', connected: true, autoForward: true },
-    { id: 'kafedra', email: 'kaf@iu7.ru', label: 'Кафедра ИУ7', connected: true, autoForward: false },
-    { id: 'profkom', email: 'prof@bmstu.ru', label: 'Профком', connected: false, autoForward: false },
+    {
+        id: 'kafedra',
+        email: 'kaf@iu7.ru',
+        label: 'Кафедра ИУ7',
+        connected: true,
+        autoForward: false,
+    },
+    {
+        id: 'profkom',
+        email: 'prof@bmstu.ru',
+        label: 'Профком',
+        connected: false,
+        autoForward: false,
+    },
 ];
 
 let MATERIALS: Material[] = [
-    { id: '1', title: 'Лекция 10. Тестирование ПО', author: 'Смирнов А.В.', type: 'pdf', createdAt: '2 дня назад', maxUrl: 'https://max.ru/c/abc123' },
-    { id: '2', title: 'Запись семинара по физике', author: 'Петрова Е.С.', type: 'video', createdAt: '3 дня назад', maxUrl: 'https://max.ru/c/def456' },
+    {
+        id: '1',
+        title: 'Лекция 10. Тестирование ПО',
+        author: 'Смирнов А.В.',
+        type: 'pdf',
+        createdAt: '2 дня назад',
+        maxUrl: 'https://max.ru/c/abc123',
+    },
+    {
+        id: '2',
+        title: 'Запись семинара по физике',
+        author: 'Петрова Е.С.',
+        type: 'video',
+        createdAt: '3 дня назад',
+        maxUrl: 'https://max.ru/c/def456',
+    },
 ];
 
 let EXAMS: Exam[] = [
     {
-        id: 'e1', subject: 'Матанализ', date: `${isoPlusDays(7)}T10:00`, time: '10:00',
-        room: '412', teacher: 'Смирнов А.В.', icon: '🔢', type: 'exam',
+        id: 'e1',
+        subject: 'Матанализ',
+        date: `${isoPlusDays(7)}T10:00`,
+        time: '10:00',
+        room: '412',
+        teacher: 'Смирнов А.В.',
+        icon: '🔢',
+        type: 'exam',
         materials: [
-            { id: 'em1', examId: 'e1', title: 'Список вопросов', addedBy: 'Смирнов А.В.', addedAt: '5 мая' },
-            { id: 'em2', examId: 'e1', title: 'Конспект лекций', addedBy: 'Иван Петров', addedAt: '6 мая' },
+            {
+                id: 'em1',
+                examId: 'e1',
+                title: 'Список вопросов',
+                addedBy: 'Смирнов А.В.',
+                addedAt: '5 мая',
+            },
+            {
+                id: 'em2',
+                examId: 'e1',
+                title: 'Конспект лекций',
+                addedBy: 'Иван Петров',
+                addedAt: '6 мая',
+            },
         ],
     },
-    { id: 'e2', subject: 'Физика', date: `${isoPlusDays(10)}T14:00`, time: '14:00', room: '301', teacher: 'Петрова Е.С.', icon: '⚛️', type: 'exam', materials: [] },
     {
-        id: 'e3', subject: 'ТРПО (зачёт)', date: `${isoPlusDays(14)}T12:00`, time: '12:00',
-        room: '505', teacher: 'Иванов П.П.', icon: '💻', type: 'exam',
+        id: 'e2',
+        subject: 'Физика',
+        date: `${isoPlusDays(10)}T14:00`,
+        time: '14:00',
+        room: '301',
+        teacher: 'Петрова Е.С.',
+        icon: '⚛️',
+        type: 'exam',
+        materials: [],
+    },
+    {
+        id: 'e3',
+        subject: 'ТРПО (зачёт)',
+        date: `${isoPlusDays(14)}T12:00`,
+        time: '12:00',
+        room: '505',
+        teacher: 'Иванов П.П.',
+        icon: '💻',
+        type: 'exam',
         materials: [
-            { id: 'em3', examId: 'e3', title: 'Методичка по лабам', addedBy: 'Иванов П.П.', addedAt: '3 мая' },
+            {
+                id: 'em3',
+                examId: 'e3',
+                title: 'Методичка по лабам',
+                addedBy: 'Иванов П.П.',
+                addedAt: '3 мая',
+            },
         ],
     },
-    { id: 'c1', subject: 'Матанализ', date: `${isoPlusDays(6)}T15:00`, time: '15:00', room: '412', teacher: 'Смирнов А.В.', icon: '💬', type: 'consultation', materials: [] },
-    { id: 'c2', subject: 'Физика', date: `${isoPlusDays(9)}T13:00`, time: '13:00', room: '301', teacher: 'Петрова Е.С.', icon: '💬', type: 'consultation', materials: [] },
+    {
+        id: 'c1',
+        subject: 'Матанализ',
+        date: `${isoPlusDays(6)}T15:00`,
+        time: '15:00',
+        room: '412',
+        teacher: 'Смирнов А.В.',
+        icon: '💬',
+        type: 'consultation',
+        materials: [],
+    },
+    {
+        id: 'c2',
+        subject: 'Физика',
+        date: `${isoPlusDays(9)}T13:00`,
+        time: '13:00',
+        room: '301',
+        teacher: 'Петрова Е.С.',
+        icon: '💬',
+        type: 'consultation',
+        materials: [],
+    },
 ];
 
 let TASKS: Task[] = [
-    { id: 't1', title: 'Лаба №3 по ТРПО', description: 'Реализовать REST API на FastAPI', deadline: isoPlusDays(3), type: 'group', status: 'active' },
-    { id: 't2', title: 'ДЗ по матанализу', description: 'Интегралы, задачи 1–15', deadline: isoPlusDays(7), type: 'personal', status: 'soon' },
-    { id: 't3', title: 'Отчёт по физике', description: 'Лаба №2, оформление по ГОСТ', deadline: isoPlusDays(-5), type: 'group', status: 'done' },
-    { id: 't4', title: 'Реферат по истории', description: 'Тема: «Развитие ЭВМ в СССР»', deadline: isoPlusDays(-2), type: 'personal', status: 'overdue' },
+    {
+        id: 't1',
+        title: 'Лаба №3 по ТРПО',
+        description: 'Реализовать REST API на FastAPI',
+        deadline: isoPlusDays(3),
+        type: 'group',
+        status: 'active',
+    },
+    {
+        id: 't2',
+        title: 'ДЗ по матанализу',
+        description: 'Интегралы, задачи 1–15',
+        deadline: isoPlusDays(7),
+        type: 'personal',
+        status: 'soon',
+    },
+    {
+        id: 't3',
+        title: 'Отчёт по физике',
+        description: 'Лаба №2, оформление по ГОСТ',
+        deadline: isoPlusDays(-5),
+        type: 'group',
+        status: 'done',
+    },
+    {
+        id: 't4',
+        title: 'Реферат по истории',
+        description: 'Тема: «Развитие ЭВМ в СССР»',
+        deadline: isoPlusDays(-2),
+        type: 'personal',
+        status: 'overdue',
+    },
 ];
 
 const delay = (ms = 400) => new Promise(r => setTimeout(r, ms));
@@ -233,7 +426,7 @@ export const mockApi = {
                 payload.scope === 'selected' && payload.studentIds?.length
                     ? payload.studentIds
                     : undefined,
-            completedBy: [],   // ← ДОБАВИТЬ
+            completedBy: [], // ← ДОБАВИТЬ
         };
         REMINDERS = [reminder, ...REMINDERS];
         return reminder;
@@ -252,12 +445,12 @@ export const mockApi = {
     },
 
     /**
- * Отправка напоминания.
- * Студенты, у которых это напоминание уже отмечено выполненным,
- * уведомление НЕ получают.
- * Если напоминание с targetStudentIds — отправляем только им
- * (минус выполненные).
- */
+     * Отправка напоминания.
+     * Студенты, у которых это напоминание уже отмечено выполненным,
+     * уведомление НЕ получают.
+     * Если напоминание с targetStudentIds — отправляем только им
+     * (минус выполненные).
+     */
     async remindReminder(id: string) {
         await delay(700);
         const target = REMINDERS.find(r => r.id === id);
@@ -284,9 +477,9 @@ export const mockApi = {
     },
 
     /**
- * Отметить/снять напоминание как выполненное для текущего пользователя.
- * На бэке — добавить/удалить user.id из списка completedBy.
- */
+     * Отметить/снять напоминание как выполненное для текущего пользователя.
+     * На бэке — добавить/удалить user.id из списка completedBy.
+     */
     async toggleReminderCompleted(id: string, completed: boolean) {
         await delay();
         const userId = ME.id;
@@ -308,12 +501,21 @@ export const mockApi = {
         type: string;
         deadline: string;
     }): Promise<Debt> {
-        if (USE_API_MOCK) return mockApi.createDebt(payload);
-        return request<Debt>('/debts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
+        await delay();
+        const studentId = payload.studentId ?? ME.id;
+        const studentName =
+            payload.studentName ?? STUDENTS.find(s => s.id === studentId)?.name ?? '';
+        const debt: Debt = {
+            id: `debt-${Date.now()}`,
+            studentId,
+            studentName,
+            subject: payload.subject,
+            type: payload.type,
+            deadline: payload.deadline,
+            status: payload.deadline < isoPlusDays(0) ? 'overdue' : 'active',
+        };
+        DEBTS = [debt, ...DEBTS];
+        return debt;
     },
 
     async updateDebt(
@@ -326,17 +528,15 @@ export const mockApi = {
             deadline: string;
         }>
     ): Promise<{ ok: boolean }> {
-        if (USE_API_MOCK) return mockApi.updateDebt(id, payload);
-        return request<{ ok: boolean }>(`/debts/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
+        await delay();
+        DEBTS = DEBTS.map(d => (d.id === id ? { ...d, ...payload } : d));
+        return { ok: true };
     },
 
     async deleteDebt(id: string): Promise<{ ok: boolean }> {
-        if (USE_API_MOCK) return mockApi.deleteDebt(id);
-        return request<{ ok: boolean }>(`/debts/${id}`, { method: 'DELETE' });
+        await delay();
+        DEBTS = DEBTS.filter(d => d.id !== id);
+        return { ok: true };
     },
 
     // ===== ЗАДАНИЯ =====
@@ -381,11 +581,7 @@ export const mockApi = {
      * Материалы добавляются только ссылкой на сообщение в MAX.
      * Файл лежит в чате, бот перешлёт его в группу.
      */
-    async uploadMaterial(payload: {
-        title: string;
-        type: string;
-        url: string;
-    }): Promise<Material> {
+    async uploadMaterial(payload: { title: string; type: string; url: string }): Promise<Material> {
         await delay();
         const material: Material = {
             id: `mat-${Date.now()}`,
@@ -460,9 +656,7 @@ export const mockApi = {
     async deleteExamMaterial(examId: string, materialId: string) {
         await delay();
         EXAMS = EXAMS.map(e =>
-            e.id === examId
-                ? { ...e, materials: e.materials.filter(m => m.id !== materialId) }
-                : e
+            e.id === examId ? { ...e, materials: e.materials.filter(m => m.id !== materialId) } : e
         );
         return { ok: true, examId, materialId };
     },
@@ -524,9 +718,7 @@ export const mockApi = {
     async renameMember(studentId: string, newName: string) {
         await delay();
         const oldName = STUDENTS.find(s => s.id === studentId)?.name ?? '';
-        STUDENTS = STUDENTS.map(s =>
-            s.id === studentId ? { ...s, name: newName } : s
-        );
+        STUDENTS = STUDENTS.map(s => (s.id === studentId ? { ...s, name: newName } : s));
         return { ok: true, oldName, newName };
     },
 
@@ -537,10 +729,10 @@ export const mockApi = {
     },
 
     /**
- * Покинуть группу. Удаляем пользователя из списка, сбрасываем группу.
- * После вызова — reload() в контексте вернёт юзера без группы,
- * и App покажет страницу 504.
- */
+     * Покинуть группу. Удаляем пользователя из списка, сбрасываем группу.
+     * После вызова — reload() в контексте вернёт юзера без группы,
+     * и App покажет страницу 504.
+     */
     async leaveGroup() {
         await delay();
         const myName = `${ME.firstName} ${ME.lastName}`;

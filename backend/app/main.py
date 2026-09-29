@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from maxapi import Bot
 
 from app.api.v1.router import api_router
 from app.core.config import SETTINGS
+from app.core.openapi import install_openapi
 from app.services import notify_service
 
 
@@ -42,17 +44,28 @@ app = FastAPI(
     title="Mister Moderator API",
     version="1.0.0",
     lifespan=lifespan,
+    # Под префиксом /api, чтобы документация была доступна через nginx и туннель
+    docs_url="/api/docs",
+    redoc_url=None,
+    openapi_url="/api/openapi.json",
 )
+install_openapi(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=SETTINGS.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*", "X-Max-Init-Data"],
 )
 
 app.include_router(api_router, prefix="/api")
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+    """Некорректные данные (например, неверный формат даты) — 400, а не 500."""
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
 @app.get("/api/health")

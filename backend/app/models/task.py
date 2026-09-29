@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from functools import partial
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+
 from app.core.database import Base
 
 

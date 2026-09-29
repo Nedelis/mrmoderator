@@ -1,6 +1,6 @@
 from typing import Literal
-from app.schemas.base import BaseSchema
 
+from app.schemas.base import BaseSchema
 
 MaterialType = Literal["pdf", "video", "other"]
 

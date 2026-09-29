@@ -1,11 +1,14 @@
 from datetime import datetime
+
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.exam import Exam, ExamMaterial
 from app.models.user import User
-from app.schemas.exam import Exam as ExamSchema, ExamMaterial as ExamMaterialSchema, CreateExamRequest as CreateExamRequestSchema
+from app.schemas.exam import CreateExamRequest as CreateExamRequestSchema
+from app.schemas.exam import Exam as ExamSchema
+from app.schemas.exam import ExamMaterial as ExamMaterialSchema
 
 
 def _to_material_schema(m: ExamMaterial, added_by_name: str) -> ExamMaterialSchema:
@@ -40,17 +43,19 @@ async def list_exams(db: AsyncSession, group_id: str) -> list[ExamSchema]:
                     added_by_name = f"{u.last_name} {u.first_name[0]}."
             materials.append(_to_material_schema(m, added_by_name))
 
-        out.append(ExamSchema(
-            id=str(e.id),
-            subject=e.subject,
-            date=e.date.isoformat(timespec="minutes"),
-            time=e.time,
-            room=e.room,
-            teacher=e.teacher,
-            icon=e.icon,
-            type=e.type,
-            materials=materials,
-        ))
+        out.append(
+            ExamSchema(
+                id=str(e.id),
+                subject=e.subject,
+                date=e.date.isoformat(timespec="minutes"),
+                time=e.time,
+                room=e.room,
+                teacher=e.teacher,
+                icon=e.icon,
+                type=e.type,
+                materials=materials,
+            )
+        )
     return out
 
 
@@ -59,13 +64,8 @@ async def get_exam(db: AsyncSession, exam_id: int) -> Exam | None:
     return result.scalar_one_or_none()
 
 
-async def create_exam(
-    db: AsyncSession,
-    group_id: str,
-    data: CreateExamRequestSchema
-) -> ExamSchema:
+async def create_exam(db: AsyncSession, group_id: str, data: CreateExamRequestSchema) -> ExamSchema:
     """Создаёт новый экзамен в расписании группы."""
-    from datetime import datetime
 
     # Парсим дату из строки (ISO-формат: YYYY-MM-DD или YYYY-MM-DDTHH:MM)
     try:

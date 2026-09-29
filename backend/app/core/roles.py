@@ -1,6 +1,5 @@
 from typing import Final
 
-
 # ============================================================
 # ПРАВА
 # ============================================================
@@ -44,8 +43,15 @@ ROLES: Final[dict[str, dict]] = {
         "badgeIcon": "👑",
         "badgeText": "Высшая",
         "menu": [
-            "/", "/my-stats", "/reminders", "/debts", "/exams",
-            "/tasks", "/materials", "/mail", "/roles",
+            "/",
+            "/my-stats",
+            "/reminders",
+            "/debts",
+            "/exams",
+            "/tasks",
+            "/materials",
+            "/mail",
+            "/roles",
         ],
         "permissions": [
             "reminder.create.group",
@@ -80,8 +86,15 @@ ROLES: Final[dict[str, dict]] = {
         "badgeIcon": "🛡️",
         "badgeText": "Высокая",
         "menu": [
-            "/", "/my-stats", "/reminders", "/debts", "/exams",
-            "/tasks", "/materials", "/mail", "/roles",
+            "/",
+            "/my-stats",
+            "/reminders",
+            "/debts",
+            "/exams",
+            "/tasks",
+            "/materials",
+            "/mail",
+            "/roles",
         ],
         "permissions": [
             "reminder.create.group",
@@ -115,8 +128,13 @@ ROLES: Final[dict[str, dict]] = {
         "badgeIcon": "📢",
         "badgeText": "Средняя",
         "menu": [
-            "/my-stats", "/reminders", "/debts", "/exams",
-            "/tasks", "/materials", "/mail",
+            "/my-stats",
+            "/reminders",
+            "/debts",
+            "/exams",
+            "/tasks",
+            "/materials",
+            "/mail",
         ],
         "permissions": [
             "reminder.create.personal",
@@ -137,8 +155,12 @@ ROLES: Final[dict[str, dict]] = {
         "badgeIcon": "👤",
         "badgeText": "Базовая",
         "menu": [
-            "/my-stats", "/reminders", "/debts", "/exams",
-            "/tasks", "/materials",
+            "/my-stats",
+            "/reminders",
+            "/debts",
+            "/exams",
+            "/tasks",
+            "/materials",
         ],
         "permissions": [
             "reminder.create.personal",
@@ -154,6 +176,7 @@ ROLES: Final[dict[str, dict]] = {
 # ============================================================
 # ХЕЛПЕРЫ
 # ============================================================
+
 
 def get_role(role_id: str) -> dict | None:
     """Возвращает конфиг роли или None."""

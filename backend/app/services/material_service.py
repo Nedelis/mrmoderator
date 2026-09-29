@@ -1,12 +1,17 @@
 from datetime import datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.material import Material
 from app.models.user import User
 from app.schemas.material import Material as MaterialSchema
 
 
 def _humanize(dt: datetime) -> str:
+    # SQLite возвращает naive datetime — считаем его UTC
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     delta = datetime.now(timezone.utc) - dt
     seconds = delta.total_seconds()
     if seconds < 60:
@@ -52,9 +57,7 @@ async def _resolve_author_name(db: AsyncSession, author_id: int | None) -> str:
 
 async def list_materials(db: AsyncSession, group_id: str) -> list[MaterialSchema]:
     result = await db.execute(
-        select(Material)
-        .where(Material.group_id == group_id)
-        .order_by(Material.created_at.desc())
+        select(Material).where(Material.group_id == group_id).order_by(Material.created_at.desc())
     )
     materials = result.scalars().all()
 

@@ -7,9 +7,11 @@ from app.core.roles import has_permission
 from app.models.debt import Debt
 from app.models.user import User
 from app.schemas.debt import (
-    Debt as DebtSchema,
     CreateDebtRequest,
     UpdateDebtRequest,
+)
+from app.schemas.debt import (
+    Debt as DebtSchema,
 )
 
 
@@ -46,7 +48,7 @@ def _compute_status(deadline: datetime) -> str:
 
 
 def _parse_date(date_str: str) -> datetime:
-    return datetime.strptime(date_str, "%Y-%m-%d")
+    return datetime.fromisoformat(date_str)
 
 
 async def _get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
@@ -127,8 +129,8 @@ async def update_debt(
     # 1. Если меняется студент — обновляем и student_id, и student_name
     if data.student_id is not None:
         target = await _get_user_by_id(db, int(data.student_id))
-        if target is None:
-            raise ValueError(f"Студент с id={data.student_id} не найден")
+        if target is None or target.group_id != debt.group_id:
+            raise ValueError(f"Студент с id={data.student_id} не найден в группе")
         debt.student_id = target.id
         debt.student_name = _build_full_name(target)
 

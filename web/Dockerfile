@@ -7,9 +7,11 @@ RUN npm ci
 
 COPY . .
 
-# Подставляется в бандл на этапе сборки (import.meta.env.VITE_API_BASE)
-ARG VITE_API_BASE=/api/v1
-ENV VITE_API_BASE=$VITE_API_BASE
+# Подставляются в бандл на этапе сборки (import.meta.env.*)
+ARG VITE_API_BASE=/api
+ARG VITE_USE_API_MOCK=false
+ENV VITE_API_BASE=$VITE_API_BASE \
+    VITE_USE_API_MOCK=$VITE_USE_API_MOCK
 
 RUN npm run build
 

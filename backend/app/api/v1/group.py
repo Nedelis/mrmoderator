@@ -15,6 +15,7 @@ router = APIRouter(tags=["Группа"])
 # GET /group — инфо о группе
 # ═══════════════════════════════════════════════════════════════
 
+
 @router.get("/group", response_model=GroupInfo)
 async def get_group(
     user: User = Depends(get_current_user),
@@ -29,6 +30,7 @@ async def get_group(
 # ═══════════════════════════════════════════════════════════════
 # GET /students — список студентов группы
 # ═══════════════════════════════════════════════════════════════
+
 
 @router.get("/students", response_model=list[Student])
 async def get_students(
@@ -45,6 +47,7 @@ async def get_students(
 # ═══════════════════════════════════════════════════════════════
 # POST /group/leave — выход из группы
 # ═══════════════════════════════════════════════════════════════
+
 
 @router.post("/group/leave", response_model=OkResponse)
 async def leave_group(

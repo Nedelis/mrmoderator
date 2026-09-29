@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require
 from app.models.user import User
-from app.schemas.common import OkResponse, ForwardMailResponse, RefreshMailResponse
-from app.schemas.mail import MailItem, Mailbox, AddMailboxRequest, ConfigureMailboxesRequest
+from app.schemas.common import ForwardMailResponse, OkResponse, RefreshMailResponse
+from app.schemas.mail import AddMailboxRequest, ConfigureMailboxesRequest, Mailbox, MailItem
 from app.services import mail_service
 
 router = APIRouter(prefix="/mail", tags=["Почта"])
@@ -77,7 +77,7 @@ async def remove_mailbox(
     db: AsyncSession = Depends(get_db),
 ):
     mb = await mail_service.get_mailbox(db, mailbox_id)
-    if mb is None:
+    if mb is None or mb.group_id != user.group_id:
         raise HTTPException(404, "Ящик не найден")
     await mail_service.remove_mailbox(db, mb)
     return OkResponse()

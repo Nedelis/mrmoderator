@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +8,7 @@ from app.core.deps import get_current_user, require
 from app.core.roles import ROLES
 from app.models.user import User
 from app.schemas.common import OkResponse, RemindResponse
-from app.schemas.task import Task, CreateTaskRequest, UpdateTaskRequest
+from app.schemas.task import CreateTaskRequest, Task, UpdateTaskRequest
 from app.services import task_service
 
 router = APIRouter(prefix="/tasks", tags=["Задания"])
@@ -46,7 +47,7 @@ async def update_task(
     db: AsyncSession = Depends(get_db),
 ):
     task = await task_service.get_task(db, task_id)
-    if task is None:
+    if task is None or task.group_id != user.group_id:
         raise HTTPException(404, "Задание не найдено")
 
     is_author = task.author_id == user.id
@@ -67,7 +68,7 @@ async def delete_task(
     db: AsyncSession = Depends(get_db),
 ):
     task = await task_service.get_task(db, task_id)
-    if task is None:
+    if task is None or task.group_id != user.group_id:
         raise HTTPException(404, "Задание не найдено")
 
     is_author = task.author_id == user.id
@@ -88,7 +89,7 @@ async def remind_task(
     db: AsyncSession = Depends(get_db),
 ):
     task = await task_service.get_task(db, task_id)
-    if task is None:
+    if task is None or task.group_id != user.group_id:
         raise HTTPException(404, "Задание не найдено")
 
     sent_to = await task_service.remind_all(db, task, task.group_id)

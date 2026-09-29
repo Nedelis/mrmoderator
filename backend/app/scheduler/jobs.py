@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select
+
 from app.core.database import async_session
 from app.models.debt import Debt
 from app.models.group import Group
@@ -69,9 +71,7 @@ async def check_upcoming_deadlines() -> None:
             ):
                 continue
 
-            student_result = await db.execute(
-                select(User).where(User.id == debt.student_id)
-            )
+            student_result = await db.execute(select(User).where(User.id == debt.student_id))
             student = student_result.scalar_one_or_none()
             if student is None or not student.max_user_id:
                 continue
@@ -100,21 +100,14 @@ async def _notify_group_about(
 ) -> None:
     """Рассылает уведомление всем студентам группы."""
     students = await user_service.get_group_students(db, group_id)
-    text = (
-        f"{emoji} Напоминание: {title}\n"
-        f"Дедлайн: {deadline.strftime('%d.%m.%Y %H:%M')}"
-    )
+    text = f"{emoji} Напоминание: {title}\nДедлайн: {deadline.strftime('%d.%m.%Y %H:%M')}"
     for student in students:
         if not student.max_user_id:
             continue
-        if await notification_log_service.was_sent(
-            db, entity_type, entity_id, student.id, kind
-        ):
+        if await notification_log_service.was_sent(db, entity_type, entity_id, student.id, kind):
             continue
         if await notify_service.send_to_user(student.max_user_id, text):
-            await notification_log_service.mark_sent(
-                db, entity_type, entity_id, student.id, kind
-            )
+            await notification_log_service.mark_sent(db, entity_type, entity_id, student.id, kind)
 
 
 async def check_overdue_debts() -> None:
@@ -122,9 +115,7 @@ async def check_overdue_debts() -> None:
     now = datetime.utcnow()
 
     async with async_session() as db:
-        result = await db.execute(
-            select(Debt).where(Debt.deadline < now)
-        )
+        result = await db.execute(select(Debt).where(Debt.deadline < now))
         for debt in result.scalars().all():
             # Не чаще, чем раз в 24 часа
             if await notification_log_service.was_sent_recently(
@@ -132,9 +123,7 @@ async def check_overdue_debts() -> None:
             ):
                 continue
 
-            student_result = await db.execute(
-                select(User).where(User.id == debt.student_id)
-            )
+            student_result = await db.execute(select(User).where(User.id == debt.student_id))
             student = student_result.scalar_one_or_none()
             if student is None or not student.max_user_id:
                 continue
@@ -148,14 +137,13 @@ async def check_overdue_debts() -> None:
                 f"Срочно свяжись с преподавателем."
             )
             if await notify_service.send_to_user(student.max_user_id, text):
-                await notification_log_service.mark_sent(
-                    db, "debt", debt.id, student.id, "overdue"
-                )
+                await notification_log_service.mark_sent(db, "debt", debt.id, student.id, "overdue")
 
 
 async def send_daily_summary() -> None:
     """Раз в день собирает статистику по группе и шлёт старосте."""
-    now = datetime.now(timezone.utc)
+    # Дедлайны хранятся как naive UTC — сравниваем с naive UTC
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     today_end = now + timedelta(days=1)
 
     async with async_session() as db:
@@ -175,9 +163,7 @@ async def send_daily_summary() -> None:
                 continue
 
             # Должники
-            debts_result = await db.execute(
-                select(Debt).where(Debt.group_id == group.id)
-            )
+            debts_result = await db.execute(select(Debt).where(Debt.group_id == group.id))
             debts = list(debts_result.scalars().all())
             overdue = [d for d in debts if d.deadline < now]
 

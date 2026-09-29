@@ -16,6 +16,8 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     # === MAX ===
     MAX_BOT_TOKEN: SecretStr = SecretStr("")
+    # Ник бота без @ — из него строятся ссылки на мини-приложение и приглашения
+    MAX_BOT_USERNAME: str = "t595_hakaton_max_bot"
 
     # === App ===
     DEBUG: bool = False

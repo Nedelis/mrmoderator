@@ -1,11 +1,15 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.mail import MailItem, Mailbox
+from app.models.mail import Mailbox, MailItem
+from app.schemas.mail import (
+    AddMailboxRequest,
+)
+from app.schemas.mail import (
+    Mailbox as MailboxSchema,
+)
 from app.schemas.mail import (
     MailItem as MailItemSchema,
-    Mailbox as MailboxSchema,
-    AddMailboxRequest,
 )
 
 

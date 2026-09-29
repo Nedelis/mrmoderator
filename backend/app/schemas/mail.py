@@ -1,5 +1,7 @@
 from typing import Literal
+
 from pydantic import Field
+
 from app.schemas.base import BaseSchema
 
 MailSource = Literal["dean", "kafedra", "prepod"]

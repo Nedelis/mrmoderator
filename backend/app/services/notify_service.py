@@ -19,9 +19,10 @@ async def send_to_user(max_user_id: str, text: str) -> bool:
 
 async def send_to_group(group_id: str, text: str) -> bool:
     """Отправить сообщение в групповой чат. Требует chat_id в БД."""
+    from sqlalchemy import select
+
     from app.core.database import async_session
     from app.models.group import Group
-    from sqlalchemy import select
 
     async with async_session() as db:
         result = await db.execute(select(Group).where(Group.id == group_id))

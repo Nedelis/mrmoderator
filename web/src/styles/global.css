@@ -38,13 +38,21 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+        'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
 }
 
 body {
     color: var(--text);
     min-height: 100vh;
-    transition: background 0.2s, color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s;
 }
 
 /* ===== APP LAYOUT ===== */
@@ -122,15 +130,15 @@ body {
     transition: all 0.15s ease;
 }
 
-    .sidebar-nav-item:hover {
-        background: var(--border);
-    }
+.sidebar-nav-item:hover {
+    background: var(--border);
+}
 
-    .sidebar-nav-item.active {
-        background: var(--accent-soft);
-        color: var(--accent);
-        box-shadow: inset 0 0 0 1px var(--accent);
-    }
+.sidebar-nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
 
 .nav-icon {
     font-size: 15px;
@@ -162,9 +170,9 @@ body {
     transition: all 0.15s ease;
 }
 
-    .sidebar-action:hover {
-        background: var(--border);
-    }
+.sidebar-action:hover {
+    background: var(--border);
+}
 
 /* Универсальный селект, используется в формах */
 .role-select {
@@ -178,9 +186,9 @@ body {
     outline: none;
 }
 
-    .role-select:focus {
-        border-color: var(--accent);
-    }
+.role-select:focus {
+    border-color: var(--accent);
+}
 
 .user-mini {
     display: flex;
@@ -255,17 +263,17 @@ body {
     flex-wrap: wrap;
 }
 
-    .page-header h2 {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
+.page-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
 
-    .page-header p {
-        font-size: 13px;
-        color: var(--muted);
-        margin-top: 4px;
-    }
+.page-header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+}
 
 .page-actions {
     display: flex;
@@ -279,13 +287,15 @@ body {
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
-    .card:hover {
-        border-color: var(--accent);
-        box-shadow: 0 8px 24px rgba(91, 140, 255, 0.08);
-    }
+.card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(91, 140, 255, 0.08);
+}
 
 .card-header {
     display: flex;
@@ -294,10 +304,10 @@ body {
     margin-bottom: 16px;
 }
 
-    .card-header h3 {
-        font-size: 15px;
-        font-weight: 600;
-    }
+.card-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+}
 
 /* ===== GRID ===== */
 .grid {
@@ -305,25 +315,31 @@ body {
     gap: 18px;
 }
 
+/* minmax(0, 1fr) и min-width: 0 — чтобы длинное содержимое карточек
+   не раздвигало колонки шире экрана на телефоне */
+.grid > * {
+    min-width: 0;
+}
+
 .grid-2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .grid-3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .grid-4 {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 @media (max-width: 1100px) {
     .grid-4 {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .grid-3 {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -347,29 +363,29 @@ body {
     font-size: 13px;
 }
 
-    .table th {
-        text-align: left;
-        padding: 10px 12px;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted);
-        font-weight: 600;
-        border-bottom: 1px solid var(--border);
-    }
+.table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+}
 
-    .table td {
-        padding: 12px;
-        border-bottom: 1px solid var(--border);
-    }
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
 
-    .table tr:last-child td {
-        border-bottom: none;
-    }
+.table tr:last-child td {
+    border-bottom: none;
+}
 
-    .table tr:hover td {
-        background: var(--panel-2);
-    }
+.table tr:hover td {
+    background: var(--panel-2);
+}
 
 /* ===== TAGS ===== */
 .tag {
@@ -466,54 +482,60 @@ body {
     flex-shrink: 0;
 }
 
-    .reminder-icon.blue {
-        background: rgba(91, 140, 255, 0.12);
-        color: var(--accent);
-    }
+.reminder-icon.blue {
+    background: rgba(91, 140, 255, 0.12);
+    color: var(--accent);
+}
 
-    .reminder-icon.green {
-        background: rgba(46, 204, 113, 0.12);
-        color: var(--green);
-    }
+.reminder-icon.green {
+    background: rgba(46, 204, 113, 0.12);
+    color: var(--green);
+}
 
-    .reminder-icon.red {
-        background: rgba(255, 92, 92, 0.12);
-        color: var(--red);
-    }
+.reminder-icon.red {
+    background: rgba(255, 92, 92, 0.12);
+    color: var(--red);
+}
 
-    .reminder-icon.yellow {
-        background: rgba(255, 200, 87, 0.12);
-        color: var(--yellow);
-    }
+.reminder-icon.yellow {
+    background: rgba(255, 200, 87, 0.12);
+    color: var(--yellow);
+}
 
-    .reminder-icon.purple {
-        background: rgba(167, 139, 250, 0.12);
-        color: var(--purple);
-    }
+.reminder-icon.purple {
+    background: rgba(167, 139, 250, 0.12);
+    color: var(--purple);
+}
 
 .reminder-content {
     flex: 1;
+    min-width: 0;
 }
 
-    .reminder-content .title {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
+/* Заголовок с тегами и мета-строка переносятся, а не выталкивают кнопки за экран */
+.reminder-content > div {
+    flex-wrap: wrap;
+}
 
-    .reminder-content .desc {
-        font-size: 12.5px;
-        color: var(--muted);
-        line-height: 1.5;
-    }
+.reminder-content .title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
 
-    .reminder-content .meta {
-        display: flex;
-        gap: 14px;
-        margin-top: 8px;
-        font-size: 11.5px;
-        color: var(--muted);
-    }
+.reminder-content .desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.reminder-content .meta {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--muted);
+}
 
 /* ===== BUTTONS ===== */
 .btn {
@@ -534,10 +556,10 @@ body {
     color: #fff;
 }
 
-    .btn-primary:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
 
 .btn-ghost {
     background: var(--panel-2);
@@ -545,9 +567,9 @@ body {
     border: 1px solid var(--border);
 }
 
-    .btn-ghost:hover {
-        background: var(--border);
-    }
+.btn-ghost:hover {
+    background: var(--border);
+}
 
 /* ===== MOBILE ===== */
 .mobile-menu-btn {
@@ -591,10 +613,10 @@ body {
     flex-direction: column;
 }
 
-    .mobile-nav.open {
-        transform: translateX(0);
-        display: flex;
-    }
+.mobile-nav.open {
+    transform: translateX(0);
+    display: flex;
+}
 
 .mobile-nav-header {
     display: flex;
@@ -605,17 +627,17 @@ body {
     border-bottom: 1px solid var(--border);
 }
 
-    .mobile-nav-header h2 {
-        font-size: 18px;
-    }
+.mobile-nav-header h2 {
+    font-size: 18px;
+}
 
-    .mobile-nav-header button {
-        background: transparent;
-        border: none;
-        color: var(--text);
-        font-size: 20px;
-        cursor: pointer;
-    }
+.mobile-nav-header button {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+}
 
 /* Список навигации растягивается и толкает футер вниз */
 .mobile-nav-list {
@@ -645,10 +667,10 @@ body {
     font-size: 14px;
 }
 
-    .mobile-nav-item.active {
-        background: var(--accent-soft);
-        color: var(--accent);
-    }
+.mobile-nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
 
 @media (max-width: 780px) {
     .sidebar {
@@ -675,13 +697,21 @@ body {
         min-height: 100vh;
     }
 
-    .grid-2, .grid-3, .grid-4 {
-        grid-template-columns: 1fr;
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .page-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    /* Широкие таблицы на телефоне прокручиваются внутри карточки */
+    .table {
+        display: block;
+        overflow-x: auto;
     }
 }
 
@@ -788,10 +818,10 @@ body {
     border-bottom: 1px solid var(--border);
 }
 
-    .modal-header h3 {
-        font-size: 16px;
-        font-weight: 600;
-    }
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+}
 
 .modal-body {
     padding: 20px 24px 24px;
@@ -814,14 +844,14 @@ body {
     opacity: 0.65;
 }
 
-    .reminder-item-completed .title {
-        text-decoration: line-through;
-        color: var(--muted);
-    }
+.reminder-item-completed .title {
+    text-decoration: line-through;
+    color: var(--muted);
+}
 
-    .reminder-item-completed .desc {
-        color: var(--muted);
-    }
+.reminder-item-completed .desc {
+    color: var(--muted);
+}
 
 /* ===== DANGER ACTION ===== */
 .sidebar-action-danger {
@@ -829,11 +859,11 @@ body {
     border-color: var(--red);
 }
 
-    .sidebar-action-danger:hover:not(:disabled) {
-        background: rgba(255, 92, 92, 0.1);
-    }
+.sidebar-action-danger:hover:not(:disabled) {
+    background: rgba(255, 92, 92, 0.1);
+}
 
-    .sidebar-action-danger:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+.sidebar-action-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

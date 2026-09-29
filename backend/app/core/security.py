@@ -6,26 +6,47 @@ from urllib.parse import parse_qsl
 
 import aiohttp
 from fastapi import HTTPException, status
+from maxapi.client.ssl import create_default_ssl_context
+from maxapi.connection.base import BaseConnection
 
 from app.core.config import SETTINGS
-
 
 # ═══════════════════════════════════════════════════════════════
 # Проверка токена бота
 # ═══════════════════════════════════════════════════════════════
 
-_bot_verified: bool | None = None
+_bot_verified = False
 
 
 async def verify_bot_token() -> bool:
     """
     Проверяет токен бота через GET /me.
-    Кеширует результат, чтобы не дёргать MAX на каждый запрос.
+    Кеширует только успешный результат, чтобы не дёргать MAX на каждый запрос;
+    после сетевой ошибки проверка повторится на следующем запросе.
     """
     global _bot_verified
 
-    if _bot_verified is not None:
-        return _bot_verified
+    if _bot_verified:
+        return True
+
+    token = SETTINGS.MAX_BOT_TOKEN.get_secret_value()
+    if not token:
+        return False
+
+    # Сертификат platform-api.max.ru выпущен НУЦ Минцифры — его корень
+    # есть в maxapi, но не в стандартном наборе CA
+    connector = aiohttp.TCPConnector(ssl=create_default_ssl_context())
+    try:
+        async with aiohttp.ClientSession(connector=connector) as session:
+            async with session.get(
+                f"{BaseConnection.API_URL}/me",
+                headers={"Authorization": token},
+            ) as resp:
+                _bot_verified = resp.status == 200
+    except aiohttp.ClientError:
+        return False
+
+    return _bot_verified
 
     token = SETTINGS.MAX_BOT_TOKEN.get_secret_value()
     if not token:
@@ -49,6 +70,7 @@ async def verify_bot_token() -> bool:
 # Парсинг initData
 # ═══════════════════════════════════════════════════════════════
 
+
 def parse_init_data(init_data: str) -> dict:
     return dict(parse_qsl(init_data, keep_blank_values=True))
 
@@ -56,6 +78,7 @@ def parse_init_data(init_data: str) -> dict:
 # ═══════════════════════════════════════════════════════════════
 # Валидация initData
 # ═══════════════════════════════════════════════════════════════
+
 
 async def validate_init_data(init_data: str) -> dict:
     """
@@ -107,9 +130,7 @@ async def validate_init_data(init_data: str) -> dict:
         )
 
     # 5. Собираем data_check_string
-    data_check_string = "\n".join(
-        f"{k}={v}" for k, v in sorted(parsed.items())
-    )
+    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed.items()))
 
     # 6. Считаем подпись
     secret_key = hmac.new(

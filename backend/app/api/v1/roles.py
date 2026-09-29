@@ -21,6 +21,7 @@ def _role_level(role_id: str) -> int:
 # НАЗНАЧЕНИЕ РОЛИ
 # ═══════════════════════════════════════════════════════════════
 
+
 @router.post("/roles/assign", response_model=OkResponse)
 async def assign_role(
     data: AssignRoleRequest,
@@ -34,7 +35,7 @@ async def assign_role(
     # 2. Найти целевого пользователя
     result = await db.execute(select(User).where(User.id == int(data.student_id)))
     target = result.scalar_one_or_none()
-    if target is None:
+    if target is None or target.group_id != current.group_id:
         raise HTTPException(404, "Студент не найден")
 
     # 3. Нельзя трогать того, кто выше или равен по уровню
@@ -68,6 +69,7 @@ async def assign_role(
 # УДАЛЕНИЕ УЧАСТНИКА
 # ═══════════════════════════════════════════════════════════════
 
+
 @router.delete("/group/members/{student_id}", response_model=RemovedMemberResponse)
 async def remove_group_member(
     student_id: str,
@@ -81,7 +83,7 @@ async def remove_group_member(
     # 2. Найти целевого пользователя
     result = await db.execute(select(User).where(User.id == int(student_id)))
     target = result.scalar_one_or_none()
-    if target is None:
+    if target is None or target.group_id != current.group_id:
         raise HTTPException(404, "Участник не найден")
 
     # 3. Нельзя удалить того, кто выше или равен по уровню
@@ -101,6 +103,7 @@ async def remove_group_member(
 # ПЕРЕИМЕНОВАНИЕ УЧАСТНИКА
 # ═══════════════════════════════════════════════════════════════
 
+
 @router.patch("/group/members/{student_id}/name", response_model=RenamedMemberResponse)
 async def rename_member(
     student_id: str,
@@ -110,7 +113,7 @@ async def rename_member(
 ):
     result = await db.execute(select(User).where(User.id == int(student_id)))
     target = result.scalar_one_or_none()
-    if target is None:
+    if target is None or target.group_id != current.group_id:
         raise HTTPException(404, "Участник не найден")
 
     if _role_level(target.role_id) >= _role_level(current.role_id):

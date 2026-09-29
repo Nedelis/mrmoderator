@@ -68,7 +68,12 @@ export const api = {
         return data.user;
     },
 
-    async getGroup(): Promise<{ name: string; course: number; semester: number; studentsCount: number }> {
+    async getGroup(): Promise<{
+        name: string;
+        course: number;
+        semester: number;
+        studentsCount: number;
+    }> {
         if (USE_API_MOCK) return mockApi.getGroupInfo();
         return request('/group');
     },
@@ -158,10 +163,7 @@ export const api = {
         return request(`/reminders/${id}/remind`, { method: 'POST' });
     },
 
-    async markReminderCompleted(
-        id: string,
-        completed: boolean
-    ): Promise<{ ok: boolean }> {
+    async markReminderCompleted(id: string, completed: boolean): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.toggleReminderCompleted(id, completed);
         return request<{ ok: boolean }>(`/reminders/${id}/complete`, {
             method: 'PUT',
@@ -224,10 +226,7 @@ export const api = {
         });
     },
 
-    async updateTask(
-        id: string,
-        payload: Record<string, unknown>
-    ): Promise<{ ok: boolean }> {
+    async updateTask(id: string, payload: Record<string, unknown>): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.updateTask(id, payload);
         return request<{ ok: boolean }>(`/tasks/${id}`, {
             method: 'PUT',
@@ -253,11 +252,7 @@ export const api = {
     },
 
     // ===== МАТЕРИАЛЫ =====
-    async uploadMaterial(payload: {
-        title: string;
-        type: string;
-        url: string;
-    }): Promise<Material> {
+    async uploadMaterial(payload: { title: string; type: string; url: string }): Promise<Material> {
         if (USE_API_MOCK) return mockApi.uploadMaterial(payload);
         return request<Material>('/materials', {
             method: 'POST',
@@ -310,10 +305,7 @@ export const api = {
         });
     },
 
-    async deleteExamMaterial(
-        examId: string,
-        materialId: string
-    ): Promise<{ ok: boolean }> {
+    async deleteExamMaterial(examId: string, materialId: string): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.deleteExamMaterial(examId, materialId);
         return request<{ ok: boolean }>(`/exams/${examId}/materials/${materialId}`, {
             method: 'DELETE',
@@ -369,10 +361,7 @@ export const api = {
     },
 
     // ===== РОЛИ =====
-    async assignRole(payload: {
-        studentId: string;
-        roleId: string;
-    }): Promise<{ ok: boolean }> {
+    async assignRole(payload: { studentId: string; roleId: string }): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.assignRole(payload);
         return request<{ ok: boolean }>('/roles/assign', {
             method: 'POST',

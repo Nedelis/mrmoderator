@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-    /** Базовый URL бэкенда. Например: http://localhost:8000/api/v1 */
+    /** Базовый URL бэкенда. Например: http://localhost:8000/api */
     readonly VITE_API_BASE: string;
 
     /** Флаг использования моков. Строка "true" или "false". */

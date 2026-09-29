@@ -10,17 +10,17 @@ import { CurrentUserProvider } from './contexts/CurrentUserContext';
 import { ToastProvider } from './components/Toast';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ThemeProvider>
-        <ToastProvider>
-          <RolesProvider>
-            <CurrentUserProvider>
-              <App />
-            </CurrentUserProvider>
-          </RolesProvider>
-        </ToastProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+    <React.StrictMode>
+        <BrowserRouter>
+            <ThemeProvider>
+                <ToastProvider>
+                    <RolesProvider>
+                        <CurrentUserProvider>
+                            <App />
+                        </CurrentUserProvider>
+                    </RolesProvider>
+                </ToastProvider>
+            </ThemeProvider>
+        </BrowserRouter>
+    </React.StrictMode>
 );

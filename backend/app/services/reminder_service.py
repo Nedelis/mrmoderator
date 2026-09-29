@@ -6,9 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.reminder import Reminder
 from app.models.user import User
 from app.schemas.reminder import (
-    Reminder as ReminderSchema,
     CreateReminderRequest,
     UpdateReminderRequest,
+)
+from app.schemas.reminder import (
+    Reminder as ReminderSchema,
 )
 from app.services import notify_service, user_service
 
@@ -28,7 +30,7 @@ def _to_schema(r: Reminder) -> ReminderSchema:
 
 def _parse_deadline(date_str: str, time_str: str) -> datetime:
     """Склеивает 'YYYY-MM-DD' + 'HH:mm' в datetime."""
-    return datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+    return datetime.fromisoformat(f"{date_str}T{time_str}")
 
 
 async def list_reminders(db: AsyncSession, user: User, group_id: str) -> list[ReminderSchema]:
@@ -124,6 +126,6 @@ async def remind_all(db: AsyncSession, reminder: Reminder, group_id: str) -> int
     )
     sent = 0
     for student in students:
-        if await notify_service.send_to_user(student.max_chat_id, text):
+        if await notify_service.send_to_user(student.max_user_id, text):
             sent += 1
     return sent

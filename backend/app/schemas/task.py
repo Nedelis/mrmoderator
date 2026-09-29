@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
-from app.schemas.base import BaseSchema
 
+from app.schemas.base import BaseSchema
 
 TaskType = Literal["group", "personal"]
 TaskStatus = Literal["active", "soon", "done", "overdue"]

@@ -1,0 +1,2600 @@
+openapi: 3.1.0
+info:
+  title: Mister Moderator API
+  description: |-
+    API мини-приложения **«Мистер Модератор»** для MAX — помощника старосты студенческой группы:
+    напоминания, задания, долги, экзамены, материалы, почта и роли внутри группы.
+
+    ### Авторизация
+    Мини-приложение передаёт в каждом запросе заголовок `X-Max-Init-Data` — строку
+    `WebApp.initData` из MAX Bridge. Сервер проверяет её HMAC-подпись токеном бота.
+
+    * `STRICT_AUTH=true` — заголовок обязателен, без него ответ `401`.
+    * `STRICT_AUTH=false` (демо-режим, по умолчанию) — заголовок игнорируется, все запросы
+      выполняются от тестового пользователя «Тест Тестов» с ролью **староста**
+      в группе `TEST-GROUP-01`. Группа и пользователь создаются автоматически при первом запросе.
+
+    ### Роли
+    `starosta` (4) → `zam` (3) → `proforg` (2) → `student` (1). Права каждой роли —
+    в ответе `GET /api/roles`. При нехватке прав — `403`.
+
+    ### Формат ошибок
+    `{"detail": "<сообщение>"}` или `{"detail": {"error": {"code": "...", "message": "..."}}}`.
+    Ошибки валидации тела запроса — `422` в стандартном формате FastAPI.
+  version: 1.0.0
+paths:
+  /api/roles:
+    get:
+      tags:
+      - Служебное
+      summary: Справочник ролей
+      description: Все роли с уровнем, правами (`permissions`) и доступными разделами мини-приложения
+        (`menu`). Фронтенд строит по нему меню и проверки прав.
+      operationId: get_roles_api_roles_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolesResponse'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/me:
+    get:
+      tags:
+      - Служебное
+      summary: Текущий пользователь
+      description: 'Пользователь, определённый по initData (или тестовый в демо-режиме), с группой и ролью.
+        Пустой `groupId` — пользователь ещё не вступил в группу (вступление — через бота: `/creategroup`
+        или `/join`).'
+      operationId: get_me_api_me_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/group:
+    get:
+      tags:
+      - Группа
+      summary: Информация о группе
+      description: Название, курс, семестр и число участников группы текущего пользователя.
+      operationId: get_group_api_group_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInfo'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/students:
+    get:
+      tags:
+      - Группа
+      summary: Участники группы
+      description: Список участников группы с ролями и количеством долгов.
+      operationId: get_students_api_students_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+                title: Response Get Students Api Students Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/group/leave:
+    post:
+      tags:
+      - Группа
+      summary: Выйти из группы
+      description: Удаляет личные сущности пользователя (долги, задания, напоминалки, материалы) и отвязывает
+        его от группы. Староста выйти не может — сначала нужно передать роль.
+      operationId: leave_group_api_group_leave_post
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/reminders:
+    get:
+      tags:
+      - Напоминалки
+      summary: Список напоминалок
+      operationId: list_reminders_api_reminders_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reminder'
+                title: Response List Reminders Api Reminders Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Групповые напоминалки и личные напоминалки текущего пользователя, отсортированные по
+        дедлайну.
+      security:
+      - MaxInitData: []
+      - {}
+    post:
+      tags:
+      - Напоминалки
+      summary: Создать напоминалку
+      operationId: create_reminder_api_reminders_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReminderRequest'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: '`scope`: `personal` — личная (право `reminder.create.personal`), `group` — всей группе,
+        `selected` — выбранным участникам из `studentIds` (право `reminder.create.group`). Дата — `YYYY-MM-DD`,
+        время — `HH:mm`.'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/reminders/{reminder_id}:
+    put:
+      tags:
+      - Напоминалки
+      summary: Изменить напоминалку
+      operationId: update_reminder_api_reminders__reminder_id__put
+      parameters:
+      - name: reminder_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Reminder Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReminderRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Автор или обладатель права `reminder.remind`.
+      security:
+      - MaxInitData: []
+      - {}
+    delete:
+      tags:
+      - Напоминалки
+      summary: Удалить напоминалку
+      operationId: delete_reminder_api_reminders__reminder_id__delete
+      parameters:
+      - name: reminder_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Reminder Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Автор или обладатель права `reminder.remind`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/reminders/{reminder_id}/complete:
+    put:
+      tags:
+      - Напоминалки
+      summary: Отметить выполнение
+      operationId: complete_reminder_api_reminders__reminder_id__complete_put
+      parameters:
+      - name: reminder_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Reminder Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteReminderRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Добавляет или убирает текущего пользователя из `completedBy`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/reminders/{reminder_id}/remind:
+    post:
+      tags:
+      - Напоминалки
+      summary: Напомнить всем
+      operationId: remind_reminder_api_reminders__reminder_id__remind_post
+      parameters:
+      - name: reminder_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Reminder Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemindResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `reminder.remind`. Бот отправляет личное сообщение в MAX каждому участнику группы.
+        `sentTo` — сколько сообщений доставлено.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/debts:
+    get:
+      tags:
+      - Долги
+      summary: Список долгов
+      operationId: list_debts_api_debts_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Debt'
+                title: Response List Debts Api Debts Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: С правом `debts.view.all` — долги всей группы, иначе только свои.
+      security:
+      - MaxInitData: []
+      - {}
+    post:
+      tags:
+      - Долги
+      summary: Добавить долг
+      operationId: create_debt_api_debts_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDebtRequest'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Debt'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `debts.create.own` — себе; с правом `debts.edit` — любому участнику группы. `deadline`
+        — `YYYY-MM-DD`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/debts/{debt_id}:
+    put:
+      tags:
+      - Долги
+      summary: Изменить долг
+      operationId: update_debt_api_debts__debt_id__put
+      parameters:
+      - name: debt_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Debt Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDebtRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `debts.edit`.
+      security:
+      - MaxInitData: []
+      - {}
+    delete:
+      tags:
+      - Долги
+      summary: Удалить (закрыть) долг
+      operationId: delete_debt_api_debts__debt_id__delete
+      parameters:
+      - name: debt_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Debt Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `debts.edit`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/tasks:
+    get:
+      tags:
+      - Задания
+      summary: Список заданий
+      operationId: list_tasks_api_tasks_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response List Tasks Api Tasks Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: 'Групповые и личные задания. `status` вычисляется по дедлайну: `active`, `soon` (≤
+        3 дней), `overdue`, `done`.'
+      security:
+      - MaxInitData: []
+      - {}
+    post:
+      tags:
+      - Задания
+      summary: Создать задание
+      operationId: create_task_api_tasks_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: '`type=personal` — право `task.create.personal`, `type=group` — `task.create.group`.
+        `deadline` — `YYYY-MM-DD` или `YYYY-MM-DDTHH:mm`.'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/tasks/{task_id}:
+    put:
+      tags:
+      - Задания
+      summary: Изменить задание
+      operationId: update_task_api_tasks__task_id__put
+      parameters:
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Task Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Личное — только автор, групповое — право `task.edit`.
+      security:
+      - MaxInitData: []
+      - {}
+    delete:
+      tags:
+      - Задания
+      summary: Удалить задание
+      operationId: delete_task_api_tasks__task_id__delete
+      parameters:
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Task Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Личное — только автор, групповое — право `task.delete`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/tasks/{task_id}/remind:
+    post:
+      tags:
+      - Задания
+      summary: Напомнить о задании
+      operationId: remind_task_api_tasks__task_id__remind_post
+      parameters:
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Task Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemindResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `task.remind`. Бот отправляет личное сообщение каждому участнику группы.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/materials:
+    get:
+      tags:
+      - Материалы
+      summary: Учебные материалы группы
+      operationId: list_materials_api_materials_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Material'
+                title: Response List Materials Api Materials Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Список материалов с автором и относительным временем добавления.
+      security:
+      - MaxInitData: []
+      - {}
+    post:
+      tags:
+      - Материалы
+      summary: Добавить материал
+      description: 'Право `material.upload`. Форма: `title`, `type` (`pdf`, `video`, `other`) и `url`
+        — ссылка на файл. Сами файлы хранятся в MAX, API хранит метаданные.'
+      operationId: upload_material_api_materials_post
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_upload_material_api_materials_post'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/materials/{material_id}/download:
+    get:
+      tags:
+      - Материалы
+      summary: Скачать материал
+      description: Если у материала есть прямая ссылка — редирект `307` на неё, иначе — метаданные файла
+        в MAX для скачивания через MAX Bridge.
+      operationId: download_material_api_materials__material_id__download_get
+      parameters:
+      - name: material_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Material Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '307':
+          description: Редирект на прямую ссылку на файл
+      security:
+      - MaxInitData: []
+      - {}
+  /api/materials/{material_id}:
+    delete:
+      tags:
+      - Материалы
+      summary: Удалить материал
+      operationId: delete_material_api_materials__material_id__delete
+      parameters:
+      - name: material_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Material Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `material.delete.any` или `material.delete.own` для своих.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/exams:
+    get:
+      tags:
+      - Экзамены
+      summary: Расписание экзаменов
+      operationId: list_exams_api_exams_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exam'
+                title: Response List Exams Api Exams Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Экзамены и консультации группы с прикреплёнными материалами.
+      security:
+      - MaxInitData: []
+      - {}
+    post:
+      tags:
+      - Экзамены
+      summary: Добавить экзамен
+      description: Право `exam.addMaterial`. `date` — `YYYY-MM-DD`, `time` — `HH:mm`.
+      operationId: create_exam_api_exams_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExamRequest'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exam'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/exams/{exam_id}/materials:
+    post:
+      tags:
+      - Экзамены
+      summary: Прикрепить материал к экзамену
+      operationId: add_exam_material_api_exams__exam_id__materials_post
+      parameters:
+      - name: exam_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Exam Id
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_add_exam_material_api_exams__exam_id__materials_post'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExamMaterial'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: 'Право `exam.addMaterial`. Форма: `title` и необязательная ссылка `url`.'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/exams/{exam_id}/materials/{material_id}:
+    delete:
+      tags:
+      - Экзамены
+      summary: Открепить материал от экзамена
+      operationId: delete_exam_material_api_exams__exam_id__materials__material_id__delete
+      parameters:
+      - name: exam_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Exam Id
+      - name: material_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Material Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `exam.addMaterial`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/mail:
+    get:
+      tags:
+      - Почта
+      summary: Входящие письма
+      operationId: list_mail_api_mail_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailItem'
+                title: Response List Mail Api Mail Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Письма из подключённых ящиков деканата, кафедр и преподавателей. **MVP:** синхронизация
+        с почтой не реализована, список заполняется данными из БД.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/mail/{mail_id}/forward:
+    post:
+      tags:
+      - Почта
+      summary: Переслать письмо в группу
+      operationId: forward_mail_api_mail__mail_id__forward_post
+      parameters:
+      - name: mail_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Mail Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForwardMailResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `mail.forward`. **MVP-заглушка:** возвращает подтверждение без реальной пересылки.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/mail/refresh:
+    post:
+      tags:
+      - Почта
+      summary: Проверить новые письма
+      operationId: refresh_mail_api_mail_refresh_post
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshMailResponse'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: '**MVP-заглушка:** IMAP-синхронизация не реализована, `newMessages` всегда 0.'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/mail/configure:
+    post:
+      tags:
+      - Почта
+      summary: Настроить ящики
+      operationId: configure_mailboxes_api_mail_configure_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigureMailboxesRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `mail.configure`. **MVP-заглушка:** настройки не сохраняются.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/mail/mailboxes:
+    get:
+      tags:
+      - Почта
+      summary: Подключённые почтовые ящики
+      operationId: list_mailboxes_api_mail_mailboxes_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mailbox'
+                title: Response List Mailboxes Api Mail Mailboxes Get
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `mail.configure`.
+      security:
+      - MaxInitData: []
+      - {}
+    post:
+      tags:
+      - Почта
+      summary: Добавить почтовый ящик
+      operationId: add_mailbox_api_mail_mailboxes_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMailboxRequest'
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mailbox'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `mail.configure`. Сохраняет адрес и признак автопересылки.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/mail/mailboxes/{mailbox_id}:
+    delete:
+      tags:
+      - Почта
+      summary: Удалить почтовый ящик
+      operationId: remove_mailbox_api_mail_mailboxes__mailbox_id__delete
+      parameters:
+      - name: mailbox_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Mailbox Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `mail.configure`.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/settings:
+    get:
+      tags:
+      - Настройки
+      summary: Настройки уведомлений группы
+      operationId: get_settings_api_settings_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsSchema'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Требует право `settings.edit`, которого в текущей версии нет ни у одной роли — эндпоинт
+        зарезервирован и отвечает `403`.
+      security:
+      - MaxInitData: []
+      - {}
+    put:
+      tags:
+      - Настройки
+      summary: Сохранить настройки уведомлений
+      operationId: save_settings_api_settings_put
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsSchema'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Зарезервировано (см. `GET /api/settings`).
+      security:
+      - MaxInitData: []
+      - {}
+  /api/roles/assign:
+    post:
+      tags:
+      - Роли и группа
+      summary: Назначить роль участнику
+      operationId: assign_role_api_roles_assign_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: 'Право `roles.assign`. Нельзя менять роль себе и участникам своего или более высокого
+        уровня. Назначение `starosta` доступно только старосте и означает передачу роли: текущий староста
+        становится студентом.'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/group/members/{student_id}:
+    delete:
+      tags:
+      - Роли и группа
+      summary: Исключить участника
+      operationId: remove_group_member_api_group_members__student_id__delete
+      parameters:
+      - name: student_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Student Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemovedMemberResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `group.edit` (только староста). Нельзя исключить себя и участника своего или
+        более высокого уровня.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/group/members/{student_id}/name:
+    patch:
+      tags:
+      - Роли и группа
+      summary: Переименовать участника
+      operationId: rename_member_api_group_members__student_id__name_patch
+      parameters:
+      - name: student_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Student Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameMemberRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenamedMemberResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `group.edit`. Задаёт отображаемое имя участника в группе.
+      security:
+      - MaxInitData: []
+      - {}
+  /api/health:
+    get:
+      summary: Проверка работоспособности
+      operationId: health_api_health_get
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema: {}
+      description: Не требует авторизации. Используется healthcheck'ом Docker.
+      security: []
+components:
+  schemas:
+    AddMailboxRequest:
+      properties:
+        email:
+          type: string
+          title: Email
+        label:
+          type: string
+          title: Label
+        autoForward:
+          type: boolean
+          title: Autoforward
+          default: false
+      type: object
+      required:
+      - email
+      - label
+      title: AddMailboxRequest
+    AssignRoleRequest:
+      properties:
+        studentId:
+          type: string
+          title: Studentid
+        roleId:
+          type: string
+          title: Roleid
+      type: object
+      required:
+      - studentId
+      - roleId
+      title: AssignRoleRequest
+    Body_add_exam_material_api_exams__exam_id__materials_post:
+      properties:
+        title:
+          type: string
+          title: Title
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+      type: object
+      required:
+      - title
+      title: Body_add_exam_material_api_exams__exam_id__materials_post
+    Body_upload_material_api_materials_post:
+      properties:
+        title:
+          type: string
+          title: Title
+        type:
+          type: string
+          title: Type
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+      type: object
+      required:
+      - title
+      - type
+      title: Body_upload_material_api_materials_post
+    CompleteReminderRequest:
+      properties:
+        completed:
+          type: boolean
+          title: Completed
+      type: object
+      required:
+      - completed
+      title: CompleteReminderRequest
+    ConfigureMailboxesRequest:
+      properties:
+        mailboxes:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Mailboxes
+      type: object
+      required:
+      - mailboxes
+      title: ConfigureMailboxesRequest
+    CreateDebtRequest:
+      properties:
+        studentId:
+          type: string
+          title: Studentid
+        subject:
+          type: string
+          title: Subject
+        type:
+          type: string
+          title: Type
+        deadline:
+          type: string
+          title: Deadline
+      type: object
+      required:
+      - studentId
+      - subject
+      - type
+      - deadline
+      title: CreateDebtRequest
+    CreateExamRequest:
+      properties:
+        subject:
+          type: string
+          title: Subject
+        date:
+          type: string
+          title: Date
+        time:
+          type: string
+          title: Time
+          default: ''
+        room:
+          type: string
+          title: Room
+          default: ''
+        teacher:
+          type: string
+          title: Teacher
+          default: ''
+        icon:
+          type: string
+          title: Icon
+          default: 📚
+        type:
+          type: string
+          title: Type
+          default: exam
+      type: object
+      required:
+      - subject
+      - date
+      title: CreateExamRequest
+    CreateReminderRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+          default: ''
+        date:
+          type: string
+          title: Date
+        time:
+          type: string
+          title: Time
+        scope:
+          type: string
+          enum:
+          - personal
+          - group
+          - selected
+          title: Scope
+        studentIds:
+          items:
+            type: string
+          type: array
+          title: Studentids
+          default: []
+      type: object
+      required:
+      - title
+      - date
+      - time
+      - scope
+      title: CreateReminderRequest
+    CreateTaskRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+          default: ''
+        deadline:
+          type: string
+          title: Deadline
+        type:
+          type: string
+          enum:
+          - group
+          - personal
+          title: Type
+      type: object
+      required:
+      - title
+      - deadline
+      - type
+      title: CreateTaskRequest
+    CurrentUser:
+      properties:
+        id:
+          type: string
+          title: Id
+        firstName:
+          type: string
+          title: Firstname
+        lastName:
+          type: string
+          title: Lastname
+        username:
+          type: string
+          title: Username
+        photoUrl:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Photourl
+        groupId:
+          type: string
+          title: Groupid
+        groupName:
+          type: string
+          title: Groupname
+        roleId:
+          type: string
+          title: Roleid
+      type: object
+      required:
+      - id
+      - firstName
+      - lastName
+      - username
+      - groupId
+      - groupName
+      - roleId
+      title: CurrentUser
+    Debt:
+      properties:
+        id:
+          type: string
+          title: Id
+        studentId:
+          type: string
+          title: Studentid
+        studentName:
+          type: string
+          title: Studentname
+        subject:
+          type: string
+          title: Subject
+        type:
+          type: string
+          title: Type
+        deadline:
+          type: string
+          format: date-time
+          title: Deadline
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - id
+      - studentId
+      - studentName
+      - subject
+      - type
+      - deadline
+      - status
+      title: Debt
+    Exam:
+      properties:
+        id:
+          type: string
+          title: Id
+        subject:
+          type: string
+          title: Subject
+        date:
+          type: string
+          title: Date
+        time:
+          type: string
+          title: Time
+        room:
+          type: string
+          title: Room
+        teacher:
+          type: string
+          title: Teacher
+        icon:
+          type: string
+          title: Icon
+        type:
+          type: string
+          enum:
+          - exam
+          - consultation
+          title: Type
+        materials:
+          items:
+            $ref: '#/components/schemas/ExamMaterial'
+          type: array
+          title: Materials
+          default: []
+      type: object
+      required:
+      - id
+      - subject
+      - date
+      - time
+      - room
+      - teacher
+      - icon
+      - type
+      title: Exam
+    ExamMaterial:
+      properties:
+        id:
+          type: string
+          title: Id
+        examId:
+          type: string
+          title: Examid
+        title:
+          type: string
+          title: Title
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+        addedBy:
+          type: string
+          title: Addedby
+        addedAt:
+          type: string
+          title: Addedat
+      type: object
+      required:
+      - id
+      - examId
+      - title
+      - addedBy
+      - addedAt
+      title: ExamMaterial
+    ForwardMailResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        id:
+          type: string
+          title: Id
+        forwardedTo:
+          type: string
+          title: Forwardedto
+      type: object
+      required:
+      - id
+      - forwardedTo
+      title: ForwardMailResponse
+    GroupInfo:
+      properties:
+        name:
+          type: string
+          title: Name
+        course:
+          type: integer
+          title: Course
+        semester:
+          type: integer
+          title: Semester
+        studentsCount:
+          type: integer
+          title: Studentscount
+      type: object
+      required:
+      - name
+      - course
+      - semester
+      - studentsCount
+      title: GroupInfo
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    MailItem:
+      properties:
+        id:
+          type: string
+          title: Id
+        from:
+          type: string
+          title: From
+        subject:
+          type: string
+          title: Subject
+        preview:
+          type: string
+          title: Preview
+        source:
+          type: string
+          enum:
+          - dean
+          - kafedra
+          - prepod
+          title: Source
+        autoForward:
+          type: boolean
+          title: Autoforward
+      type: object
+      required:
+      - id
+      - from
+      - subject
+      - preview
+      - source
+      - autoForward
+      title: MailItem
+    Mailbox:
+      properties:
+        id:
+          type: string
+          title: Id
+        email:
+          type: string
+          title: Email
+        label:
+          type: string
+          title: Label
+        connected:
+          type: boolean
+          title: Connected
+        autoForward:
+          type: boolean
+          title: Autoforward
+      type: object
+      required:
+      - id
+      - email
+      - label
+      - connected
+      - autoForward
+      title: Mailbox
+    Material:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        author:
+          type: string
+          title: Author
+        type:
+          type: string
+          enum:
+          - pdf
+          - video
+          - other
+          title: Type
+        createdAt:
+          type: string
+          title: Createdat
+      type: object
+      required:
+      - id
+      - title
+      - author
+      - type
+      - createdAt
+      title: Material
+    MeResponse:
+      properties:
+        user:
+          $ref: '#/components/schemas/CurrentUser'
+      type: object
+      required:
+      - user
+      title: MeResponse
+    OkResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+      type: object
+      title: OkResponse
+    RefreshMailResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        newMessages:
+          type: integer
+          title: Newmessages
+      type: object
+      required:
+      - newMessages
+      title: RefreshMailResponse
+    RemindResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+          default: ''
+        sentTo:
+          type: integer
+          title: Sentto
+        sentAt:
+          type: string
+          format: date-time
+          title: Sentat
+      type: object
+      required:
+      - id
+      - sentTo
+      - sentAt
+      title: RemindResponse
+    Reminder:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        deadline:
+          type: string
+          format: date-time
+          title: Deadline
+        type:
+          type: string
+          enum:
+          - personal
+          - group
+          title: Type
+        priority:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          title: Priority
+        targetStudentIds:
+          items:
+            type: string
+          type: array
+          title: Targetstudentids
+          default: []
+        completedBy:
+          items:
+            type: string
+          type: array
+          title: Completedby
+          default: []
+      type: object
+      required:
+      - id
+      - title
+      - description
+      - deadline
+      - type
+      - priority
+      title: Reminder
+    RemovedMemberResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        removed:
+          type: string
+          title: Removed
+      type: object
+      required:
+      - removed
+      title: RemovedMemberResponse
+    RenameMemberRequest:
+      properties:
+        name:
+          type: string
+          title: Name
+      type: object
+      required:
+      - name
+      title: RenameMemberRequest
+    RenamedMemberResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        oldName:
+          type: string
+          title: Oldname
+        newName:
+          type: string
+          title: Newname
+      type: object
+      required:
+      - oldName
+      - newName
+      title: RenamedMemberResponse
+    Role:
+      properties:
+        id:
+          type: string
+          title: Id
+        label:
+          type: string
+          title: Label
+        shortLabel:
+          type: string
+          title: Shortlabel
+        description:
+          type: string
+          title: Description
+        level:
+          type: integer
+          title: Level
+        badgeClass:
+          type: string
+          title: Badgeclass
+        badgeIcon:
+          type: string
+          title: Badgeicon
+        badgeText:
+          type: string
+          title: Badgetext
+        menu:
+          items:
+            type: string
+          type: array
+          title: Menu
+        permissions:
+          items:
+            type: string
+          type: array
+          title: Permissions
+      type: object
+      required:
+      - id
+      - label
+      - shortLabel
+      - description
+      - level
+      - badgeClass
+      - badgeIcon
+      - badgeText
+      - menu
+      - permissions
+      title: Role
+    RolesResponse:
+      properties:
+        roles:
+          items:
+            $ref: '#/components/schemas/Role'
+          type: array
+          title: Roles
+      type: object
+      required:
+      - roles
+      title: RolesResponse
+    SettingsSchema:
+      properties:
+        pushNotifications:
+          type: boolean
+          title: Pushnotifications
+          default: true
+        dailySummary:
+          type: boolean
+          title: Dailysummary
+          default: true
+        debtNotifications:
+          type: boolean
+          title: Debtnotifications
+          default: true
+        newMaterials:
+          type: boolean
+          title: Newmaterials
+          default: false
+        twoFactor:
+          type: boolean
+          title: Twofactor
+          default: true
+        auditLog:
+          type: boolean
+          title: Auditlog
+          default: true
+      additionalProperties: true
+      type: object
+      title: SettingsSchema
+    Student:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        role:
+          type: string
+          title: Role
+        avgScore:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Avgscore
+        attendance:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Attendance
+        debts:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Debts
+      type: object
+      required:
+      - id
+      - name
+      - role
+      title: Student
+    Task:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        deadline:
+          type: string
+          format: date-time
+          title: Deadline
+        type:
+          type: string
+          enum:
+          - group
+          - personal
+          title: Type
+        status:
+          type: string
+          enum:
+          - active
+          - soon
+          - done
+          - overdue
+          title: Status
+      type: object
+      required:
+      - id
+      - title
+      - description
+      - deadline
+      - type
+      - status
+      title: Task
+    UpdateDebtRequest:
+      properties:
+        studentId:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Studentid
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Type
+        deadline:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deadline
+      type: object
+      title: UpdateDebtRequest
+    UpdateReminderRequest:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+      type: object
+      title: UpdateReminderRequest
+    UpdateTaskRequest:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        deadline:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deadline
+        type:
+          anyOf:
+          - type: string
+            enum:
+            - group
+            - personal
+          - type: 'null'
+          title: Type
+      type: object
+      title: UpdateTaskRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    HTTPError:
+      title: HTTPError
+      type: object
+      required:
+      - detail
+      properties:
+        detail:
+          description: 'Текст ошибки или объект {error: {code, message}}'
+          oneOf:
+          - type: string
+          - $ref: '#/components/schemas/ErrorResponse'
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              example: permission_denied
+            message:
+              type: string
+              example: Нет права roles.assign
+  securitySchemes:
+    MaxInitData:
+      type: apiKey
+      in: header
+      name: X-Max-Init-Data
+      description: Строка WebApp.initData из MAX Bridge. Обязательна при STRICT_AUTH=true.
+servers:
+- url: /
+  description: 'Текущий хост (через nginx: https://<публичный-адрес>/)'
+- url: http://localhost:8080
+  description: Локальный запуск через Docker (nginx)
+- url: http://localhost:8000
+  description: Локальный запуск через Docker (API)

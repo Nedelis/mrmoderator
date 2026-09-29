@@ -1,17 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import (
-    auth,
-    reminders,
-    debts,
-    tasks,
-    materials,
-    exams,
-    mail,
-    settings,
-    roles,
-    group
-)
+from app.api.v1 import auth, debts, exams, group, mail, materials, reminders, roles, settings, tasks
 
 api_router = APIRouter()
 

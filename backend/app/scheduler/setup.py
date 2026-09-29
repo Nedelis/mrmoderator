@@ -32,6 +32,7 @@ logger = logging.getLogger("scheduler")
 # Регистрация sender'а — чтобы notify_service умел отправлять
 # ────────────────────────────────────────────────────────────
 
+
 def _register_sender() -> None:
     token = SETTINGS.MAX_BOT_TOKEN.get_secret_value()
     if not token:
@@ -39,12 +40,13 @@ def _register_sender() -> None:
 
     bot = Bot(token=token)
 
-    async def sender(chat_id: str, text: str) -> bool:
+    async def sender(user_id: str, text: str) -> bool:
+        # notify_service.send_to_user передаёт max_user_id — это user_id, а не chat_id
         try:
-            await bot.send_message(chat_id=chat_id, text=text)
+            await bot.send_message(user_id=user_id, text=text)
             return True
         except Exception as e:
-            logger.error("Не удалось отправить сообщение в %s: %s", chat_id, e)
+            logger.error("Не удалось отправить сообщение пользователю %s: %s", user_id, e)
             return False
 
     notify_service.register_sender(sender)
@@ -54,6 +56,7 @@ def _register_sender() -> None:
 # ────────────────────────────────────────────────────────────
 # Обёртки для логирования
 # ────────────────────────────────────────────────────────────
+
 
 async def _run_job(name: str, fn) -> None:
     logger.info("Запуск задачи: %s", name)
@@ -79,6 +82,7 @@ async def job_daily_summary() -> None:
 # ────────────────────────────────────────────────────────────
 # Главная функция
 # ────────────────────────────────────────────────────────────
+
 
 async def main() -> None:
     _register_sender()

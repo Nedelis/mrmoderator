@@ -28,16 +28,14 @@ export default function Sidebar() {
 
     const visibleItems = ALL_MENU_ITEMS.filter(item => hasMenuItem(item.path));
 
-    const initials = user
-        ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`
-        : '??';
+    const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}` : '??';
 
     const handleLeaveGroup = async () => {
         if (leaving) return;
 
         const confirmed = window.confirm(
             'Вы точно хотите покинуть группу?\n\n' +
-            'Все ваши данные (долги, задания, напоминания, история) будут удалены без возможности восстановления.'
+                'Все ваши данные (долги, задания, напоминания, история) будут удалены без возможности восстановления.'
         );
         if (!confirmed) return;
 
@@ -55,68 +53,62 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className= "sidebar" >
-        <div className="sidebar-brand" >
-            <div className="sidebar-logo" >🤖</div>
-                < div >
-                <h1>Мистер Модератор</h1>
-                    < span > мини - приложение </span>
+        <aside className="sidebar">
+            <div className="sidebar-brand">
+                <div className="sidebar-logo">🤖</div>
+                <div>
+                    <h1>Мистер Модератор</h1>
+                    <span>мини-приложение</span>
+                </div>
+            </div>
+
+            <nav className="sidebar-nav">
+                {visibleItems.map(item => (
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        end={item.path === '/'}
+                        className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+                    >
+                        <span className="nav-icon">{item.icon}</span>
+                        <span>{item.label}</span>
+                    </NavLink>
+                ))}
+            </nav>
+
+            <div className="sidebar-footer">
+                <button className="sidebar-action" onClick={toggleTheme}>
+                    <span>{theme === 'dark' ? '☀️' : '🌙'}</span>
+                    <span>{theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}</span>
+                </button>
+
+                <div className="user-mini">
+                    <div className="user-avatar">{initials}</div>
+                    <div>
+                        <p>{user ? `${user.firstName} ${user.lastName}` : 'Гость'}</p>
+                        <span>
+                            {role?.shortLabel ?? '—'} · {user?.groupName ?? '—'}
+                        </span>
                     </div>
+                </div>
+
+                <button
+                    className="sidebar-action sidebar-action-danger"
+                    onClick={handleLeaveGroup}
+                    disabled={leaving || pending}
+                    title="Удалить свои данные и выйти из группы"
+                >
+                    <span>🚪</span>
+                    <span>{leaving ? 'Выходим...' : 'Покинуть группу'}</span>
+                </button>
+
+                {isInsideMax && (
+                    <div className="platform-badge">
+                        {platform}
+                        {deviceName ? ` · ${deviceName}` : ''}
                     </div>
-
-                    < nav className = "sidebar-nav" >
-                    {
-                        visibleItems.map(item => (
-                            <NavLink
-            key= { item.path }
-            to = { item.path }
-            end = { item.path === '/' }
-            className = {({ isActive }) =>
-                            `sidebar-nav-item ${isActive ? 'active' : ''}`
-            }
-                        >
-                        <span className="nav-icon" > { item.icon } </span>
-                            < span > { item.label } </span>
-                            </NavLink>
-        ))
-}
-</nav>
-
-    < div className = "sidebar-footer" >
-        <button className="sidebar-action" onClick = { toggleTheme } >
-            <span>{ theme === 'dark' ? '☀️' : '🌙'}</span>
-                < span > { theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}</span>
-                    </button>
-
-                    < div className = "user-mini" >
-                        <div className="user-avatar" > { initials } </div>
-                            < div >
-                            <p>{ user? `${user.firstName} ${user.lastName}` : 'Гость'}</p>
-                                <span>
-{ role?.shortLabel ?? '—' } · { user?.groupName ?? '—' }
-</span>
-    </div>
-    </div>
-
-    < button
-className = "sidebar-action sidebar-action-danger"
-onClick = { handleLeaveGroup }
-disabled = { leaving || pending}
-title = "Удалить свои данные и выйти из группы"
-    >
-    <span>🚪</span>
-        < span > { leaving? 'Выходим...': 'Покинуть группу' } </span>
-        </button>
-
-{
-    isInsideMax && (
-        <div className="platform-badge" >
-        { platform }
-    { deviceName ? ` · ${deviceName}` : '' }
-    </div>
-        )
-}
-</div>
-    </aside>
-  );
+                )}
+            </div>
+        </aside>
+    );
 }
