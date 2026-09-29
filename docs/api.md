@@ -6,7 +6,7 @@
 |---|---|---|
 | Локально через nginx | http://localhost:8080/api/docs | http://localhost:8080/api/openapi.json |
 | Локально напрямую в API | http://localhost:8000/api/docs | http://localhost:8000/api/openapi.json |
-| Публично | `https://<публичный-адрес>/api/docs` | `https://<публичный-адрес>/api/openapi.json` |
+| Публично | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/docs` | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/openapi.json` |
 
 Как обновить `openapi.yaml` после изменений в API:
 

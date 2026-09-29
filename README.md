@@ -11,10 +11,10 @@
 | Что | Адрес |
 |---|---|
 | Чат-бот в MAX | https://max.ru/t595_hakaton_max_bot |
-| Мини-приложение (HTTPS) | `https://<ПУБЛИЧНЫЙ-АДРЕС>/` |
-| API | `https://<ПУБЛИЧНЫЙ-АДРЕС>/api` |
-| Swagger UI | `https://<ПУБЛИЧНЫЙ-АДРЕС>/api/docs` |
-| Проверка работоспособности | `https://<ПУБЛИЧНЫЙ-АДРЕС>/api/health` |
+| Мини-приложение (HTTPS) | `https://envelope-eldercare-earplugs.ngrok-free.dev/` |
+| API | `https://envelope-eldercare-earplugs.ngrok-free.dev/api` |
+| Swagger UI | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/docs` |
+| Проверка работоспособности | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/health` |
 | Репозиторий и commit hash | https://github.com/Nedelis/mrmoderator — `<COMMIT-HASH>` |
 
 ## Назначение
