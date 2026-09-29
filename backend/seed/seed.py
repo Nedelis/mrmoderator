@@ -2,11 +2,13 @@
 Сидер тестовых данных для API.
 
 Использование:
-    python -m seed.seed
-    python -m seed.seed --force
+    python -m seed
+    python -m seed --force
+    python -m seed --clean
 
 Наполняет БД тестовыми данными из seed/test_data.json.
 Очищает БД перед заливкой, если USE_TEST_DATA=true или передан --force.
+Просто очищает БД и выходит, если есть флаг --clean.
 """
 
 __all__ = ['is_db_empty', 'clear_db', 'seed', 'main', 'cli']
@@ -142,7 +144,17 @@ async def seed() -> None:
     print("✅ Тестовые данные загружены")
 
 
-async def main(force: bool = False) -> None:
+async def main(force: bool = False, just_clean: bool = False) -> None:
+    # очищаем выходим
+    if just_clean:
+        if await is_db_empty():
+            print("ℹ️  БД пустая, очистка не нужна")
+        else:
+            print("⚠️ Очистка БД")
+            await clear_db()
+            print("Успех")
+        return
+
     # Очищаем БД, если USE_TEST_DATA=true или передан --force
     if force or SETTINGS.USE_TEST_DATA:
         if await is_db_empty():
@@ -158,15 +170,16 @@ async def main(force: bool = False) -> None:
 
 
 def cli() -> None:
-    parser = argparse.ArgumentParser(description="Заполнить БД тестовыми данными")
+    parser = argparse.ArgumentParser(description="Заполнить БД тестовыми данными или очистить")
     parser.add_argument(
         "--force",
         action="store_true",
         help="Очистить БД и залить данные, даже если USE_TEST_DATA=false",
     )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Очистить БД, не заполняя данными. Приоритет выше --force"
+    )
     args = parser.parse_args()
-    asyncio.run(main(force=args.force))
-
-
-if __name__ == "__main__":
-    cli()
+    asyncio.run(main(force=args.force, just_clean=args.clean))
