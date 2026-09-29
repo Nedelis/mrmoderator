@@ -126,11 +126,11 @@
   <h1 style="margin-bottom:20px">Техническая информация</h1>
   <table class="tech">
     <tr><td>Чат-бот в MAX</td><td><b>https://max.ru/t595_hakaton_max_bot</b></td></tr>
-    <tr><td>Репозиторий и commit</td><td>https://github.com/Nedelis/mrmoderator · commit <span class="fill">⟨COMMIT-HASH⟩</span></td></tr>
+      <tr><td>Репозиторий и commit</td><td>https://github.com/Nedelis/mrmoderator · commit <span class="fill">⟨COMMIT-HASH⟩</span> (от самого последнего коммита до обновления презентации)</td></tr>
     <tr><td>Мини-приложение</td><td><span class="fill">https://envelope-eldercare-earplugs.ngrok-free.dev/</span> — открывается из бота кнопкой «🔗 Открыть приложение» или командой <code>/open</code></td></tr>
     <tr><td>Собственный API</td><td><span class="fill">https://envelope-eldercare-earplugs.ngrok-free.dev/api</span> · Swagger: <code>/api/docs</code> · спецификация: <code>docs/openapi.yaml</code></td></tr>
     <tr><td>Тестовые учётные записи</td><td>Вход через аккаунт MAX, логины и пароли не нужны. Первый пользователь создаёт группу (<code>/creategroup</code>) и становится старостой, остальные вступают по <code>/join КОД</code>. Без MAX: демо-режим, тестовый староста создаётся автоматически</td></tr>
-    <tr><td>Переменные окружения</td><td><code>MAX_BOT_TOKEN=</code><span class="fill">⟨токен бота⟩</span> · <code>STRICT_AUTH=true</code> · <code>MAX_BOT_USERNAME=t595_hakaton_max_bot</code> · остальное — по умолчанию из <code>.env.example</code></td></tr>
+    <tr><td>Переменные окружения</td><td><code>MAX_BOT_TOKEN=</code><span class="fill">⟨токен бота⟩</span> · <code>STRICT_AUTH=false</code> (демо-режим; для работы с реальными аккаунтами MAX — <code>true</code>) · остальное — по умолчанию из <code>.env.example</code></td></tr>
     <tr><td>Локальный запуск</td><td><code>cp .env.example .env</code> → вписать токен → <code>docker compose up -d --build</code> → http://localhost:8080</td></tr>
     <tr><td>Основной сценарий</td><td><code>/start</code> → <code>/creategroup ИС-21</code> → <code>/invite</code> → второй аккаунт: <code>/join КОД</code> → <code>/open</code> → «Напоминания» → создать «Для всей группы» → 🔔 → второй аккаунт получает сообщение от бота</td></tr>
   </table>
@@ -143,8 +143,8 @@
   <h1>Мистер Модератор</h1>
   <p>Цифровой помощник старосты: напоминания, долги и материалы группы в одном месте — а уведомления бот доставляет каждому лично</p>
   <div class="team">
-    Команда: <b>⟨название команды⟩</b><br>
-    ⟨Имя Фамилия⟩ — ⟨роль⟩ · ⟨Имя Фамилия⟩ — ⟨роль⟩ · ⟨Имя Фамилия⟩ — ⟨роль⟩
+    Команда: <b>GULASH</b><br>
+    Глазов Дмитрий — Backend-разработчик · Кузнецова София — Product-менеджер · Кондюров Кирилл — Frontend-разработчик
   </div>
   <div class="num">2</div>
 </section>
