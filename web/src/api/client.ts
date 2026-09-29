@@ -172,7 +172,8 @@ export const api = {
 
     // ===== ДОЛГИ =====
     async createDebt(payload: {
-        studentName: string;
+        studentId?: string;
+        studentName?: string;
         subject: string;
         type: string;
         deadline: string;
@@ -188,6 +189,7 @@ export const api = {
     async updateDebt(
         id: string,
         payload: Partial<{
+            studentId: string;
             studentName: string;
             subject: string;
             type: string;

@@ -18,10 +18,7 @@ const ROLES: Role[] = [
         badgeClass: 'role-starosta',
         badgeIcon: '👑',
         badgeText: 'Высшая',
-        menu: [
-            '/', '/my-stats', '/reminders', '/debts', '/exams',
-            '/tasks', '/materials', '/mail', '/roles',
-        ],
+        menu: ['/', '/my-stats', '/reminders', '/materials', '/mail', '/roles'],
         permissions: [
             'reminder.create.group', 'reminder.create.personal', 'reminder.remind',
             'material.upload', 'material.delete.any', 'material.delete.own',
@@ -42,10 +39,7 @@ const ROLES: Role[] = [
         badgeClass: 'role-zam',
         badgeIcon: '🛡️',
         badgeText: 'Высокая',
-        menu: [
-            '/', '/my-stats', '/reminders', '/debts', '/exams',
-            '/tasks', '/materials', '/mail', '/roles',
-        ],
+        menu: ['/', '/my-stats', '/reminders', '/materials', '/mail', '/roles'],
         permissions: [
             'reminder.create.group', 'reminder.create.personal', 'reminder.remind',
             'material.upload', 'material.delete.any', 'material.delete.own',
@@ -61,12 +55,12 @@ const ROLES: Role[] = [
         id: 'proforg',
         label: 'Профорг / Групорг',
         shortLabel: 'Профорг',
-        description: 'Материалы, объявления и личные задачи',
+        description: 'Материалы, объявления и личные события',
         level: 2,
         badgeClass: 'role-proforg',
         badgeIcon: '📢',
         badgeText: 'Средняя',
-        menu: ['/my-stats', '/reminders', '/debts', '/exams', '/tasks', '/materials', '/mail'],
+        menu: ['/my-stats', '/reminders', '/materials', '/mail'],
         permissions: [
             'reminder.create.personal',
             'material.upload', 'material.delete.own',
@@ -79,12 +73,12 @@ const ROLES: Role[] = [
         id: 'student',
         label: 'Студент',
         shortLabel: 'Студент',
-        description: 'Просмотр материалов и личные задачи',
+        description: 'Просмотр материалов и личные события',
         level: 1,
         badgeClass: 'role-student',
         badgeIcon: '👤',
         badgeText: 'Базовая',
-        menu: ['/my-stats', '/reminders', '/debts', '/exams', '/tasks', '/materials'],
+        menu: ['/my-stats', '/reminders', '/materials'],
         permissions: [
             'reminder.create.personal',
             'material.upload', 'material.delete.own',
@@ -308,27 +302,41 @@ export const mockApi = {
 
     // ===== ДОЛГИ =====
     async createDebt(payload: {
-        studentName: string;
+        studentId?: string;
+        studentName?: string;
         subject: string;
         type: string;
         deadline: string;
     }): Promise<Debt> {
-        await delay();
-        const debt: Debt = { id: `debt-${Date.now()}`, ...payload, status: 'active' };
-        DEBTS = [debt, ...DEBTS];
-        return debt;
+        if (USE_API_MOCK) return mockApi.createDebt(payload);
+        return request<Debt>('/debts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
     },
 
-    async updateDebt(id: string, payload: Partial<Debt>) {
-        await delay();
-        DEBTS = DEBTS.map(d => (d.id === id ? { ...d, ...payload } : d));
-        return { ok: true, id, ...payload };
+    async updateDebt(
+        id: string,
+        payload: Partial<{
+            studentId: string;
+            studentName: string;
+            subject: string;
+            type: string;
+            deadline: string;
+        }>
+    ): Promise<{ ok: boolean }> {
+        if (USE_API_MOCK) return mockApi.updateDebt(id, payload);
+        return request<{ ok: boolean }>(`/debts/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
     },
 
-    async deleteDebt(id: string) {
-        await delay();
-        DEBTS = DEBTS.filter(d => d.id !== id);
-        return { ok: true, id };
+    async deleteDebt(id: string): Promise<{ ok: boolean }> {
+        if (USE_API_MOCK) return mockApi.deleteDebt(id);
+        return request<{ ok: boolean }>(`/debts/${id}`, { method: 'DELETE' });
     },
 
     // ===== ЗАДАНИЯ =====

@@ -47,7 +47,7 @@ export default function Roles() {
 
     /**
      * Проверка «это я». Сравниваем и по id, и по имени:
-     * — на бэке id студента совпадает с id текущего юзера (одна и та же запись в БД),
+     * — на бэке id студента совпадает с id текущего юзера,
      * — в моках id могут не совпадать, но имя точное.
      */
     const isSelf = (s: Student) =>
@@ -322,9 +322,10 @@ disabled = {!canAssignSelected || pending}
                     <tbody>
 {
     students.map(s => {
-        const cfg = roles.find(r => r.id === s.role || r.label === s.role);
+        const cfg = roles.find(
+            r => r.id === s.role || r.label === s.role
+        );
         const self = isSelf(s);
-        const selfStarosta = self && s.role === 'starosta';
 
         return (
             <tr key= { s.id } >
@@ -353,18 +354,9 @@ disabled = {!canAssignSelected || pending}
                     )}
 </td>
     <td>
-{/* Себя: обычные роли — без действий */ }
+{/* Себя — староста: только «Изменить имя» */ }
 {
-    self && !selfStarosta && (
-        <span style={ { fontSize: 12, color: 'var(--muted)' } }>
-                        —
-    </span>
-                    )
-}
-
-{/* Себя-староста: только переименование */ }
-{
-    selfStarosta && (
+    self && canRename && (
         <button
                         className="btn btn-ghost"
     style = {{ padding: '6px 12px', fontSize: 12 }
@@ -377,12 +369,29 @@ title = "Изменить отображаемое имя"
     </button>
                     )}
 
+{/* Себя — не староста (нет group.edit): без действий */ }
+{
+    self && !canRename && (
+        <span style={ { fontSize: 12, color: 'var(--muted)' } }>
+                        —
+    </span>
+                    )
+}
+
 {/* Другие участники */ }
 {
     !self && (
-        <div style={ { display: 'flex', gap: 6, flexWrap: 'wrap' } }>
-        { canRename && (
-                <button
+        <div
+                        style={
+        {
+            display: 'flex',
+                gap: 6,
+                    flexWrap: 'wrap',
+                        }
+    }
+                      >
+    { canRename && (
+            <button
                             className="btn btn-ghost"
     style = {{ padding: '6px 12px', fontSize: 12 }
 }

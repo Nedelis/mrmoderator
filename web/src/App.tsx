@@ -10,9 +10,6 @@ import { useCurrentUser } from './contexts/CurrentUserContext';
 import Dashboard from './pages/Dashboard';
 import MyStats from './pages/MyStats';
 import Reminders from './pages/Reminders';
-import Debts from './pages/Debts';
-import Exams from './pages/Exams';
-import Tasks from './pages/Tasks';
 import Materials from './pages/Materials';
 import Mail from './pages/Mail';
 import Roles from './pages/Roles';
@@ -113,18 +110,6 @@ element = {< RequireMenu path = "/my-stats" > <MyStats /></RequireMenu >}
     < Route
 path = "/reminders"
 element = {< RequireMenu path = "/reminders" > <Reminders /></RequireMenu >}
-          />
-    < Route
-path = "/debts"
-element = {< RequireMenu path = "/debts" > <Debts /></RequireMenu >}
-          />
-    < Route
-path = "/exams"
-element = {< RequireMenu path = "/exams" > <Exams /></RequireMenu >}
-          />
-    < Route
-path = "/tasks"
-element = {< RequireMenu path = "/tasks" > <Tasks /></RequireMenu >}
           />
     < Route
 path = "/materials"

@@ -76,7 +76,7 @@ export default function Dashboard() {
     < div className = "card" >
         <div className="card-header" >
             <h3>🔥 Долги группы </h3>
-                < Link to = "/debts" className = "link" > Все →</Link>
+    < Link to = "/reminders" className = "link" > Все →</Link>
                     </div>
                     < table className = "table" >
                         <thead>

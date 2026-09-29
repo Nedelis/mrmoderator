@@ -1,16 +1,7 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\backend",
-    "\\web",
-    "\\web\\src",
-    "\\web\\src\\components",
-    "\\web\\src\\config",
-    "\\web\\src\\contexts",
-    "\\web\\src\\pages",
-    "\\web\\src\\types",
-    "\\web\\src\\utils"
+    ""
   ],
-  "SelectedNode": "\\web\\src\\pages\\Dashboard.tsx",
+  "SelectedNode": "\\web",
   "PreviewInSolutionExplorer": false
 }
