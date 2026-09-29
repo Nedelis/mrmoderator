@@ -39,12 +39,12 @@ def _register_sender() -> None:
 
     bot = Bot(token=token)
 
-    async def sender(chat_id: str, text: str) -> bool:
+    async def sender(user_id: int, text: str) -> bool:
         try:
-            await bot.send_message(chat_id=chat_id, text=text)
+            await bot.send_message(user_id=user_id, text=text)
             return True
         except Exception as e:
-            logger.error("Не удалось отправить сообщение в %s: %s", chat_id, e)
+            logger.error("Не удалось отправить сообщение в %s: %s", user_id, e)
             return False
 
     notify_service.register_sender(sender)
@@ -83,7 +83,7 @@ async def job_daily_summary() -> None:
 async def main() -> None:
     _register_sender()
 
-    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+    scheduler = AsyncIOScheduler(timezone="UTC")
 
     scheduler.add_job(
         job_upcoming_deadlines,
@@ -110,5 +110,7 @@ async def main() -> None:
     scheduler.start()
     logger.info("Планировщик запущен. Задачи: %s", [j.id for j in scheduler.get_jobs()])
 
-    # Ждём вечно
+    for job in scheduler.get_jobs():
+        logger.info("Job %s → next_run_time=%s", job.id, job.next_run_time)
+
     await asyncio.Event().wait()

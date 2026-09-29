@@ -5,19 +5,40 @@ from fastapi.middleware.cors import CORSMiddleware
 from maxapi import Bot
 
 from app.api.v1.router import api_router
+from app.bot.bot_info import BotInfo
 from app.core.config import SETTINGS
 from app.services import notify_service
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """При старте API регистрируем sender для notify_service."""
+    """При старте API регистрируем sender и заполняем BotInfo."""
     token: str = SETTINGS.MAX_BOT_TOKEN.get_secret_value()
     api_bot: Bot | None = None
 
     if token:
         api_bot = Bot(token=token)
 
+        # ─── Проверка токена + заполнение BotInfo ───
+        try:
+            bot_info = await api_bot.get_me()
+            if bot_info is None:
+                raise ValueError("get_me вернул пустой результат")
+
+            username = getattr(bot_info, "username", None)
+            if not username:
+                raise ValueError("get_me не вернул username")
+
+            BotInfo.username = username
+            BotInfo.bot_url = f"https://max.ru/{username}"
+            BotInfo.mini_app_url = BotInfo.build_mini_app_url()
+
+            print(f"[api] Bot username: {BotInfo.username}")
+            print(f"[api] Mini App URL: {BotInfo.mini_app_url}")
+        except Exception as e:
+            print(f"[api] Не удалось получить bot_info: {e}")
+
+        # ─── Sender ───
         async def sender(user_id: int, text: str) -> bool:
             try:
                 await api_bot.send_message(user_id=user_id, text=text)
