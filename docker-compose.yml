@@ -1,5 +1,7 @@
+# Общие настройки бэкенда. Образ собирает только api — bot и scheduler
+# запускаются из него же; иначе три параллельные сборки одного тега
+# конфликтуют («image ... already exists»).
 x-backend: &backend
-  build: ./backend
   image: mrmoderator-backend
   restart: unless-stopped
   env_file: .env
@@ -12,6 +14,7 @@ x-backend: &backend
 services:
   api:
     <<: *backend
+    build: ./backend
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 10s
@@ -23,6 +26,7 @@ services:
 
   bot:
     <<: *backend
+    pull_policy: never
     command: ["python", "-m", "app.bot.main"]
     depends_on:
       api:
@@ -30,6 +34,7 @@ services:
 
   scheduler:
     <<: *backend
+    pull_policy: never
     command: ["python", "-m", "app.scheduler"]
     depends_on:
       api:
