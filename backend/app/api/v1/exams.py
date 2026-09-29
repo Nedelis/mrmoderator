@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user, require
 from app.models.user import User
 from app.schemas.common import OkResponse
-from app.schemas.exam import Exam, ExamMaterial
+from app.schemas.exam import Exam, ExamMaterial, CreateExamRequest
 from app.services import exam_service, material_service
 
 router = APIRouter(prefix="/exams", tags=["Экзамены"])
@@ -19,6 +19,21 @@ async def list_exams(
     if not user.group_id:
         return []
     return await exam_service.list_exams(db, user.group_id)
+
+
+@router.post("", response_model=Exam, status_code=status.HTTP_201_CREATED)
+async def create_exam(
+    data: CreateExamRequest,
+    user: User = Depends(require("exam.addMaterial")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Создать новый экзамен в расписании группы."""
+    if not user.group_id:
+        raise HTTPException(400, "Пользователь не в группе")
+    try:
+        return await exam_service.create_exam(db, user.group_id, data)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 @router.post("/{exam_id}/materials", response_model=ExamMaterial, status_code=status.HTTP_201_CREATED)

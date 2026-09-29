@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.exam import Exam, ExamMaterial
 from app.models.user import User
-from app.schemas.exam import Exam as ExamSchema, ExamMaterial as ExamMaterialSchema
+from app.schemas.exam import Exam as ExamSchema, ExamMaterial as ExamMaterialSchema, CreateExamRequest as CreateExamRequestSchema
 
 
 def _to_material_schema(m: ExamMaterial, added_by_name: str) -> ExamMaterialSchema:
@@ -57,6 +57,47 @@ async def list_exams(db: AsyncSession, group_id: str) -> list[ExamSchema]:
 async def get_exam(db: AsyncSession, exam_id: int) -> Exam | None:
     result = await db.execute(select(Exam).where(Exam.id == exam_id))
     return result.scalar_one_or_none()
+
+
+async def create_exam(
+    db: AsyncSession,
+    group_id: str,
+    data: CreateExamRequestSchema
+) -> ExamSchema:
+    """Создаёт новый экзамен в расписании группы."""
+    from datetime import datetime
+
+    # Парсим дату из строки (ISO-формат: YYYY-MM-DD или YYYY-MM-DDTHH:MM)
+    try:
+        exam_date = datetime.fromisoformat(data.date)
+    except ValueError:
+        raise ValueError(f"Неверный формат даты: {data.date}")
+
+    exam = Exam(
+        subject=data.subject,
+        date=exam_date,
+        time=data.time or "",
+        room=data.room or "",
+        teacher=data.teacher or "",
+        icon=data.icon or "📚",
+        type=data.type or "exam",
+        group_id=group_id,
+    )
+    db.add(exam)
+    await db.commit()
+    await db.refresh(exam)
+
+    return ExamSchema(
+        id=str(exam.id),
+        subject=exam.subject,
+        date=exam.date.isoformat(timespec="minutes"),
+        time=exam.time,
+        room=exam.room,
+        teacher=exam.teacher,
+        icon=exam.icon,
+        type=exam.type,
+        materials=[],
+    )
 
 
 async def add_exam_material(

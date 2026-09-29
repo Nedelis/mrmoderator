@@ -29,3 +29,13 @@ class Exam(BaseSchema):
 class CreateExamMaterialRequest(BaseSchema):
     title: str
     url: str | None = None
+
+
+class CreateExamRequest(BaseSchema):
+    subject: str
+    date: str
+    time: str = ""
+    room: str = ""
+    teacher: str = ""
+    icon: str = "📚"
+    type: str = "exam"  # "exam" | "test" | "credit"
