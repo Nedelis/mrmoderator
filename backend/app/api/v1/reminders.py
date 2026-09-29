@@ -1,18 +1,20 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require
-from app.models.user import User
 from app.core.roles import ROLES
+from app.models.user import User
 from app.schemas.common import OkResponse, RemindResponse
 from app.schemas.reminder import (
     Reminder,
     CreateReminderRequest,
     UpdateReminderRequest,
+    CompleteReminderRequest,
 )
 from app.services import reminder_service
-from datetime import datetime
 
 router = APIRouter(prefix="/reminders", tags=["Напоминалки"])
 
@@ -33,7 +35,6 @@ async def create_reminder(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Проверка прав по scope
     if data.scope == "personal":
         if "reminder.create.personal" not in ROLES[user.role_id]["permissions"]:
             raise HTTPException(403, "Нет права создавать личные напоминалки")
@@ -86,6 +87,21 @@ async def delete_reminder(
     return OkResponse()
 
 
+@router.put("/{reminder_id}/complete", response_model=OkResponse)
+async def complete_reminder(
+    reminder_id: int,
+    data: CompleteReminderRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    reminder = await reminder_service.get_reminder(db, reminder_id)
+    if reminder is None:
+        raise HTTPException(404, "Напоминалка не найдена")
+
+    await reminder_service.toggle_completed(db, reminder, user, data.completed)
+    return OkResponse()
+
+
 @router.post("/{reminder_id}/remind", response_model=RemindResponse)
 async def remind_reminder(
     reminder_id: int,
@@ -101,5 +117,5 @@ async def remind_reminder(
         id=str(reminder.id),
         title=reminder.title,
         sent_to=sent_to,
-        sent_at=datetime.utcnow(),
+        sent_at=datetime.now(timezone.utc),
     )

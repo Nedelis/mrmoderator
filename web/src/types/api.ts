@@ -48,6 +48,7 @@ export interface Reminder {
 
 export interface Debt {
     id: string;
+    studentId: string;
     studentName: string;
     subject: string;
     type: string;

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from functools import partial
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
+from sqlalchemy import JSON, Column, DateTime, Integer, String, ForeignKey
 from app.core.database import Base
 
 
@@ -17,3 +17,6 @@ class Reminder(Base):
     author_id = Column(Integer, ForeignKey("users.id"), index=True)
     group_id = Column(String, ForeignKey("groups.id"), index=True)
     created_at = Column(DateTime, default=partial(datetime.now, timezone.utc))
+
+    target_student_ids = Column(JSON, default=list)
+    completed_by = Column(JSON, default=list)

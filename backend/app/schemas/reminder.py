@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Literal
+
 from app.schemas.base import BaseSchema
 
 ReminderType = Literal["personal", "group"]
@@ -14,6 +15,8 @@ class Reminder(BaseSchema):
     deadline: datetime
     type: ReminderType
     priority: ReminderPriority
+    target_student_ids: list[str] = []
+    completed_by: list[str] = []
 
 
 class CreateReminderRequest(BaseSchema):
@@ -22,8 +25,13 @@ class CreateReminderRequest(BaseSchema):
     date: str
     time: str
     scope: ReminderScope
+    student_ids: list[str] = []
 
 
 class UpdateReminderRequest(BaseSchema):
     title: str | None = None
     description: str | None = None
+
+
+class CompleteReminderRequest(BaseSchema):
+    completed: bool

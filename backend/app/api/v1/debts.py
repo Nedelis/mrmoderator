@@ -47,7 +47,10 @@ async def update_debt(
     debt = await debt_service.get_debt(db, debt_id)
     if debt is None:
         raise HTTPException(404, "Долг не найден")
-    await debt_service.update_debt(db, debt, data)
+    try:
+        await debt_service.update_debt(db, debt, data)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
     return OkResponse()
 
 
