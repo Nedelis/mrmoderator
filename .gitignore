@@ -1,6 +1,8 @@
-# Project Settings
+# IDE Project Settings
 .vs/
 vs/
+.vscode/
+.idea/
 .continue/
 continue/
 
