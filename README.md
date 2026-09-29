@@ -15,7 +15,7 @@
 | API | `https://envelope-eldercare-earplugs.ngrok-free.dev/api` |
 | Swagger UI | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/docs` |
 | Проверка работоспособности | `https://envelope-eldercare-earplugs.ngrok-free.dev/api/health` |
-| Репозиторий и commit hash | https://github.com/Nedelis/mrmoderator — `<COMMIT-HASH>` |
+| Репозиторий и commit hash | https://github.com/Nedelis/mrmoderator — `60279fe3e01b3857103dce939df6898fc0545159` |
 
 ## Назначение
 
