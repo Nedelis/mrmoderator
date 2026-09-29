@@ -1,14 +1,16 @@
 from maxapi import Dispatcher
 from maxapi.filters.command import Command, CommandStart
 from maxapi.types import (
+    attachments,
     BotStarted,
     ButtonsPayload,
     CallbackButton,
     LinkButton,
     MessageCallback,
-    MessageCreated,
+    MessageCreated
 )
 from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
+from maxapi.types.attachments.buttons.attachment_button import AttachmentButton
 
 from app.core.config import SETTINGS
 from app.core.database import async_session
@@ -26,9 +28,9 @@ dp = Dispatcher()
 # ═══════════════════════════════════════════════════════════════
 
 
-def main_menu_kb() -> ButtonsPayload:
+def main_menu_kb() -> AttachmentButton:
     builder = InlineKeyboardBuilder()
-    builder.row(LinkButton(text="🔗 Открыть приложение", url=BotInfo.mini_app_url))
+    builder.row(LinkButton(text="🔗 Открыть приложение", url=BotInfo.build_mini_app_url()))
     builder.row(
         CallbackButton(text="📚 Моя группа", payload="my_group"),
         CallbackButton(text="🔑 Приглашение", payload="invite"),
@@ -36,7 +38,7 @@ def main_menu_kb() -> ButtonsPayload:
     return builder.as_markup()
 
 
-def no_group_kb() -> ButtonsPayload:
+def no_group_kb() -> AttachmentButton:
     builder = InlineKeyboardBuilder()
     builder.row(
         CallbackButton(text="➕ Создать группу", payload="create_group"),
@@ -318,7 +320,7 @@ async def cmd_open(event: MessageCreated):
         )
         return
 
-    await event.message.answer(f"🔗 Открой приложение:\n{BotInfo.mini_app_url}")
+    await event.message.answer(f"🔗 Открой приложение:\n{BotInfo.build_mini_app_url()}")
 
 
 # ═══════════════════════════════════════════════════════════════
