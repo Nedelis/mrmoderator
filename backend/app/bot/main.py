@@ -33,7 +33,7 @@ async def register_commands(bot) -> None:
 
 
 async def main() -> None:
-    bot, dp = init_bot()
+    bot, dp = await init_bot()
     await register_commands(bot)
     logger.info("Бот запущен. Polling...")
     await dp.start_polling(bot)
