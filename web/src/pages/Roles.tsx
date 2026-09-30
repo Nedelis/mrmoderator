@@ -40,6 +40,11 @@ export default function Roles() {
     const canRename = can('group.edit');
     const canRemove = can('group.edit');
 
+    // Колонку «Действия» показываем только если юзеру есть что там делать.
+    // У зама нет group.edit → и переименования, и удаления недоступны → колонка пустая,
+    // поэтому её вообще не рендерим (и th, и td).
+    const showActionsColumn = canRename || canRemove;
+
     const myFullName = user ? `${user.firstName} ${user.lastName}` : '';
 
     /**
@@ -77,15 +82,33 @@ export default function Roles() {
             return;
         }
 
+        // Только при передаче старосты бэк может снять роль с текущего юзера
+        // (или перетасовать роли активa). Тогда перечитываем /me жёстким переходом
+        // на /my-stats — там у бывшего старосты ещё есть доступ.
+        const isStarostaTransfer = selectedRoleId === 'starosta';
+
+        if (isStarostaTransfer) {
+            const ok = window.confirm(
+                `Передать роль старосты участнику «${target.name}»?\n\n` +
+                    'Вы потеряете права старосты и будете перенаправлены на страницу личной статистики.'
+            );
+            if (!ok) return;
+        }
+
         await run(() => api.assignRole({ studentId: target.id, roleId: selectedRoleId }), {
             successMessage: `Роль «${selectedRole?.label}» назначена: ${target.name}`,
             onSuccess: () => {
-                // Бэк может перетасовать роли (например, при передаче старосты).
-                // Роль текущего юзера кэшируется в контексте — жёстко перезагружаем,
-                // чтобы гарантированно перечитать /me и пересчитать доступные вкладки.
-                setTimeout(() => {
-                    window.location.reload();
-                }, 600);
+                if (isStarostaTransfer) {
+                    // Даём тосту мелькнуть и жёстко переходим на /my-stats.
+                    // replace() вместо reload() — чтобы не оказаться обратно на /roles
+                    // (куда у нового бывшего старосты уже нет доступа) и не мусорить
+                    // в истории браузера.
+                    setTimeout(() => {
+                        window.location.replace('/my-stats');
+                    }, 600);
+                } else {
+                    load();
+                }
             },
         });
     };
@@ -291,7 +314,7 @@ export default function Roles() {
                         <tr>
                             <th>Студент</th>
                             <th>Роль</th>
-                            <th>Действия</th>
+                            {showActionsColumn && <th>Действия</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -321,67 +344,63 @@ export default function Roles() {
                                             <span className="tag tag-gray">—</span>
                                         )}
                                     </td>
-                                    <td>
-                                        {/* Себя — староста: только «Изменить имя» */}
-                                        {self && canRename && (
-                                            <button
-                                                className="btn btn-ghost"
-                                                style={{ padding: '6px 12px', fontSize: 12 }}
-                                                disabled={pending}
-                                                onClick={() => openRename(s)}
-                                                title="Изменить отображаемое имя"
-                                            >
-                                                ✏️ Изменить имя
-                                            </button>
-                                        )}
+                                    {showActionsColumn && (
+                                        <td>
+                                            {/* Себе имя не меняет никто, даже староста.
+                                                Себя удалить тоже нельзя — см. handleRemove.
+                                                Поэтому у своей строки действий нет. */}
+                                            {self && (
+                                                <span
+                                                    style={{
+                                                        fontSize: 12,
+                                                        color: 'var(--muted)',
+                                                    }}
+                                                >
+                                                    —
+                                                </span>
+                                            )}
 
-                                        {/* Себя — не староста (нет group.edit): без действий */}
-                                        {self && !canRename && (
-                                            <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                                                —
-                                            </span>
-                                        )}
-
-                                        {/* Другие участники */}
-                                        {!self && (
-                                            <div
-                                                style={{
-                                                    display: 'flex',
-                                                    gap: 6,
-                                                    flexWrap: 'wrap',
-                                                }}
-                                            >
-                                                {canRename && (
-                                                    <button
-                                                        className="btn btn-ghost"
-                                                        style={{
-                                                            padding: '6px 12px',
-                                                            fontSize: 12,
-                                                        }}
-                                                        disabled={pending}
-                                                        onClick={() => openRename(s)}
-                                                        title="Изменить отображаемое имя"
-                                                    >
-                                                        ✏️ Имя
-                                                    </button>
-                                                )}
-                                                {canRemove && (
-                                                    <button
-                                                        className="btn btn-ghost"
-                                                        style={{
-                                                            padding: '6px 12px',
-                                                            fontSize: 12,
-                                                            color: 'var(--red)',
-                                                        }}
-                                                        disabled={pending}
-                                                        onClick={() => handleRemove(s)}
-                                                    >
-                                                        🗑️ Удалить
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </td>
+                                            {/* Другие участники */}
+                                            {!self && (
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        gap: 6,
+                                                        flexWrap: 'wrap',
+                                                    }}
+                                                >
+                                                    {canRename && (
+                                                        <button
+                                                            className="btn btn-ghost"
+                                                            style={{
+                                                                padding: '6px 12px',
+                                                                fontSize: 12,
+                                                            }}
+                                                            disabled={pending}
+                                                            onClick={() => openRename(s)}
+                                                            title="Изменить отображаемое имя"
+                                                        >
+                                                            ✏️ Имя
+                                                        </button>
+                                                    )}
+                                                    {canRemove && (
+                                                        <button
+                                                            className="btn btn-ghost"
+                                                            style={{
+                                                                padding: '6px 12px',
+                                                                fontSize: 12,
+                                                                color: 'var(--red)',
+                                                            }}
+                                                            disabled={pending}
+                                                            onClick={() => handleRemove(s)}
+                                                        >
+                                                            🗑️ Удалить
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
                             );
                         })}

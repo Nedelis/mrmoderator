@@ -56,16 +56,27 @@ export default function MobileNav({ open, onClose, onToggle }: MobileNavProps) {
 
     return (
         <>
-            <button className="mobile-menu-btn" onClick={onToggle}>
-                {open ? '✕' : '☰'}
-            </button>
+            {/* Плавающая кнопка открытия. При открытом меню её нет —
+                закрытие живёт в крестике внутри .mobile-nav-header,
+                иначе кнопка перекрывает заголовок «Меню». */}
+            {!open && (
+                <button
+                    className="mobile-menu-btn"
+                    onClick={onToggle}
+                    aria-label="Открыть меню"
+                >
+                    ☰
+                </button>
+            )}
 
             {open && <div className="mobile-overlay" onClick={onClose} />}
 
             <nav className={`mobile-nav ${open ? 'open' : ''}`}>
                 <div className="mobile-nav-header">
                     <h2>Меню</h2>
-                    <button onClick={onClose}>✕</button>
+                    <button onClick={onClose} aria-label="Закрыть меню">
+                        ✕
+                    </button>
                 </div>
 
                 {/* Навигация */}

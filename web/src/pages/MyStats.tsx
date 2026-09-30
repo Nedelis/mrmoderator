@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import PageWrapper from '../components/PageWrapper';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
@@ -98,9 +97,6 @@ export default function MyStats() {
             <div className="card">
                 <div className="card-header">
                     <h3>🔥 Мои долги</h3>
-                    <Link to="/debts" className="link">
-                        Все →
-                    </Link>
                 </div>
                 {myDebts.length === 0 ? (
                     <div

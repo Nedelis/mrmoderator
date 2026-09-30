@@ -19,8 +19,6 @@ export interface CurrentUser {
     id: string;
     firstName: string;
     lastName: string;
-    username: string;
-    photoUrl?: string;
     groupId: string;
     groupName: string;
     roleId: RoleId;
@@ -30,9 +28,6 @@ export interface Student {
     id: string;
     name: string;
     role: string;
-    avgScore?: number | null;
-    attendance?: number | null;
-    debts?: number | null;
 }
 
 export interface Reminder {

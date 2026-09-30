@@ -130,7 +130,6 @@ const ME: CurrentUser = {
     id: '1',
     firstName: 'Иван',
     lastName: 'Петров',
-    username: 'ivan_petrov',
     groupId: 'iu7-42b',
     groupName: 'ИУ7-42Б',
     roleId: 'starosta',

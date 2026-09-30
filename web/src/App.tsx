@@ -31,7 +31,13 @@ export default function App() {
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const { isReady } = useMaxBridge();
     const { loading: rolesLoading, error: rolesError } = useRoles();
-    const { loading: userLoading, error: userError, user, role } = useCurrentUser();
+    const {
+        loading: userLoading,
+        error: userError,
+        user,
+        role,
+        hasMenuItem,
+    } = useCurrentUser();
     const location = useLocation();
 
     useEffect(() => {
@@ -79,6 +85,11 @@ export default function App() {
         );
     }
 
+    // Староста и зам видят Дашборд. Остальных уводим на личную статистику:
+    // у них нет / в menu, и старый RequireMenu давал им «Доступ ограничен» на главной.
+    const canSeeDashboard = hasMenuItem('/');
+    const homePath = canSeeDashboard ? '/' : '/my-stats';
+
     return (
         <div className="app-layout">
             <Sidebar />
@@ -93,9 +104,13 @@ export default function App() {
                     <Route
                         path="/"
                         element={
-                            <RequireMenu path="/">
-                                <Dashboard />
-                            </RequireMenu>
+                            canSeeDashboard ? (
+                                <RequireMenu path="/">
+                                    <Dashboard />
+                                </RequireMenu>
+                            ) : (
+                                <Navigate to="/my-stats" replace />
+                            )
                         }
                     />
                     <Route
@@ -138,7 +153,7 @@ export default function App() {
                             </RequireMenu>
                         }
                     />
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                    <Route path="*" element={<Navigate to={homePath} replace />} />
                 </Routes>
             </main>
         </div>
