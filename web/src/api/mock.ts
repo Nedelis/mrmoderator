@@ -904,6 +904,14 @@ export const mockApi = {
         return { ok: true, examId, materialId };
     },
 
+    async deleteExam(id: string) {
+        await delay();
+        // Материалы экзамена лежат внутри самого объекта Exam,
+        // поэтому вместе с экзаменом каскадно уходят и они.
+        EXAMS = EXAMS.filter((e) => e.id !== id);
+        return { ok: true, id };
+    },
+
     // ===== ПОЧТА =====
     async forwardMail(id: string) {
         await delay();

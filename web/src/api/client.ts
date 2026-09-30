@@ -24,13 +24,15 @@ export class NotRegisteredError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-    const initData = (window as any).WebApp?.initData;
+    const initData = (window as any).WebApp?.initData as string | undefined;
 
+    // initData приходит только внутри MAX. В dev-режиме вне мессенджера его нет —
+    // в этом случае заголовок не шлём вообще, чтобы бэк с STRICT_AUTH=false
+    // подставил тестового юзера. В проде со STRICT_AUTH=true бэк сам отдаст 401.
     const headers: Record<string, string> = {
         ...((options?.headers as Record<string, string>) || {}),
     };
-
-    if (initData && typeof initData === 'string' && initData.length > 0) {
+    if (initData) {
         headers['X-Max-Init-Data'] = initData;
     }
 
@@ -47,9 +49,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
             // не JSON — игнорируем
         }
 
+        // Бэк может отдать ошибку двумя способами:
+        //   1) { error: { code: "not_in_group" } } — «наш» формат
+        //   2) { detail: "..." } — FastAPI-дефолт (401/403/404/422 и т.п.)
         const code = errBody?.error?.code;
         if (code === 'not_in_group') {
             throw new NotRegisteredError();
+        }
+
+        const detail = errBody?.detail;
+        if (typeof detail === 'string' && detail) {
+            throw new Error(detail);
         }
 
         const errText = await res.text().catch(() => '');
@@ -315,6 +325,11 @@ export const api = {
         return request<{ ok: boolean }>(`/exams/${examId}/materials/${materialId}`, {
             method: 'DELETE',
         });
+    },
+
+    async deleteExam(id: string): Promise<{ ok: boolean }> {
+        if (USE_API_MOCK) return mockApi.deleteExam(id);
+        return request<{ ok: boolean }>(`/exams/${id}`, { method: 'DELETE' });
     },
 
     // ===== ПОЧТА =====

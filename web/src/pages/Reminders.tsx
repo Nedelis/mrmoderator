@@ -72,6 +72,9 @@ export default function Reminders() {
     const canRemindTask = can('task.remind');
 
     const canCreateExam = can('exam.create');
+    // Удаление экзамена идёт тем же правом, что и создание.
+    // Если бэк введёт отдельное exam.delete — поправим здесь.
+    const canDeleteExam = can('exam.create');
 
     const availableKinds: CreateKind[] = [];
     if (canCreateReminder) availableKinds.push('reminder');
@@ -234,7 +237,14 @@ export default function Reminders() {
                 onSuccess: load,
             });
         } else if (item.kind === 'exam') {
-            showToast('Удаление экзаменов пока не реализовано', 'info');
+            if (!canDeleteExam) {
+                showToast('Нет прав на удаление экзаменов', 'error');
+                return;
+            }
+            await run(() => api.deleteExam(item.data.id), {
+                successMessage: 'Экзамен удалён',
+                onSuccess: load,
+            });
         }
     };
 
@@ -570,15 +580,17 @@ export default function Reminders() {
                             <span>🕐 {formatDateTime(e.date)}</span>
                         </div>
                     </div>
-                    <button
-                        className="btn btn-ghost"
-                        style={{ padding: '6px 10px', fontSize: 12 }}
-                        onClick={() => handleDelete(item)}
-                        disabled={pending}
-                        title="Удалить"
-                    >
-                        🗑️
-                    </button>
+                    {canDeleteExam && (
+                        <button
+                            className="btn btn-ghost"
+                            style={{ padding: '6px 10px', fontSize: 12 }}
+                            onClick={() => handleDelete(item)}
+                            disabled={pending}
+                            title="Удалить"
+                        >
+                            🗑️
+                        </button>
+                    )}
                 </div>
             </div>
         );
