@@ -13,7 +13,7 @@
 | API | `https://discreetly-enjoyable-koi.cloudpub.ru/api` |
 | Swagger UI | `https://discreetly-enjoyable-koi.cloudpub.ru/api/docs` |
 | Проверка работоспособности | `https://discreetly-enjoyable-koi.cloudpub.ru/api/health` |
-| Репозиторий и commit hash | https://github.com/Nedelis/mrmoderator — `60279fe3e01b3857103dce939df6898fc0545159` |
+| Репозиторий и commit hash | https://github.com/Nedelis/mrmoderator — `c13d69a59ac0db5a2a4c19b28499cd8461e1a1b8` |
 
 ## Назначение
 
