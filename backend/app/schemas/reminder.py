@@ -31,6 +31,10 @@ class CreateReminderRequest(BaseSchema):
 class UpdateReminderRequest(BaseSchema):
     title: str | None = None
     description: str | None = None
+    date: str | None = None
+    time: str | None = None
+    scope: str | None = None
+    student_ids: list[str] | None = None
 
 
 class CompleteReminderRequest(BaseSchema):

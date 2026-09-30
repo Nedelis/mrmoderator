@@ -86,6 +86,14 @@ async def update_reminder(
         reminder.title = data.title
     if data.description is not None:
         reminder.description = data.description
+    if data.date is not None:
+        reminder.date = data.date
+    if data.time is not None:
+        reminder.time = data.time
+    if data.scope is not None:
+        reminder.scope = data.scope
+        if data.scope == 'selected' and data.student_ids is not None:
+            reminder.student_ids = data.student_ids
     await db.commit()
     await db.refresh(reminder)
     return _to_schema(reminder)

@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user, require
 from app.models.user import User
 from app.schemas.common import OkResponse
-from app.schemas.exam import CreateExamRequest, Exam, ExamMaterial
+from app.schemas.exam import CreateExamRequest, UpdateExamRequest, Exam, ExamMaterial
 from app.services import exam_service
 
 router = APIRouter(prefix="/exams", tags=["Экзамены"])
@@ -24,7 +24,7 @@ async def list_exams(
 @router.post("", response_model=Exam, status_code=status.HTTP_201_CREATED)
 async def create_exam(
     data: CreateExamRequest,
-    user: User = Depends(require("exam.addMaterial")),
+    user: User = Depends(require("exam.create")),
     db: AsyncSession = Depends(get_db),
 ):
     """Создать новый экзамен в расписании группы."""
@@ -34,6 +34,36 @@ async def create_exam(
         return await exam_service.create_exam(db, user.group_id, data)
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+@router.put("/{exam_id}", response_model=OkResponse)
+async def update_exam(
+    exam_id: int,
+    data: UpdateExamRequest,
+    user: User = Depends(require("exam.delete")),
+    db: AsyncSession = Depends(get_db)
+) -> OkResponse:
+    exam = await exam_service.get_exam(db, exam_id)
+    if exam is None or exam.group_id != user.group_id:
+        raise HTTPException(404, "Экзамен не найден")
+     try:
+        await exam_service.update_exam(db, exam, data)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+    return OkResponse()
+
+
+@router.delete("/{exam_id}", response_model=OkResponse)
+async def delete_exam(
+    exam_id: int,
+    user: User = Depends(require("exam.delete")),
+    db: AsyncSession = Depends(get_db)
+) -> OkResponse:
+    exam = await exam_service.get_exam(db, exam_id)
+    if exam is None or exam.group_id != user.group_id:
+        raise HTTPException(404, "Экзамен не найден")
+    await exam_service.delete_exam(db, exam)
+    return OkResponse()
 
 
 @router.post(
@@ -49,7 +79,6 @@ async def add_exam_material(
     exam = await exam_service.get_exam(db, exam_id)
     if exam is None or exam.group_id != user.group_id:
         raise HTTPException(404, "Экзамен не найден")
-
     return await exam_service.add_exam_material(db, user, exam, title, url, None)
 
 
@@ -64,6 +93,5 @@ async def delete_exam_material(
     m = await exam_service.get_exam_material(db, material_id)
     if exam is None or exam.group_id != user.group_id or m is None or m.exam_id != exam_id:
         raise HTTPException(404, "Материал не найден")
-
     await exam_service.delete_exam_material(db, m)
     return OkResponse()

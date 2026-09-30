@@ -8,7 +8,7 @@ from app.models.exam import Exam, ExamMaterial
 from app.models.user import User
 from app.schemas.exam import CreateExamRequest as CreateExamRequestSchema
 from app.schemas.exam import Exam as ExamSchema
-from app.schemas.exam import ExamMaterial as ExamMaterialSchema
+from app.schemas.exam import ExamMaterial as ExamMaterialSchema, UpdateExamRequest
 
 
 def _to_material_schema(m: ExamMaterial, added_by_name: str) -> ExamMaterialSchema:
@@ -98,6 +98,53 @@ async def create_exam(db: AsyncSession, group_id: str, data: CreateExamRequestSc
         type=exam.type,
         materials=[],
     )
+
+
+async def update_exam(db: AsyncSession, exam: Exam, data: UpdateExamRequest) -> ExamSchema:
+    if data.subject is not None:
+        exam.subject = data.subject
+    if data.date is not None:
+        exam.date = data.date
+    if data.time is not None:
+        exam.time = data.time
+    if data.room is not None:
+        exam.room = data.room
+    if data.teacher is not None:
+        exam.teacher = data.teacher
+    if data.icon is not None:
+        exam.icon = data.icon
+    if data.type is not None:
+        exam.type = data.type
+
+    await db.commit()
+    await db.refresh(exam)
+
+    materials = []
+    for m in exam.materials:
+        added_by_name = ""
+        if m.added_by:
+            u = await db.execute(select(User).where(User.id == m.added_by))
+            u = u.scalar_one_or_none()
+            if u:
+                added_by_name = f"{u.last_name} {u.first_name[0]}."
+        materials.append(_to_material_schema(m, added_by_name))
+
+    return ExamSchema(
+        id=str(exam.id),
+        subject=exam.subject,
+        date=exam.date,
+        time=exam.time,
+        room=exam.room,
+        teacher=exam.teacher,
+        icon=exam.icon,
+        type=exam.type,
+        materials=materials
+    )
+
+
+async def delete_exam(db: AsyncSession, exam: Exam) -> None:
+    await db.delete(exam)
+    await db.commit()
 
 
 async def add_exam_material(

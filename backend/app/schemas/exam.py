@@ -39,3 +39,13 @@ class CreateExamRequest(BaseSchema):
     teacher: str = ""
     icon: str = "📚"
     type: str = "exam"  # "exam" | "test" | "credit"
+
+
+class UpdateExamRequest(BaseSchema):
+    subject: str | None = None
+    date: str | None = None
+    time: str | None = None
+    room: str | None = None
+    teacher: str | None = None
+    icon: str | None = None
+    type: str | None = None

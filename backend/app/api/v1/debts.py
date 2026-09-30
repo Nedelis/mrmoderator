@@ -45,7 +45,7 @@ async def update_debt(
     db: AsyncSession = Depends(get_db),
 ):
     debt = await debt_service.get_debt(db, debt_id)
-    if debt is None or debt.group_id != user.group_id:
+    if debt is None or debt.student_id != user.id or debt.group_id != user.group_id:
         raise HTTPException(404, "Долг не найден")
     try:
         await debt_service.update_debt(db, debt, data)
@@ -61,7 +61,7 @@ async def delete_debt(
     db: AsyncSession = Depends(get_db),
 ):
     debt = await debt_service.get_debt(db, debt_id)
-    if debt is None or debt.group_id != user.group_id:
+    if debt is None or debt.student_id != user.id or debt.group_id != user.group_id:
         raise HTTPException(404, "Долг не найден")
     await debt_service.delete_debt(db, debt)
     return OkResponse()
