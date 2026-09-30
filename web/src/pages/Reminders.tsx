@@ -166,17 +166,21 @@ export default function Reminders() {
                         studentIds: scope === 'selected' ? selectedStudentIds : undefined,
                     });
                 } else if (kind === 'debt') {
-                    // studentId — если выбран конкретный студент (только для тех, кто может назначать чужие)
-                    // studentName — ФИО для отображения; бэк может использовать любое из двух
+                    // studentId уходит ВСЕГДА. Если выбран чужой студент (доступно
+                    // тем, у кого debts.edit) — берём его id. Иначе это «себе»,
+                    // и targetStudentId = user.id. Пустой studentId бэк не принимает.
                     const selectedStudent = debtStudentId
                         ? students.find(s => s.id === debtStudentId)
                         : null;
 
+                    const targetStudentId =
+                        canCreateDebtAny && debtStudentId ? debtStudentId : user?.id;
+
+                    const targetStudentName = selectedStudent?.name || myFullName;
+
                     await api.createDebt({
-                        studentId: canCreateDebtAny ? debtStudentId || undefined : undefined,
-                        studentName: canCreateDebtAny
-                            ? selectedStudent?.name || myFullName
-                            : myFullName,
+                        studentId: targetStudentId,
+                        studentName: targetStudentName,
                         subject: title.trim(),
                         type: debtType,
                         deadline: date,
