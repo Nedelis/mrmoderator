@@ -131,18 +131,18 @@ async def get_current_user(
     x_max_init_data: str | None = Header(None, alias="X-Max-Init-Data"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    if x_max_init_data is not None:
+        return await _get_or_create_user_from_init_data(db, x_max_init_data)
+    
     if not SETTINGS.STRICT_AUTH:
         return await _get_or_create_test_user(db)
 
-    if not x_max_init_data:
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "error": {"code": "no_init_data", "message": "Заголовок X-Max-Init-Data обязателен"}
-            },
-        )
-
-    return await _get_or_create_user_from_init_data(db, x_max_init_data)
+    raise HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        detail={
+            "error": {"code": "no_init_data", "message": "Заголовок X-Max-Init-Data обязателен"}
+        },
+    )
 
 
 # =============================================================================

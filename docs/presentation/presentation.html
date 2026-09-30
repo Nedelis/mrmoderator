@@ -126,11 +126,11 @@
   <h1 style="margin-bottom:20px">Техническая информация</h1>
   <table class="tech">
     <tr><td>Чат-бот в MAX</td><td><b>https://max.ru/t595_hakaton_max_bot</b></td></tr>
-    <tr><td>Репозиторий и commit</td><td>https://github.com/Nedelis/mrmoderator · commit <span class="fill">⟨COMMIT-HASH⟩</span></td></tr>
-    <tr><td>Мини-приложение</td><td><span class="fill">https://⟨ПУБЛИЧНЫЙ-АДРЕС⟩/</span> — открывается из бота кнопкой «🔗 Открыть приложение» или командой <code>/open</code></td></tr>
-    <tr><td>Собственный API</td><td><span class="fill">https://⟨ПУБЛИЧНЫЙ-АДРЕС⟩/api</span> · Swagger: <code>/api/docs</code> · спецификация: <code>docs/openapi.yaml</code></td></tr>
+      <tr><td>Репозиторий и commit</td><td>https://github.com/Nedelis/mrmoderator · commit <span class="fill">60279fe3e01b3857103dce939df6898fc0545159</span> (от самого последнего коммита до обновления презентации)</td></tr>
+    <tr><td>Мини-приложение</td><td><span class="fill">https://discreetly-enjoyable-koi.cloudpub.ru/</span> — открывается из бота кнопкой «🔗 Открыть приложение» или командой <code>/open</code></td></tr>
+    <tr><td>Собственный API</td><td><span class="fill">https://discreetly-enjoyable-koi.cloudpub.ru/</span> · Swagger: <code>/api/docs</code> · спецификация: <code>docs/openapi.yaml</code></td></tr>
     <tr><td>Тестовые учётные записи</td><td>Вход через аккаунт MAX, логины и пароли не нужны. Первый пользователь создаёт группу (<code>/creategroup</code>) и становится старостой, остальные вступают по <code>/join КОД</code>. Без MAX: демо-режим, тестовый староста создаётся автоматически</td></tr>
-    <tr><td>Переменные окружения</td><td><code>MAX_BOT_TOKEN=</code><span class="fill">⟨токен бота⟩</span> · <code>STRICT_AUTH=true</code> · <code>MAX_BOT_USERNAME=t595_hakaton_max_bot</code> · остальное — по умолчанию из <code>.env.example</code></td></tr>
+    <tr><td>Переменные окружения</td><td><code>MAX_BOT_TOKEN=</code><span class="fill">⟨токен бота⟩</span> · <code>STRICT_AUTH=false</code> (демо-режим; для работы с реальными аккаунтами MAX — <code>true</code>) · остальное — по умолчанию из <code>.env.example</code></td></tr>
     <tr><td>Локальный запуск</td><td><code>cp .env.example .env</code> → вписать токен → <code>docker compose up -d --build</code> → http://localhost:8080</td></tr>
     <tr><td>Основной сценарий</td><td><code>/start</code> → <code>/creategroup ИС-21</code> → <code>/invite</code> → второй аккаунт: <code>/join КОД</code> → <code>/open</code> → «Напоминания» → создать «Для всей группы» → 🔔 → второй аккаунт получает сообщение от бота</td></tr>
   </table>
@@ -143,8 +143,8 @@
   <h1>Мистер Модератор</h1>
   <p>Цифровой помощник старосты: напоминания, долги и материалы группы в одном месте — а уведомления бот доставляет каждому лично</p>
   <div class="team">
-    Команда: <b>⟨название команды⟩</b><br>
-    ⟨Имя Фамилия⟩ — ⟨роль⟩ · ⟨Имя Фамилия⟩ — ⟨роль⟩ · ⟨Имя Фамилия⟩ — ⟨роль⟩
+    Команда: <b>GULASH</b><br>
+    Глазов Дмитрий — Backend-разработчик · Кузнецова София — Product-менеджер · Кондюров Кирилл — Frontend-разработчик
   </div>
   <div class="num">2</div>
 </section>
@@ -187,7 +187,7 @@
   <table>
     <tr><th style="width:24%">Задача</th><th style="width:38%">Сейчас</th><th>С «Мистером Модератором»</th></tr>
     <tr><td><b>Донести объявление</b></td><td class="muted">Переслать в общий чат, где его пролистают</td><td>Напоминалка «Для всей группы» → 🔔 — бот пишет каждому лично</td></tr>
-    <tr><td><b>Напомнить о дедлайне</b></td><td class="muted">Вручную, накануне, если не забыл</td><td>Бот сам напоминает за 24 часа до срока — один раз, без спама</td></tr>
+    <tr><td><b>Напомнить о дедлайне</b></td><td class="muted">Вручную, накануне, если не забыл</td><td>Бот сам напоминает за 7 дней, 3 дня, сутки, 8 часов и 2 часа — не спам, а если неактуально, можно просто отметить дедлайн выполненным</td></tr>
     <tr><td><b>Контроль долгов</b></td><td class="muted">В голове или в заметках, по личкам</td><td>Реестр долгов группы, ежедневные напоминания должникам, утренняя сводка старосте</td></tr>
     <tr><td><b>Материалы к сессии</b></td><td class="muted">Искать по перепискам и «Избранному»</td><td>Раздел «Материалы» и материалы, прикреплённые к экзаменам</td></tr>
     <tr><td><b>Если староста выпал</b></td><td class="muted">Группа без информации</td><td>Роли зама и профорга: права делегируются, уведомления идут автоматически</td></tr>
@@ -206,7 +206,7 @@
         <li><code>/creategroup</code> — группа за одну команду, создатель — староста</li>
         <li>Ссылка-приглашение: одногруппник вступает в один переход (диплинк MAX)</li>
         <li><code>/setchat</code> — привязка группового чата</li>
-        <li>Личные уведомления: дедлайн через 24 часа, просроченный долг, утренняя сводка старосте</li>
+        <li>Личные уведомления: дедлайн через 7д/3д/1д/8ч/2ч, просроченный долг, утренняя сводка старосте</li>
         <li>Кнопка «Открыть приложение»</li>
       </ul>
     </div>
@@ -278,7 +278,7 @@
   <div class="arch">
     <div class="stack">
       <div class="box accent"><b>MAX</b><span>чат с ботом и мини-приложение (WebView)</span></div>
-      <div class="box"><b>HTTPS-туннель</b><span>ngrok / cloudflared → порт 8080</span></div>
+      <div class="box"><b>HTTPS-туннель</b><span>Cloudpub → порт 8080</span></div>
     </div>
     <div class="arrow">→</div>
     <div class="docker">
@@ -286,7 +286,7 @@
       <div class="box"><b>web</b><span>nginx: React 19 + TypeScript, прокси /api</span></div>
       <div class="box"><b>api</b><span>FastAPI, проверка initData, права по ролям, миграции Alembic</span></div>
       <div class="box"><b>bot</b><span>maxapi, long polling: группы, приглашения</span></div>
-      <div class="box"><b>scheduler</b><span>APScheduler: 24 ч до дедлайна, долги, сводка</span></div>
+      <div class="box"><b>scheduler</b><span>APScheduler: 7д/3д/1д/8ч/2ч ч до дедлайна, долги, сводка</span></div>
       <div class="box db"><b>SQLite (volume)</b><span>переход на PostgreSQL — сменой DATABASE_URL</span></div>
     </div>
     <div class="arrow">↔</div>
@@ -338,9 +338,9 @@
 <!-- 13. Пилот -->
 <section class="slide">
   <div class="kicker">Пилотный запуск</div>
-  <h1>4 недели, 5–10 групп одного факультета</h1>
+  <h1>4 недели, 5–10 групп одного института</h1>
   <div class="grid g3" style="flex:1">
-    <div class="card"><h2>Где и для кого</h2><p class="muted small"><span class="fill">⟨вуз, факультет⟩</span>, группы 1–2 курса — там старосты ещё выстраивают процессы. Старосты — первые пользователи, одногруппники приходят по их ссылке-приглашению.</p></div>
+    <div class="card"><h2>Где и для кого</h2><p class="muted small"><span class="fill">МГТУ "СТАНКИН", ИИТ</span>, группы 1–2 курса — там старосты ещё выстраивают процессы. Старосты — первые пользователи, одногруппники приходят по их ссылке-приглашению.</p></div>
     <div class="card"><h2>Как встраивается</h2><p class="muted small">Не заменяет общий чат и ЭИОС: староста переносит в бота только то, что требует внимания всех — дедлайны, переносы, долги. Первое знакомство — через профбюро и собрание старост.</p></div>
     <div class="card"><h2>Что нужно</h2><p class="muted small">Сервер или облако РФ с HTTPS-доменом, токен бота MAX, контакт в профбюро или деканате, 1 человек поддержки на время пилота.</p></div>
   </div>

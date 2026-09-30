@@ -24,7 +24,7 @@
     },
     {
       "id": 2,
-      "max_user_id": "434583486",
+      "max_user_id": "test_user_434583486",
       "first_name": "Дмитрий",
       "last_name": "Иванов",
       "username": "dmitry_ivanov",
@@ -35,7 +35,7 @@
     },
     {
       "id": 3,
-      "max_user_id": "434583487",
+      "max_user_id": "test_user_434583487",
       "first_name": "Мария",
       "last_name": "Петрова",
       "username": "maria_petrova",
@@ -46,7 +46,7 @@
     },
     {
       "id": 4,
-      "max_user_id": "434583488",
+      "max_user_id": "test_user_434583488",
       "first_name": "Алексей",
       "last_name": "Сидоров",
       "username": "alexey_sidorov",
@@ -57,7 +57,7 @@
     },
     {
       "id": 5,
-      "max_user_id": "434583489",
+      "max_user_id": "test_user_434583489",
       "first_name": "Мария",
       "last_name": "Кузнецова",
       "username": "maria_kuznetsova",
@@ -68,7 +68,7 @@
     },
     {
       "id": 6,
-      "max_user_id": "434583490",
+      "max_user_id": "test_user_434583490",
       "first_name": "Кирилл",
       "last_name": "Смирнов",
       "username": "kirill_smirnov",
@@ -79,7 +79,7 @@
     },
     {
       "id": 7,
-      "max_user_id": "434583491",
+      "max_user_id": "test_user_434583491",
       "first_name": "Елена",
       "last_name": "Волкова",
       "username": "elena_volkova",
@@ -90,7 +90,7 @@
     },
     {
       "id": 8,
-      "max_user_id": "434583492",
+      "max_user_id": "test_user_434583492",
       "first_name": "Павел",
       "last_name": "Морозов",
       "username": "pavel_morozov",
@@ -101,7 +101,7 @@
     },
     {
       "id": 9,
-      "max_user_id": "434583493",
+      "max_user_id": "test_user_434583493",
       "first_name": "Анна",
       "last_name": "Лебедева",
       "username": "anna_lebedeeva",
@@ -112,7 +112,7 @@
     },
     {
       "id": 10,
-      "max_user_id": "434583494",
+      "max_user_id": "test_user_434583494",
       "first_name": "Сергей",
       "last_name": "Новиков",
       "username": "sergey_novikov",
@@ -123,7 +123,7 @@
     },
     {
       "id": 11,
-      "max_user_id": "434583495",
+      "max_user_id": "test_user_434583495",
       "first_name": "Наталья",
       "last_name": "Фёдорова",
       "username": "natalya_fedorova",
@@ -134,7 +134,7 @@
     },
     {
       "id": 12,
-      "max_user_id": "434583496",
+      "max_user_id": "test_user_434583496",
       "first_name": "Дмитрий",
       "last_name": "Козлов",
       "username": "dmitry_kozlov",

@@ -2593,7 +2593,7 @@ components:
       description: Строка WebApp.initData из MAX Bridge. Обязательна при STRICT_AUTH=true.
 servers:
 - url: /
-  description: 'Текущий хост (через nginx: https://<публичный-адрес>/)'
+  description: 'Текущий хост (через nginx: https://discreetly-enjoyable-koi.cloudpub.ru/)'
 - url: http://localhost:8080
   description: Локальный запуск через Docker (nginx)
 - url: http://localhost:8000

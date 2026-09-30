@@ -14,7 +14,7 @@ export default defineConfig({
               changeOrigin: true,
           },
       },
-      allowedHosts: ['.ngrok-free.dev'],
+      allowedHosts: ['.cloudpub.ru'],
   },
   build: {
     outDir: 'dist',
