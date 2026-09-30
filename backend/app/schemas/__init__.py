@@ -23,7 +23,6 @@ from app.schemas.reminder import (
     UpdateReminderRequest,
 )
 from app.schemas.role import Role, RolesResponse
-from app.schemas.settings import SettingsSchema
 from app.schemas.task import CreateTaskRequest, Task, UpdateTaskRequest
 from app.schemas.user import CurrentUser, GroupInfo, MeResponse, Student
 
@@ -53,7 +52,6 @@ __all__ = [
     "Mailbox",
     "ConfigureMailboxesRequest",
     "AddMailboxRequest",
-    "SettingsSchema",
     "OkResponse",
     "RemindResponse",
     "ErrorResponse",

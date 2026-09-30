@@ -46,7 +46,7 @@ async def update_exam(
     exam = await exam_service.get_exam(db, exam_id)
     if exam is None or exam.group_id != user.group_id:
         raise HTTPException(404, "Экзамен не найден")
-     try:
+    try:
         await exam_service.update_exam(db, exam, data)
     except ValueError as e:
         raise HTTPException(404, str(e))

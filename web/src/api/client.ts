@@ -293,7 +293,7 @@ export const api = {
         return request<{ ok: boolean }>(`/materials/${id}`, { method: 'DELETE' });
     },
 
-    // ===== ЭКЗАМЕНЫ =====
+        // ===== ЭКЗАМЕНЫ =====
     async createExam(payload: {
         subject: string;
         type: 'exam' | 'consultation';
@@ -322,30 +322,13 @@ export const api = {
             teacher: string;
             icon: string;
         }>
-    ) {
-        await delay();
-        EXAMS = EXAMS.map(e => {
-            if (e.id !== id) return e;
-            const updated: Exam = { ...e };
-
-            if (payload.subject !== undefined) updated.subject = payload.subject;
-            if (payload.type !== undefined) updated.type = payload.type;
-            if (payload.room !== undefined) updated.room = payload.room;
-            if (payload.teacher !== undefined) updated.teacher = payload.teacher;
-            if (payload.icon !== undefined) updated.icon = payload.icon;
-
-            // date и time держим синхронно: e.date = YYYY-MM-DDTHH:mm, e.time = HH:mm
-            if (payload.date !== undefined || payload.time !== undefined) {
-                const [oldDate, oldTime] = e.date.split('T');
-                const date = payload.date ?? oldDate;
-                const time = payload.time ?? oldTime ?? e.time ?? '10:00';
-                updated.date = `${date}T${time}`;
-                updated.time = time;
-            }
-
-            return updated;
+    ): Promise<{ ok: boolean }> {
+        if (USE_API_MOCK) return mockApi.updateExam(id, payload);
+        return request<{ ok: boolean }>(`/exams/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
         });
-        return { ok: true, id };
     },
 
     async addExamMaterial(payload: {
@@ -375,7 +358,7 @@ export const api = {
         if (USE_API_MOCK) return mockApi.deleteExam(id);
         return request<{ ok: boolean }>(`/exams/${id}`, { method: 'DELETE' });
     },
-
+    
     // ===== ПОЧТА =====
     async forwardMail(id: string): Promise<{
         ok: boolean;

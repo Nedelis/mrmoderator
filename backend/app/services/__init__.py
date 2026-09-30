@@ -7,7 +7,6 @@ from app.services import (
     notification_log_service,
     notify_service,
     reminder_service,
-    settings_service,
     task_service,
     user_service,
 )
@@ -21,7 +20,6 @@ __all__ = [
     "material_service",
     "exam_service",
     "mail_service",
-    "settings_service",
     "notify_service",
     "notification_log_service",
 ]

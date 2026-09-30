@@ -695,7 +695,6 @@ export const mockApi = {
             if (payload.title !== undefined) updated.title = payload.title;
             if (payload.description !== undefined) updated.description = payload.description;
 
-            // Склеиваем date + time обратно в deadline формата YYYY-MM-DDTHH:mm
             if (payload.date !== undefined || payload.time !== undefined) {
                 const [oldDate, oldTime] = r.deadline.split('T');
                 const date = payload.date ?? oldDate;
@@ -703,7 +702,6 @@ export const mockApi = {
                 updated.deadline = `${date}T${time}`;
             }
 
-            // scope меняет type и targetStudentIds
             if (payload.scope !== undefined) {
                 updated.type = payload.scope === 'personal' ? 'personal' : 'group';
                 if (payload.scope === 'selected' && payload.studentIds?.length) {
@@ -712,7 +710,6 @@ export const mockApi = {
                     updated.targetStudentIds = undefined;
                 }
             } else if (payload.studentIds !== undefined && r.type === 'group') {
-                // если scope не менялся, но передали studentIds — просто обновляем
                 updated.targetStudentIds = payload.studentIds.length
                     ? payload.studentIds
                     : undefined;
@@ -913,6 +910,43 @@ export const mockApi = {
         return exam;
     },
 
+    async updateExam(
+        id: string,
+        payload: Partial<{
+            subject: string;
+            type: 'exam' | 'consultation';
+            date: string;
+            time: string;
+            room: string;
+            teacher: string;
+            icon: string;
+        }>
+    ): Promise<{ ok: boolean }> {
+        await delay();
+        EXAMS = EXAMS.map((e) => {
+            if (e.id !== id) return e;
+            const updated: Exam = { ...e };
+
+            if (payload.subject !== undefined) updated.subject = payload.subject;
+            if (payload.type !== undefined) updated.type = payload.type;
+            if (payload.room !== undefined) updated.room = payload.room;
+            if (payload.teacher !== undefined) updated.teacher = payload.teacher;
+            if (payload.icon !== undefined) updated.icon = payload.icon;
+
+            // date и time держим синхронно: e.date = YYYY-MM-DDTHH:mm, e.time = HH:mm
+            if (payload.date !== undefined || payload.time !== undefined) {
+                const [oldDate, oldTime] = e.date.split('T');
+                const date = payload.date ?? oldDate;
+                const time = payload.time ?? oldTime ?? e.time ?? '10:00';
+                updated.date = `${date}T${time}`;
+                updated.time = time;
+            }
+
+            return updated;
+        });
+        return { ok: true };
+    },
+
     async addExamMaterial(payload: {
         examId: string;
         title: string;
@@ -947,8 +981,6 @@ export const mockApi = {
 
     async deleteExam(id: string) {
         await delay();
-        // Материалы экзамена лежат внутри самого объекта Exam,
-        // поэтому вместе с экзаменом каскадно уходят и они.
         EXAMS = EXAMS.filter((e) => e.id !== id);
         return { ok: true, id };
     },
