@@ -26,9 +26,6 @@ export class NotRegisteredError extends Error {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const initData = (window as any).WebApp?.initData as string | undefined;
 
-    // initData приходит только внутри MAX. В dev-режиме вне мессенджера его нет —
-    // в этом случае заголовок не шлём вообще, чтобы бэк с STRICT_AUTH=false
-    // подставил тестового юзера. В проде со STRICT_AUTH=true бэк сам отдаст 401.
     const headers: Record<string, string> = {
         ...((options?.headers as Record<string, string>) || {}),
     };
@@ -36,10 +33,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
         headers['X-Max-Init-Data'] = initData;
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers,
-    });
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
     if (!res.ok) {
         let errBody: any = null;
@@ -49,9 +43,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
             // не JSON — игнорируем
         }
 
-        // Бэк может отдать ошибку двумя способами:
-        //   1) { error: { code: "not_in_group" } } — «наш» формат
-        //   2) { detail: "..." } — FastAPI-дефолт (401/403/404/422 и т.п.)
         const code = errBody?.error?.code;
         if (code === 'not_in_group') {
             throw new NotRegisteredError();
@@ -152,7 +143,14 @@ export const api = {
 
     async updateReminder(
         id: string,
-        payload: Partial<{ title: string; description: string }>
+        payload: Partial<{
+            title: string;
+            description: string;
+            date: string;
+            time: string;
+            scope: 'personal' | 'group' | 'selected';
+            studentIds: string[];
+        }>
     ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.updateReminder(id, payload);
         return request<{ ok: boolean }>(`/reminders/${id}`, {
@@ -241,7 +239,16 @@ export const api = {
         });
     },
 
-    async updateTask(id: string, payload: Record<string, unknown>): Promise<{ ok: boolean }> {
+    async updateTask(
+        id: string,
+        payload: Partial<{
+            title: string;
+            description: string;
+            deadline: string;
+            type: 'group' | 'personal';
+            status: 'active' | 'soon' | 'done' | 'overdue';
+        }>
+    ): Promise<{ ok: boolean }> {
         if (USE_API_MOCK) return mockApi.updateTask(id, payload);
         return request<{ ok: boolean }>(`/tasks/${id}`, {
             method: 'PUT',
@@ -302,6 +309,43 @@ export const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
+    },
+
+    async updateExam(
+        id: string,
+        payload: Partial<{
+            subject: string;
+            type: 'exam' | 'consultation';
+            date: string;
+            time: string;
+            room: string;
+            teacher: string;
+            icon: string;
+        }>
+    ) {
+        await delay();
+        EXAMS = EXAMS.map(e => {
+            if (e.id !== id) return e;
+            const updated: Exam = { ...e };
+
+            if (payload.subject !== undefined) updated.subject = payload.subject;
+            if (payload.type !== undefined) updated.type = payload.type;
+            if (payload.room !== undefined) updated.room = payload.room;
+            if (payload.teacher !== undefined) updated.teacher = payload.teacher;
+            if (payload.icon !== undefined) updated.icon = payload.icon;
+
+            // date и time держим синхронно: e.date = YYYY-MM-DDTHH:mm, e.time = HH:mm
+            if (payload.date !== undefined || payload.time !== undefined) {
+                const [oldDate, oldTime] = e.date.split('T');
+                const date = payload.date ?? oldDate;
+                const time = payload.time ?? oldTime ?? e.time ?? '10:00';
+                updated.date = `${date}T${time}`;
+                updated.time = time;
+            }
+
+            return updated;
+        });
+        return { ok: true, id };
     },
 
     async addExamMaterial(payload: {

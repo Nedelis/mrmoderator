@@ -1,5 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react';
 import PageWrapper from '../components/PageWrapper';
+import Modal from '../components/Modal';
 import { useToast } from '../components/Toast';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { api } from '../api/client';
@@ -12,6 +13,7 @@ type CreateKind = 'reminder' | 'debt' | 'task' | 'exam';
 type DebtKind = 'Экзамен' | 'Зачёт' | 'Лаба' | 'Курсовая';
 type TaskKind = 'group' | 'personal';
 type ExamKind = 'exam' | 'consultation';
+type ReminderScope = 'group' | 'selected' | 'personal';
 
 type EventItem =
     | { kind: 'reminder'; data: Reminder }
@@ -26,6 +28,32 @@ const KIND_META: Record<CreateKind, { label: string; icon: string; cls: string }
     exam: { label: 'Экзамен', icon: '📅', cls: 'purple' },
 };
 
+// "YYYY-MM-DDTHH:mm" → { date: "YYYY-MM-DD", time: "HH:mm" }
+function splitDateTime(iso: string): { date: string; time: string } {
+    if (!iso) return { date: '', time: '' };
+    const [d, t] = iso.split('T');
+    return { date: d ?? '', time: (t ?? '').slice(0, 5) };
+}
+
+// Состояние формы редактирования. Поля — надмножество всех четырёх типов,
+// при открытии модалки заполняются только релевантные.
+interface EditFormState {
+    kind: CreateKind;
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    scope: ReminderScope;
+    selectedStudentIds: string[];
+    debtType: DebtKind;
+    debtStudentId: string;
+    taskType: TaskKind;
+    examType: ExamKind;
+    examRoom: string;
+    examTeacher: string;
+}
+
 export default function Reminders() {
     const { can, user } = useCurrentUser();
     const { showToast } = useToast();
@@ -38,6 +66,7 @@ export default function Reminders() {
     const [students, setStudents] = useState<Student[]>([]);
     const [filter, setFilter] = useState<'all' | CreateKind>('all');
 
+    // === Форма создания ===
     const [kind, setKind] = useState<CreateKind>('reminder');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -45,17 +74,21 @@ export default function Reminders() {
     const [time, setTime] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const [scope, setScope] = useState<'group' | 'selected' | 'personal'>('personal');
+    const [scope, setScope] = useState<ReminderScope>('personal');
     const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
     const [debtType, setDebtType] = useState<DebtKind>('Экзамен');
-    const [debtStudentId, setDebtStudentId] = useState(''); // ← id вместо имени
+    const [debtStudentId, setDebtStudentId] = useState('');
 
     const [taskType, setTaskType] = useState<TaskKind>('group');
 
     const [examType, setExamType] = useState<ExamKind>('exam');
     const [examRoom, setExamRoom] = useState('');
     const [examTeacher, setExamTeacher] = useState('');
+
+    // === Форма редактирования ===
+    const [editForm, setEditForm] = useState<EditFormState | null>(null);
+    const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
     const canCreateReminderPersonal = can('reminder.create.personal');
     const canCreateReminderGroup = can('reminder.create.group');
@@ -70,10 +103,9 @@ export default function Reminders() {
     const canCreateTaskGroup = can('task.create.group');
     const canCreateTask = canCreateTaskPersonal || canCreateTaskGroup;
     const canRemindTask = can('task.remind');
+    const canEditTaskGroup = can('task.edit');
 
     const canCreateExam = can('exam.create');
-    // Удаление экзамена идёт тем же правом, что и создание.
-    // Если бэк введёт отдельное exam.delete — поправим здесь.
     const canDeleteExam = can('exam.create');
 
     const availableKinds: CreateKind[] = [];
@@ -124,6 +156,10 @@ export default function Reminders() {
         setErrors({});
     };
 
+    // ==================================================================
+    // СОЗДАНИЕ
+    // ==================================================================
+
     const handleCreate = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -166,16 +202,11 @@ export default function Reminders() {
                         studentIds: scope === 'selected' ? selectedStudentIds : undefined,
                     });
                 } else if (kind === 'debt') {
-                    // studentId уходит ВСЕГДА. Если выбран чужой студент (доступно
-                    // тем, у кого debts.edit) — берём его id. Иначе это «себе»,
-                    // и targetStudentId = user.id. Пустой studentId бэк не принимает.
                     const selectedStudent = debtStudentId
                         ? students.find(s => s.id === debtStudentId)
                         : null;
-
                     const targetStudentId =
                         canCreateDebtAny && debtStudentId ? debtStudentId : user?.id;
-
                     const targetStudentName = selectedStudent?.name || myFullName;
 
                     await api.createDebt({
@@ -213,6 +244,199 @@ export default function Reminders() {
             }
         );
     };
+
+    // ==================================================================
+    // РЕДАКТИРОВАНИЕ
+    // ==================================================================
+
+    /**
+     * Право на редактирование конкретной карточки.
+     * Личные напоминания и личные задания каждый может править (они его собственные),
+     * групповые — только те, у кого есть соответствующее право.
+     */
+    const canEditItem = (item: EventItem): boolean => {
+        switch (item.kind) {
+            case 'reminder':
+                return item.data.type === 'group' ? canRemind : true;
+            case 'debt':
+                return canCreateDebtAny;
+            case 'task':
+                return item.data.type === 'group' ? canEditTaskGroup : true;
+            case 'exam':
+                return canCreateExam;
+        }
+    };
+
+    const openEdit = (item: EventItem) => {
+        setEditErrors({});
+
+        if (item.kind === 'reminder') {
+            const r = item.data;
+            const { date: d, time: t } = splitDateTime(r.deadline);
+            setEditForm({
+                kind: 'reminder',
+                id: r.id,
+                title: r.title,
+                description: r.description,
+                date: d,
+                time: t,
+                scope: r.type === 'personal'
+                    ? 'personal'
+                    : r.targetStudentIds?.length
+                      ? 'selected'
+                      : 'group',
+                selectedStudentIds: r.targetStudentIds ?? [],
+                debtType: 'Экзамен',
+                debtStudentId: '',
+                taskType: 'group',
+                examType: 'exam',
+                examRoom: '',
+                examTeacher: '',
+            });
+        } else if (item.kind === 'debt') {
+            const d = item.data;
+            setEditForm({
+                kind: 'debt',
+                id: d.id,
+                title: d.subject,
+                description: '',
+                date: d.deadline,
+                time: '',
+                scope: 'personal',
+                selectedStudentIds: [],
+                debtType: (d.type as DebtKind) || 'Экзамен',
+                debtStudentId: d.studentId ?? '',
+                taskType: 'group',
+                examType: 'exam',
+                examRoom: '',
+                examTeacher: '',
+            });
+        } else if (item.kind === 'task') {
+            const t = item.data;
+            setEditForm({
+                kind: 'task',
+                id: t.id,
+                title: t.title,
+                description: t.description,
+                date: t.deadline,
+                time: '',
+                scope: 'personal',
+                selectedStudentIds: [],
+                debtType: 'Экзамен',
+                debtStudentId: '',
+                taskType: t.type,
+                examType: 'exam',
+                examRoom: '',
+                examTeacher: '',
+            });
+        } else {
+            const e = item.data;
+            const { date: d, time: t } = splitDateTime(e.date);
+            setEditForm({
+                kind: 'exam',
+                id: e.id,
+                title: e.subject,
+                description: '',
+                date: d,
+                time: t,
+                scope: 'personal',
+                selectedStudentIds: [],
+                debtType: 'Экзамен',
+                debtStudentId: '',
+                taskType: 'group',
+                examType: e.type,
+                examRoom: e.room,
+                examTeacher: e.teacher,
+            });
+        }
+    };
+
+    const handleEditSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!editForm) return;
+
+        const baseErrs = validateObject(
+            { title: editForm.title, date: editForm.date },
+            {
+                title: [
+                    rules.required('Введите название'),
+                    rules.minLen(3, 'Минимум 3 символа'),
+                    rules.maxLen(120),
+                ],
+                date: [rules.date({ minYearOffset: 0, maxYearOffset: 1 })],
+            }
+        );
+
+        if (editForm.kind === 'reminder') {
+            const timeErr = validateObject({ time: editForm.time }, { time: [rules.time()] });
+            Object.assign(baseErrs, timeErr);
+            if (editForm.scope === 'selected' && editForm.selectedStudentIds.length === 0) {
+                baseErrs.selectedStudents = 'Выберите хотя бы одного студента';
+            }
+        }
+
+        if (Object.keys(baseErrs).length > 0) {
+            setEditErrors(baseErrs);
+            return;
+        }
+
+        await run(
+            async () => {
+                if (editForm.kind === 'reminder') {
+                    await api.updateReminder(editForm.id, {
+                        title: editForm.title.trim(),
+                        description: editForm.description.trim(),
+                        date: editForm.date,
+                        time: editForm.time,
+                        scope: editForm.scope,
+                        studentIds:
+                            editForm.scope === 'selected'
+                                ? editForm.selectedStudentIds
+                                : undefined,
+                    });
+                } else if (editForm.kind === 'debt') {
+                    const selectedStudent = editForm.debtStudentId
+                        ? students.find(s => s.id === editForm.debtStudentId)
+                        : null;
+                    await api.updateDebt(editForm.id, {
+                        studentId: editForm.debtStudentId || user?.id,
+                        studentName: selectedStudent?.name || myFullName,
+                        subject: editForm.title.trim(),
+                        type: editForm.debtType,
+                        deadline: editForm.date,
+                    });
+                } else if (editForm.kind === 'task') {
+                    await api.updateTask(editForm.id, {
+                        title: editForm.title.trim(),
+                        description: editForm.description.trim(),
+                        deadline: editForm.date,
+                        type: editForm.taskType,
+                    });
+                } else if (editForm.kind === 'exam') {
+                    await api.updateExam(editForm.id, {
+                        subject: editForm.title.trim(),
+                        type: editForm.examType,
+                        date: editForm.date,
+                        time: editForm.time || '10:00',
+                        room: editForm.examRoom.trim(),
+                        teacher: editForm.examTeacher.trim(),
+                    });
+                }
+            },
+            {
+                successMessage: 'Изменения сохранены',
+                errorMessage: 'Не удалось сохранить',
+                onSuccess: () => {
+                    setEditForm(null);
+                    load();
+                },
+            }
+        );
+    };
+
+    // ==================================================================
+    // УДАЛЕНИЕ / ДЕЙСТВИЯ
+    // ==================================================================
 
     const handleDelete = async (item: EventItem) => {
         const confirmText =
@@ -301,6 +525,10 @@ export default function Reminders() {
         });
     };
 
+    // ==================================================================
+    // РЕНДЕР
+    // ==================================================================
+
     const allEvents: EventItem[] = [
         ...reminders.map(r => ({ kind: 'reminder' as const, data: r })),
         ...debts.map(d => ({ kind: 'debt' as const, data: d })),
@@ -327,6 +555,7 @@ export default function Reminders() {
 
     const renderCard = (item: EventItem) => {
         const meta = KIND_META[item.kind];
+        const canEdit = canEditItem(item);
 
         if (item.kind === 'reminder') {
             const r = item.data;
@@ -400,6 +629,17 @@ export default function Reminders() {
                             >
                                 {completed ? '↩️' : '✅'}
                             </button>
+                            {canEdit && (
+                                <button
+                                    className="btn btn-ghost"
+                                    style={{ padding: '6px 10px', fontSize: 12 }}
+                                    onClick={() => openEdit(item)}
+                                    disabled={pending}
+                                    title="Редактировать"
+                                >
+                                    ✏️
+                                </button>
+                            )}
                             <button
                                 className="btn btn-ghost"
                                 style={{ padding: '6px 10px', fontSize: 12 }}
@@ -464,15 +704,28 @@ export default function Reminders() {
                                 <span>🕐 Дедлайн: {formatDate(d.deadline)}</span>
                             </div>
                         </div>
-                        <button
-                            className="btn btn-ghost"
-                            style={{ padding: '6px 10px', fontSize: 12 }}
-                            onClick={() => handleDelete(item)}
-                            disabled={pending}
-                            title="Удалить"
-                        >
-                            🗑️
-                        </button>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            {canEdit && (
+                                <button
+                                    className="btn btn-ghost"
+                                    style={{ padding: '6px 10px', fontSize: 12 }}
+                                    onClick={() => openEdit(item)}
+                                    disabled={pending}
+                                    title="Редактировать"
+                                >
+                                    ✏️
+                                </button>
+                            )}
+                            <button
+                                className="btn btn-ghost"
+                                style={{ padding: '6px 10px', fontSize: 12 }}
+                                onClick={() => handleDelete(item)}
+                                disabled={pending}
+                                title="Удалить"
+                            >
+                                🗑️
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -538,6 +791,17 @@ export default function Reminders() {
                                     🔔
                                 </button>
                             )}
+                            {canEdit && (
+                                <button
+                                    className="btn btn-ghost"
+                                    style={{ padding: '6px 10px', fontSize: 12 }}
+                                    onClick={() => openEdit(item)}
+                                    disabled={pending}
+                                    title="Редактировать"
+                                >
+                                    ✏️
+                                </button>
+                            )}
                             <button
                                 className="btn btn-ghost"
                                 style={{ padding: '6px 10px', fontSize: 12 }}
@@ -584,17 +848,30 @@ export default function Reminders() {
                             <span>🕐 {formatDateTime(e.date)}</span>
                         </div>
                     </div>
-                    {canDeleteExam && (
-                        <button
-                            className="btn btn-ghost"
-                            style={{ padding: '6px 10px', fontSize: 12 }}
-                            onClick={() => handleDelete(item)}
-                            disabled={pending}
-                            title="Удалить"
-                        >
-                            🗑️
-                        </button>
-                    )}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {canEdit && (
+                            <button
+                                className="btn btn-ghost"
+                                style={{ padding: '6px 10px', fontSize: 12 }}
+                                onClick={() => openEdit(item)}
+                                disabled={pending}
+                                title="Редактировать"
+                            >
+                                ✏️
+                            </button>
+                        )}
+                        {canDeleteExam && (
+                            <button
+                                className="btn btn-ghost"
+                                style={{ padding: '6px 10px', fontSize: 12 }}
+                                onClick={() => handleDelete(item)}
+                                disabled={pending}
+                                title="Удалить"
+                            >
+                                🗑️
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -739,7 +1016,7 @@ export default function Reminders() {
                                         className="role-select"
                                         value={scope}
                                         onChange={e => {
-                                            setScope(e.target.value as any);
+                                            setScope(e.target.value as ReminderScope);
                                             setSelectedStudentIds([]);
                                         }}
                                     >
@@ -925,6 +1202,287 @@ export default function Reminders() {
                     </div>
                 )}
             </div>
+
+            {/* ===== Модалка редактирования ===== */}
+            <Modal
+                open={!!editForm}
+                onClose={() => setEditForm(null)}
+                title={
+                    editForm
+                        ? `Редактировать · ${KIND_META[editForm.kind].label}`
+                        : 'Редактировать'
+                }
+            >
+                {editForm && (
+                    <form
+                        onSubmit={handleEditSubmit}
+                        style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                    >
+                        <div>
+                            <input
+                                className={`role-select ${editErrors.title ? 'field-error' : ''}`}
+                                style={{ width: '100%' }}
+                                placeholder={
+                                    editForm.kind === 'debt' || editForm.kind === 'exam'
+                                        ? 'Предмет'
+                                        : 'Название'
+                                }
+                                value={editForm.title}
+                                onChange={e =>
+                                    setEditForm({ ...editForm, title: e.target.value })
+                                }
+                            />
+                            {editErrors.title && (
+                                <div className="field-error-msg">{editErrors.title}</div>
+                            )}
+                        </div>
+
+                        {(editForm.kind === 'reminder' || editForm.kind === 'task') && (
+                            <div>
+                                <input
+                                    className={`role-select ${editErrors.description ? 'field-error' : ''}`}
+                                    style={{ width: '100%' }}
+                                    placeholder="Описание"
+                                    value={editForm.description}
+                                    onChange={e =>
+                                        setEditForm({ ...editForm, description: e.target.value })
+                                    }
+                                />
+                                {editErrors.description && (
+                                    <div className="field-error-msg">{editErrors.description}</div>
+                                )}
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <div style={{ flex: 1 }}>
+                                <input
+                                    className={`role-select ${editErrors.date ? 'field-error' : ''}`}
+                                    style={{ width: '100%' }}
+                                    type="date"
+                                    value={editForm.date}
+                                    onChange={e =>
+                                        setEditForm({ ...editForm, date: e.target.value })
+                                    }
+                                />
+                                {editErrors.date && (
+                                    <div className="field-error-msg">{editErrors.date}</div>
+                                )}
+                            </div>
+                            {(editForm.kind === 'reminder' || editForm.kind === 'exam') && (
+                                <div style={{ flex: 1 }}>
+                                    <input
+                                        className={`role-select ${editErrors.time ? 'field-error' : ''}`}
+                                        style={{ width: '100%' }}
+                                        type="time"
+                                        value={editForm.time}
+                                        onChange={e =>
+                                            setEditForm({ ...editForm, time: e.target.value })
+                                        }
+                                    />
+                                    {editErrors.time && (
+                                        <div className="field-error-msg">{editErrors.time}</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {editForm.kind === 'reminder' && (
+                            <>
+                                <select
+                                    className="role-select"
+                                    value={editForm.scope}
+                                    onChange={e =>
+                                        setEditForm({
+                                            ...editForm,
+                                            scope: e.target.value as ReminderScope,
+                                            selectedStudentIds: [],
+                                        })
+                                    }
+                                >
+                                    {canCreateReminderGroup && (
+                                        <option value="group">Для всей группы</option>
+                                    )}
+                                    {canCreateReminderGroup && (
+                                        <option value="selected">Для конкретных студентов</option>
+                                    )}
+                                    {canCreateReminderPersonal && (
+                                        <option value="personal">Только для меня</option>
+                                    )}
+                                </select>
+
+                                {editForm.scope === 'selected' && (
+                                    <div
+                                        style={{
+                                            maxHeight: 200,
+                                            overflowY: 'auto',
+                                            border: '1px solid var(--border)',
+                                            borderRadius: 'var(--radius-sm)',
+                                            padding: 8,
+                                            background: 'var(--panel-2)',
+                                        }}
+                                    >
+                                        {students.map(s => (
+                                            <label
+                                                key={s.id}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 10,
+                                                    padding: '8px 10px',
+                                                    cursor: 'pointer',
+                                                    borderRadius: 8,
+                                                }}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editForm.selectedStudentIds.includes(
+                                                        s.id
+                                                    )}
+                                                    onChange={() =>
+                                                        setEditForm({
+                                                            ...editForm,
+                                                            selectedStudentIds:
+                                                                editForm.selectedStudentIds.includes(
+                                                                    s.id
+                                                                )
+                                                                    ? editForm.selectedStudentIds.filter(
+                                                                          x => x !== s.id
+                                                                      )
+                                                                    : [
+                                                                          ...editForm.selectedStudentIds,
+                                                                          s.id,
+                                                                      ],
+                                                        })
+                                                    }
+                                                />
+                                                <span style={{ fontSize: 13 }}>{s.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                                {editErrors.selectedStudents && (
+                                    <div className="field-error-msg">
+                                        {editErrors.selectedStudents}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {editForm.kind === 'debt' && (
+                            <>
+                                <select
+                                    className="role-select"
+                                    value={editForm.debtType}
+                                    onChange={e =>
+                                        setEditForm({
+                                            ...editForm,
+                                            debtType: e.target.value as DebtKind,
+                                        })
+                                    }
+                                >
+                                    <option value="Экзамен">Экзамен</option>
+                                    <option value="Зачёт">Зачёт</option>
+                                    <option value="Лаба">Лаба</option>
+                                    <option value="Курсовая">Курсовая</option>
+                                </select>
+
+                                {canCreateDebtAny && (
+                                    <select
+                                        className="role-select"
+                                        value={editForm.debtStudentId}
+                                        onChange={e =>
+                                            setEditForm({
+                                                ...editForm,
+                                                debtStudentId: e.target.value,
+                                            })
+                                        }
+                                    >
+                                        <option value="">Себе ({myFullName})</option>
+                                        {students.map(s => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </>
+                        )}
+
+                        {editForm.kind === 'task' && (
+                            <select
+                                className="role-select"
+                                value={editForm.taskType}
+                                onChange={e =>
+                                    setEditForm({
+                                        ...editForm,
+                                        taskType: e.target.value as TaskKind,
+                                    })
+                                }
+                            >
+                                {canCreateTaskGroup && (
+                                    <option value="group">Для всей группы</option>
+                                )}
+                                <option value="personal">Личное</option>
+                            </select>
+                        )}
+
+                        {editForm.kind === 'exam' && (
+                            <>
+                                <select
+                                    className="role-select"
+                                    value={editForm.examType}
+                                    onChange={e =>
+                                        setEditForm({
+                                            ...editForm,
+                                            examType: e.target.value as ExamKind,
+                                        })
+                                    }
+                                >
+                                    <option value="exam">Экзамен</option>
+                                    <option value="consultation">Консультация</option>
+                                </select>
+                                <input
+                                    className="role-select"
+                                    style={{ width: '100%' }}
+                                    placeholder="Аудитория (например: 412)"
+                                    value={editForm.examRoom}
+                                    onChange={e =>
+                                        setEditForm({ ...editForm, examRoom: e.target.value })
+                                    }
+                                />
+                                <input
+                                    className="role-select"
+                                    style={{ width: '100%' }}
+                                    placeholder="Преподаватель"
+                                    value={editForm.examTeacher}
+                                    onChange={e =>
+                                        setEditForm({ ...editForm, examTeacher: e.target.value })
+                                    }
+                                />
+                            </>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={() => setEditForm(null)}
+                                disabled={pending}
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                disabled={pending}
+                            >
+                                {pending ? '⏳ Сохраняем...' : '✅ Сохранить'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </PageWrapper>
     );
 }

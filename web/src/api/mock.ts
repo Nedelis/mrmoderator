@@ -676,10 +676,51 @@ export const mockApi = {
         return reminder;
     },
 
-    async updateReminder(id: string, payload: Partial<Reminder>) {
+    async updateReminder(
+        id: string,
+        payload: Partial<{
+            title: string;
+            description: string;
+            date: string;
+            time: string;
+            scope: 'personal' | 'group' | 'selected';
+            studentIds: string[];
+        }>
+    ) {
         await delay();
-        REMINDERS = REMINDERS.map((r) => (r.id === id ? { ...r, ...payload } : r));
-        return { ok: true, id, ...payload };
+        REMINDERS = REMINDERS.map(r => {
+            if (r.id !== id) return r;
+            const updated: Reminder = { ...r };
+
+            if (payload.title !== undefined) updated.title = payload.title;
+            if (payload.description !== undefined) updated.description = payload.description;
+
+            // Склеиваем date + time обратно в deadline формата YYYY-MM-DDTHH:mm
+            if (payload.date !== undefined || payload.time !== undefined) {
+                const [oldDate, oldTime] = r.deadline.split('T');
+                const date = payload.date ?? oldDate;
+                const time = payload.time ?? oldTime ?? '00:00';
+                updated.deadline = `${date}T${time}`;
+            }
+
+            // scope меняет type и targetStudentIds
+            if (payload.scope !== undefined) {
+                updated.type = payload.scope === 'personal' ? 'personal' : 'group';
+                if (payload.scope === 'selected' && payload.studentIds?.length) {
+                    updated.targetStudentIds = payload.studentIds;
+                } else {
+                    updated.targetStudentIds = undefined;
+                }
+            } else if (payload.studentIds !== undefined && r.type === 'group') {
+                // если scope не менялся, но передали studentIds — просто обновляем
+                updated.targetStudentIds = payload.studentIds.length
+                    ? payload.studentIds
+                    : undefined;
+            }
+
+            return updated;
+        });
+        return { ok: true, id };
     },
 
     async deleteReminder(id: string) {
