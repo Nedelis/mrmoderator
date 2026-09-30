@@ -44,6 +44,7 @@ def _to_schema(m: Material, author_name: str) -> MaterialSchema:
         author=author_name,
         type=m.type,
         created_at=_humanize(m.created_at),
+        max_url=m.download_url,
     )
 
 

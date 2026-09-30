@@ -27,8 +27,12 @@ async def forward_mail(
     user: User = Depends(require("mail.forward")),
     db: AsyncSession = Depends(get_db),
 ):
-    # Заглушка — реальная пересылка через бота позже
-    return ForwardMailResponse(id=str(mail_id), forwarded_to="Группа")
+    mail = await mail_service.get_mail_item(db, mail_id)
+    if mail is None or mail.group_id != user.group_id:
+        raise HTTPException(404, "Письмо не найдено")
+
+    sent_to = await mail_service.forward_mail(db, mail)
+    return ForwardMailResponse(id=str(mail.id), forwarded_to="Группа", sent_to=sent_to)
 
 
 @router.post("/refresh", response_model=RefreshMailResponse)

@@ -1,4 +1,8 @@
+from typing import Literal
+
 from app.schemas.base import BaseSchema
+
+RoleId = Literal["starosta", "zam", "proforg", "student"]
 
 
 class Role(BaseSchema):
@@ -20,7 +24,7 @@ class RolesResponse(BaseSchema):
 
 class AssignRoleRequest(BaseSchema):
     student_id: str
-    role_id: str
+    role_id: RoleId
 
 
 class RenameMemberRequest(BaseSchema):

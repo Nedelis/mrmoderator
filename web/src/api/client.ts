@@ -364,6 +364,7 @@ export const api = {
         ok: boolean;
         id: string;
         forwardedTo: string;
+        sentTo?: number;
     }> {
         if (USE_API_MOCK) return mockApi.forwardMail(id);
         return request(`/mail/${id}/forward`, { method: 'POST' });

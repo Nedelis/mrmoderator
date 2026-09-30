@@ -9,10 +9,12 @@ info:
     Мини-приложение передаёт в каждом запросе заголовок `X-Max-Init-Data` — строку
     `WebApp.initData` из MAX Bridge. Сервер проверяет её HMAC-подпись токеном бота.
 
-    * `STRICT_AUTH=true` — заголовок обязателен, без него ответ `401`.
-    * `STRICT_AUTH=false` (демо-режим, по умолчанию) — заголовок игнорируется, все запросы
-      выполняются от тестового пользователя «Тест Тестов» с ролью **староста**
-      в группе `TEST-GROUP-01`. Группа и пользователь создаются автоматически при первом запросе.
+    * `STRICT_AUTH=true` — заголовок обязателен и подпись проверяется; иначе ответ `401`.
+    * `STRICT_AUTH=false` (демо-режим, по умолчанию) — без заголовка запросы выполняются
+      от тестового старосты (`max_user_id = test_user_001`): при `USE_TEST_DATA=true` это
+      староста группы `iu7-42b` из `backend/seed/test_data.json`, иначе автоматически создаётся
+      «Тест Тестов» в группе `TEST-GROUP-01`. Если заголовок передан, пользователь берётся
+      из его поля `user` **без проверки подписи** — так проверяются остальные роли.
 
     ### Роли
     `starosta` (4) → `zam` (3) → `proforg` (2) → `student` (1). Права каждой роли —
@@ -39,7 +41,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RolesResponse'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -53,8 +55,8 @@ paths:
       - Служебное
       summary: Текущий пользователь
       description: 'Пользователь, определённый по initData (или тестовый в демо-режиме), с группой и ролью.
-        Пустой `groupId` — пользователь ещё не вступил в группу (вступление — через бота: `/creategroup`
-        или `/join`).'
+        Новый пользователь создаётся с ролью `student` без группы: пустой `groupId` означает, что нужно
+        вступить в группу через бота (`/creategroup` или `/join`).'
       operationId: get_me_api_me_get
       responses:
         '200':
@@ -64,7 +66,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MeResponse'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -87,7 +89,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GroupInfo'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -113,7 +115,7 @@ paths:
                   $ref: '#/components/schemas/Student'
                 title: Response Get Students Api Students Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -137,7 +139,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OkResponse'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -174,7 +176,7 @@ paths:
                   $ref: '#/components/schemas/Reminder'
                 title: Response List Reminders Api Reminders Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -195,6 +197,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateReminderRequest'
+            example:
+              title: Сдать реферат
+              description: Тема на выбор, 10–15 страниц
+              date: '2026-10-05'
+              time: '18:00'
+              scope: group
       responses:
         '201':
           description: Успешный ответ
@@ -209,7 +217,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -251,6 +259,14 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateReminderRequest'
+            example:
+              title: Сдать реферат (перенос)
+              date: '2026-10-07'
+              time: '12:00'
+              scope: selected
+              studentIds:
+              - '2'
+              - '3'
       responses:
         '200':
           description: Успешный ответ
@@ -265,7 +281,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
           content:
             application/json:
               schema:
@@ -277,12 +299,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Автор или обладатель права `reminder.remind`.
+      description: 'Частичное обновление: меняются только переданные поля. Личную напоминалку меняет только
+        автор, групповую — автор или обладатель права `reminder.remind`. `date` и `time` пересобирают
+        дедлайн; `scope` меняет адресатов (`selected` — вместе с `studentIds`) и требует того же права,
+        что и создание.'
       security:
       - MaxInitData: []
       - {}
@@ -312,7 +337,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -324,12 +349,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Автор или обладатель права `reminder.remind`.
+      description: Личную напоминалку удаляет только автор, групповую — автор или обладатель права `reminder.remind`.
       security:
       - MaxInitData: []
       - {}
@@ -352,6 +377,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CompleteReminderRequest'
+            example:
+              completed: true
       responses:
         '200':
           description: Успешный ответ
@@ -366,18 +393,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Добавляет или убирает текущего пользователя из `completedBy`.
+      description: Добавляет или убирает текущего пользователя из `completedBy`. Чужая личная напоминалка
+        недоступна (`404`).
       security:
       - MaxInitData: []
       - {}
@@ -408,7 +436,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -420,7 +448,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -447,12 +475,13 @@ paths:
                   $ref: '#/components/schemas/Debt'
                 title: Response List Debts Api Debts Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: С правом `debts.view.all` — долги всей группы, иначе только свои.
+      description: 'С правом `debts.view.all` — долги всей группы, иначе только свои. `status`: `active`
+        или `overdue` — вычисляется по дедлайну.'
       security:
       - MaxInitData: []
       - {}
@@ -467,6 +496,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateDebtRequest'
+            example:
+              studentId: '2'
+              subject: Математический анализ
+              type: Экзамен
+              deadline: '2026-10-15'
       responses:
         '201':
           description: Успешный ответ
@@ -481,7 +515,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -499,13 +533,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Право `debts.create.own` — себе; с правом `debts.edit` — любому участнику группы. `deadline`
-        — `YYYY-MM-DD`.
+      description: Себе — право `debts.create.own`; любому участнику своей группы — право `debts.edit`.
+        `deadline` — `YYYY-MM-DD`. `404`, если участник с `studentId` не найден в группе.
       security:
       - MaxInitData: []
       - {}
@@ -528,6 +562,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateDebtRequest'
+            example:
+              subject: Матанализ
+              deadline: '2026-10-20'
       responses:
         '200':
           description: Успешный ответ
@@ -542,7 +579,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -560,12 +597,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Право `debts.edit`.
+      description: Частичное обновление. С правом `debts.edit` — любой долг своей группы, без него — только
+        свой. Переназначить долг другому участнику (`studentId`) может только обладатель `debts.edit`.
       security:
       - MaxInitData: []
       - {}
@@ -595,7 +633,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -607,12 +645,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Право `debts.edit`.
+      description: С правом `debts.edit` — любой долг своей группы, без него — только свой.
       security:
       - MaxInitData: []
       - {}
@@ -633,7 +671,7 @@ paths:
                   $ref: '#/components/schemas/Task'
                 title: Response List Tasks Api Tasks Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -654,6 +692,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateTaskRequest'
+            example:
+              title: Лабораторная №3
+              description: Базы данных
+              deadline: '2026-10-10'
+              type: group
       responses:
         '201':
           description: Успешный ответ
@@ -668,7 +711,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -709,6 +752,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateTaskRequest'
+            example:
+              title: Лабораторная №3 (v2)
+              deadline: '2026-10-12'
       responses:
         '200':
           description: Успешный ответ
@@ -723,7 +769,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -741,7 +787,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -776,7 +822,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -788,7 +834,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -824,7 +870,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -836,7 +882,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -862,7 +908,7 @@ paths:
                   $ref: '#/components/schemas/Material'
                 title: Response List Materials Api Materials Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -875,15 +921,19 @@ paths:
       tags:
       - Материалы
       summary: Добавить материал
-      description: 'Право `material.upload`. Форма: `title`, `type` (`pdf`, `video`, `other`) и `url`
-        — ссылка на файл. Сами файлы хранятся в MAX, API хранит метаданные.'
+      description: 'Право `material.upload`. JSON: `title`, `type` (`pdf`, `video`, `other`) и `url` —
+        ссылка на файл. Сами файлы хранятся в MAX или облаке, API хранит метаданные и ссылку.'
       operationId: upload_material_api_materials_post
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/Body_upload_material_api_materials_post'
+              $ref: '#/components/schemas/UploadMaterialRequest'
+            example:
+              title: Конспект лекций по матанализу
+              type: pdf
+              url: https://example.com/matan.pdf
       responses:
         '201':
           description: Успешный ответ
@@ -898,7 +948,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -946,13 +996,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -989,7 +1039,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1001,7 +1051,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -1027,12 +1077,13 @@ paths:
                   $ref: '#/components/schemas/Exam'
                 title: Response List Exams Api Exams Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Экзамены и консультации группы с прикреплёнными материалами.
+      description: Экзамены и консультации группы с прикреплёнными материалами, по возрастанию даты. `date`
+        — `YYYY-MM-DDTHH:mm`, `time` — `HH:mm`.
       security:
       - MaxInitData: []
       - {}
@@ -1040,7 +1091,7 @@ paths:
       tags:
       - Экзамены
       summary: Добавить экзамен
-      description: Право `exam.addMaterial`. `date` — `YYYY-MM-DD`, `time` — `HH:mm`.
+      description: Право `exam.create`. `date` — `YYYY-MM-DD`, `time` — `HH:mm`, `type` — `exam` или `consultation`.
       operationId: create_exam_api_exams_post
       requestBody:
         required: true
@@ -1048,6 +1099,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateExamRequest'
+            example:
+              subject: Физика
+              date: '2026-12-20'
+              time: '10:00'
+              room: '501'
+              teacher: Смирнов А. В.
+              type: exam
       responses:
         '201':
           description: Успешный ответ
@@ -1062,7 +1120,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1079,6 +1137,118 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
+      security:
+      - MaxInitData: []
+      - {}
+  /api/exams/{exam_id}:
+    put:
+      tags:
+      - Экзамены
+      summary: Изменить экзамен
+      operationId: update_exam_api_exams__exam_id__put
+      parameters:
+      - name: exam_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Exam Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExamRequest'
+            example:
+              date: '2026-12-22'
+              time: '14:30'
+              room: '305'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден или принадлежит другой группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: 'Право `exam.edit`. Частичное обновление: меняются только переданные поля; `date` и
+        `time` можно менять по отдельности.'
+      security:
+      - MaxInitData: []
+      - {}
+    delete:
+      tags:
+      - Экзамены
+      summary: Удалить экзамен
+      operationId: delete_exam_api_exams__exam_id__delete
+      parameters:
+      - name: exam_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Exam Id
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '422':
+          description: Ошибка валидации параметров или тела запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '403':
+          description: Недостаточно прав для операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Объект не найден или принадлежит другой группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `exam.delete`. Вместе с экзаменом удаляются прикреплённые к нему материалы.
       security:
       - MaxInitData: []
       - {}
@@ -1115,7 +1285,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1127,7 +1297,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -1169,7 +1339,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1181,7 +1351,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -1207,13 +1377,13 @@ paths:
                   $ref: '#/components/schemas/MailItem'
                 title: Response List Mail Api Mail Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Письма из подключённых ящиков деканата, кафедр и преподавателей. **MVP:** синхронизация
-        с почтой не реализована, список заполняется данными из БД.
+      description: Письма группы из подключённых ящиков деканата, кафедр и преподавателей. **MVP:** синхронизация
+        с почтовыми серверами не реализована — список берётся из БД (тестовые данные).
       security:
       - MaxInitData: []
       - {}
@@ -1244,7 +1414,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1255,7 +1425,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Право `mail.forward`. **MVP-заглушка:** возвращает подтверждение без реальной пересылки.
+        '404':
+          description: Объект не найден или принадлежит другой группе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+      description: Право `mail.forward`. Бот отправляет письмо (отправитель, тема, превью) личным сообщением
+        каждому участнику группы. `sentTo` — сколько сообщений доставлено.
       security:
       - MaxInitData: []
       - {}
@@ -1273,12 +1450,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/RefreshMailResponse'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: '**MVP-заглушка:** IMAP-синхронизация не реализована, `newMessages` всегда 0.'
+      description: '**MVP-заглушка:** синхронизация по IMAP не реализована, `newMessages` всегда 0.'
       security:
       - MaxInitData: []
       - {}
@@ -1294,6 +1471,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ConfigureMailboxesRequest'
+            example:
+              mailboxes:
+              - id: '1'
+                connected: true
+                autoForward: false
       responses:
         '200':
           description: Успешный ответ
@@ -1308,7 +1490,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '400':
+          description: Некорректные данные (например, неверный формат даты) или пользователь не в группе
           content:
             application/json:
               schema:
@@ -1319,7 +1507,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
-      description: Право `mail.configure`. **MVP-заглушка:** настройки не сохраняются.
+      description: Право `mail.configure`. Для каждого ящика из `mailboxes` обновляет `connected` и `autoForward`
+        (только переданные поля). Ящики других групп и несуществующие `id` пропускаются.
       security:
       - MaxInitData: []
       - {}
@@ -1340,7 +1529,7 @@ paths:
                   $ref: '#/components/schemas/Mailbox'
                 title: Response List Mailboxes Api Mail Mailboxes Get
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1366,6 +1555,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AddMailboxRequest'
+            example:
+              email: dean@university.example
+              label: Деканат
+              autoForward: true
       responses:
         '201':
           description: Успешный ответ
@@ -1380,7 +1573,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1428,7 +1621,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1440,82 +1633,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
       description: Право `mail.configure`.
-      security:
-      - MaxInitData: []
-      - {}
-  /api/settings:
-    get:
-      tags:
-      - Настройки
-      summary: Настройки уведомлений группы
-      operationId: get_settings_api_settings_get
-      responses:
-        '200':
-          description: Успешный ответ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SettingsSchema'
-        '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-        '403':
-          description: Недостаточно прав для операции
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-      description: Требует право `settings.edit`, которого в текущей версии нет ни у одной роли — эндпоинт
-        зарезервирован и отвечает `403`.
-      security:
-      - MaxInitData: []
-      - {}
-    put:
-      tags:
-      - Настройки
-      summary: Сохранить настройки уведомлений
-      operationId: save_settings_api_settings_put
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SettingsSchema'
-      responses:
-        '200':
-          description: Успешный ответ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OkResponse'
-        '422':
-          description: Ошибка валидации параметров или тела запроса
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-        '403':
-          description: Недостаточно прав для операции
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-      description: Зарезервировано (см. `GET /api/settings`).
       security:
       - MaxInitData: []
       - {}
@@ -1531,6 +1654,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AssignRoleRequest'
+            example:
+              studentId: '2'
+              roleId: zam
       responses:
         '200':
           description: Успешный ответ
@@ -1545,7 +1671,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1557,14 +1683,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPError'
       description: 'Право `roles.assign`. Нельзя менять роль себе и участникам своего или более высокого
-        уровня. Назначение `starosta` доступно только старосте и означает передачу роли: текущий староста
-        становится студентом.'
+        уровня, нельзя назначить роль не ниже своей. Назначение `starosta` доступно только старосте и
+        означает передачу роли: текущий староста становится студентом.'
       security:
       - MaxInitData: []
       - {}
@@ -1579,7 +1705,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
           title: Student Id
       responses:
         '200':
@@ -1595,7 +1721,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1607,7 +1733,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -1628,7 +1754,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
           title: Student Id
       requestBody:
         required: true
@@ -1636,6 +1762,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RenameMemberRequest'
+            example:
+              name: Иванов Дмитрий
       responses:
         '200':
           description: Успешный ответ
@@ -1650,7 +1778,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
         '401':
-          description: Нет или невалиден заголовок X-Max-Init-Data (только при STRICT_AUTH=true)
+          description: Нет заголовка X-Max-Init-Data (при STRICT_AUTH=true) или он невалиден
           content:
             application/json:
               schema:
@@ -1662,7 +1790,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
         '404':
-          description: Объект не найден
+          description: Объект не найден или принадлежит другой группе
           content:
             application/json:
               schema:
@@ -1709,6 +1837,11 @@ components:
           title: Studentid
         roleId:
           type: string
+          enum:
+          - starosta
+          - zam
+          - proforg
+          - student
           title: Roleid
       type: object
       required:
@@ -1729,24 +1862,6 @@ components:
       required:
       - title
       title: Body_add_exam_material_api_exams__exam_id__materials_post
-    Body_upload_material_api_materials_post:
-      properties:
-        title:
-          type: string
-          title: Title
-        type:
-          type: string
-          title: Type
-        url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Url
-      type: object
-      required:
-      - title
-      - type
-      title: Body_upload_material_api_materials_post
     CompleteReminderRequest:
       properties:
         completed:
@@ -1760,8 +1875,7 @@ components:
       properties:
         mailboxes:
           items:
-            additionalProperties: true
-            type: object
+            $ref: '#/components/schemas/MailboxSettings'
           type: array
           title: Mailboxes
       type: object
@@ -1815,6 +1929,9 @@ components:
           default: 📚
         type:
           type: string
+          enum:
+          - exam
+          - consultation
           title: Type
           default: exam
       type: object
@@ -2041,6 +2158,10 @@ components:
         forwardedTo:
           type: string
           title: Forwardedto
+        sentTo:
+          type: integer
+          title: Sentto
+          default: 0
       type: object
       required:
       - id
@@ -2092,10 +2213,6 @@ components:
           title: Preview
         source:
           type: string
-          enum:
-          - dean
-          - kafedra
-          - prepod
           title: Source
         autoForward:
           type: boolean
@@ -2134,6 +2251,25 @@ components:
       - connected
       - autoForward
       title: Mailbox
+    MailboxSettings:
+      properties:
+        id:
+          type: string
+          title: Id
+        connected:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Connected
+        autoForward:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Autoforward
+      type: object
+      required:
+      - id
+      title: MailboxSettings
     Material:
       properties:
         id:
@@ -2155,6 +2291,11 @@ components:
         createdAt:
           type: string
           title: Createdat
+        maxUrl:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Maxurl
       type: object
       required:
       - id
@@ -2366,35 +2507,6 @@ components:
       required:
       - roles
       title: RolesResponse
-    SettingsSchema:
-      properties:
-        pushNotifications:
-          type: boolean
-          title: Pushnotifications
-          default: true
-        dailySummary:
-          type: boolean
-          title: Dailysummary
-          default: true
-        debtNotifications:
-          type: boolean
-          title: Debtnotifications
-          default: true
-        newMaterials:
-          type: boolean
-          title: Newmaterials
-          default: false
-        twoFactor:
-          type: boolean
-          title: Twofactor
-          default: true
-        auditLog:
-          type: boolean
-          title: Auditlog
-          default: true
-      additionalProperties: true
-      type: object
-      title: SettingsSchema
     Student:
       properties:
         id:
@@ -2489,6 +2601,48 @@ components:
           title: Deadline
       type: object
       title: UpdateDebtRequest
+    UpdateExamRequest:
+      properties:
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date
+        time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Time
+        room:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Room
+        teacher:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Teacher
+        icon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Icon
+        type:
+          anyOf:
+          - type: string
+            enum:
+            - exam
+            - consultation
+          - type: 'null'
+          title: Type
+      type: object
+      title: UpdateExamRequest
     UpdateReminderRequest:
       properties:
         title:
@@ -2501,6 +2655,32 @@ components:
           - type: string
           - type: 'null'
           title: Description
+        date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date
+        time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Time
+        scope:
+          anyOf:
+          - type: string
+            enum:
+            - personal
+            - group
+            - selected
+          - type: 'null'
+          title: Scope
+        studentIds:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Studentids
       type: object
       title: UpdateReminderRequest
     UpdateTaskRequest:
@@ -2530,6 +2710,27 @@ components:
           title: Type
       type: object
       title: UpdateTaskRequest
+    UploadMaterialRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+        type:
+          type: string
+          enum:
+          - pdf
+          - video
+          - other
+          title: Type
+        url:
+          type: string
+          title: Url
+      type: object
+      required:
+      - title
+      - type
+      - url
+      title: UploadMaterialRequest
     ValidationError:
       properties:
         loc:

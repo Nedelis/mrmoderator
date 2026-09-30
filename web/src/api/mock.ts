@@ -43,6 +43,8 @@ const ROLES: Role[] = [
             'roles.assign',
             'group.edit',
             'exam.create',
+            'exam.edit',
+            'exam.delete',
             'exam.addMaterial',
             'task.create.group',
             'task.create.personal',
@@ -75,6 +77,8 @@ const ROLES: Role[] = [
             'debts.view.all',
             'roles.assign',
             'exam.create',
+            'exam.edit',
+            'exam.delete',
             'exam.addMaterial',
             'task.create.group',
             'task.create.personal',
@@ -620,7 +624,7 @@ let TASKS: Task[] = [
 // УТИЛИТЫ
 // ============================================================
 
-const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
+const delay = (ms = 400) => new Promise(r => setTimeout(r, ms));
 
 // ============================================================
 // API
@@ -695,6 +699,7 @@ export const mockApi = {
             if (payload.title !== undefined) updated.title = payload.title;
             if (payload.description !== undefined) updated.description = payload.description;
 
+            // Склеиваем date + time обратно в deadline формата YYYY-MM-DDTHH:mm
             if (payload.date !== undefined || payload.time !== undefined) {
                 const [oldDate, oldTime] = r.deadline.split('T');
                 const date = payload.date ?? oldDate;
@@ -702,6 +707,7 @@ export const mockApi = {
                 updated.deadline = `${date}T${time}`;
             }
 
+            // scope меняет type и targetStudentIds
             if (payload.scope !== undefined) {
                 updated.type = payload.scope === 'personal' ? 'personal' : 'group';
                 if (payload.scope === 'selected' && payload.studentIds?.length) {
@@ -710,6 +716,7 @@ export const mockApi = {
                     updated.targetStudentIds = undefined;
                 }
             } else if (payload.studentIds !== undefined && r.type === 'group') {
+                // если scope не менялся, но передали studentIds — просто обновляем
                 updated.targetStudentIds = payload.studentIds.length
                     ? payload.studentIds
                     : undefined;
@@ -722,13 +729,13 @@ export const mockApi = {
 
     async deleteReminder(id: string) {
         await delay();
-        REMINDERS = REMINDERS.filter((r) => r.id !== id);
+        REMINDERS = REMINDERS.filter(r => r.id !== id);
         return { ok: true, id };
     },
 
     async remindReminder(id: string) {
         await delay(700);
-        const target = REMINDERS.find((r) => r.id === id);
+        const target = REMINDERS.find(r => r.id === id);
         if (!target) throw new Error('Напоминалка не найдена');
 
         const completed = new Set(target.completedBy ?? []);
@@ -736,10 +743,10 @@ export const mockApi = {
         let recipients: Student[];
         if (target.targetStudentIds?.length) {
             recipients = STUDENTS.filter(
-                (s) => target.targetStudentIds!.includes(s.id) && !completed.has(s.id)
+                s => target.targetStudentIds!.includes(s.id) && !completed.has(s.id)
             );
         } else {
-            recipients = STUDENTS.filter((s) => !completed.has(s.id));
+            recipients = STUDENTS.filter(s => !completed.has(s.id));
         }
 
         return {
@@ -754,7 +761,7 @@ export const mockApi = {
     async toggleReminderCompleted(id: string, completed: boolean) {
         await delay();
         const userId = ME.id;
-        REMINDERS = REMINDERS.map((r) => {
+        REMINDERS = REMINDERS.map(r => {
             if (r.id !== id) return r;
             const set = new Set(r.completedBy ?? []);
             if (completed) set.add(userId);
@@ -775,9 +782,7 @@ export const mockApi = {
         await delay();
         const studentId = payload.studentId ?? ME.id;
         const studentName =
-            payload.studentName ??
-            STUDENTS.find((s) => s.id === studentId)?.name ??
-            '';
+            payload.studentName ?? STUDENTS.find(s => s.id === studentId)?.name ?? '';
         const debt: Debt = {
             id: `debt-${Date.now()}`,
             studentId,
@@ -802,13 +807,13 @@ export const mockApi = {
         }>
     ): Promise<{ ok: boolean }> {
         await delay();
-        DEBTS = DEBTS.map((d) => (d.id === id ? { ...d, ...payload } : d));
+        DEBTS = DEBTS.map(d => (d.id === id ? { ...d, ...payload } : d));
         return { ok: true };
     },
 
     async deleteDebt(id: string): Promise<{ ok: boolean }> {
         await delay();
-        DEBTS = DEBTS.filter((d) => d.id !== id);
+        DEBTS = DEBTS.filter(d => d.id !== id);
         return { ok: true };
     },
 
@@ -831,19 +836,19 @@ export const mockApi = {
 
     async updateTask(id: string, payload: Partial<Task>) {
         await delay();
-        TASKS = TASKS.map((t) => (t.id === id ? { ...t, ...payload } : t));
+        TASKS = TASKS.map(t => (t.id === id ? { ...t, ...payload } : t));
         return { ok: true, id, ...payload };
     },
 
     async deleteTask(id: string) {
         await delay();
-        TASKS = TASKS.filter((t) => t.id !== id);
+        TASKS = TASKS.filter(t => t.id !== id);
         return { ok: true, id };
     },
 
     async remindTask(id: string) {
         await delay(700);
-        const target = TASKS.find((t) => t.id === id);
+        const target = TASKS.find(t => t.id === id);
         return {
             ok: true,
             id,
@@ -854,11 +859,7 @@ export const mockApi = {
     },
 
     // ===== МАТЕРИАЛЫ =====
-    async uploadMaterial(payload: {
-        title: string;
-        type: string;
-        url: string;
-    }): Promise<Material> {
+    async uploadMaterial(payload: { title: string; type: string; url: string }): Promise<Material> {
         await delay();
         const material: Material = {
             id: `mat-${Date.now()}`,
@@ -874,13 +875,13 @@ export const mockApi = {
 
     async deleteMaterial(id: string) {
         await delay();
-        MATERIALS = MATERIALS.filter((m) => m.id !== id);
+        MATERIALS = MATERIALS.filter(m => m.id !== id);
         return { ok: true, id };
     },
 
     async downloadMaterial(id: string) {
         await delay();
-        const m = MATERIALS.find((x) => x.id === id);
+        const m = MATERIALS.find(x => x.id === id);
         return { ok: true, id, maxUrl: m?.maxUrl };
     },
 
@@ -910,6 +911,34 @@ export const mockApi = {
         return exam;
     },
 
+    async addExamMaterial(payload: {
+        examId: string;
+        title: string;
+        url?: string;
+    }): Promise<ExamMaterial> {
+        await delay();
+        const material: ExamMaterial = {
+            id: `em-${Date.now()}`,
+            examId: payload.examId,
+            title: payload.title,
+            url: payload.url,
+            addedBy: `${ME.firstName} ${ME.lastName}`,
+            addedAt: 'Только что',
+        };
+        EXAMS = EXAMS.map(e =>
+            e.id === payload.examId ? { ...e, materials: [...e.materials, material] } : e
+        );
+        return material;
+    },
+
+    async deleteExamMaterial(examId: string, materialId: string) {
+        await delay();
+        EXAMS = EXAMS.map(e =>
+            e.id === examId ? { ...e, materials: e.materials.filter(m => m.id !== materialId) } : e
+        );
+        return { ok: true, examId, materialId };
+    },
+
     async updateExam(
         id: string,
         payload: Partial<{
@@ -921,9 +950,9 @@ export const mockApi = {
             teacher: string;
             icon: string;
         }>
-    ): Promise<{ ok: boolean }> {
+    ) {
         await delay();
-        EXAMS = EXAMS.map((e) => {
+        EXAMS = EXAMS.map(e => {
             if (e.id !== id) return e;
             const updated: Exam = { ...e };
 
@@ -944,44 +973,14 @@ export const mockApi = {
 
             return updated;
         });
-        return { ok: true };
-    },
-
-    async addExamMaterial(payload: {
-        examId: string;
-        title: string;
-        url?: string;
-    }): Promise<ExamMaterial> {
-        await delay();
-        const material: ExamMaterial = {
-            id: `em-${Date.now()}`,
-            examId: payload.examId,
-            title: payload.title,
-            url: payload.url,
-            addedBy: `${ME.firstName} ${ME.lastName}`,
-            addedAt: 'Только что',
-        };
-        EXAMS = EXAMS.map((e) =>
-            e.id === payload.examId
-                ? { ...e, materials: [...e.materials, material] }
-                : e
-        );
-        return material;
-    },
-
-    async deleteExamMaterial(examId: string, materialId: string) {
-        await delay();
-        EXAMS = EXAMS.map((e) =>
-            e.id === examId
-                ? { ...e, materials: e.materials.filter((m) => m.id !== materialId) }
-                : e
-        );
-        return { ok: true, examId, materialId };
+        return { ok: true, id };
     },
 
     async deleteExam(id: string) {
         await delay();
-        EXAMS = EXAMS.filter((e) => e.id !== id);
+        // Материалы экзамена лежат внутри самого объекта Exam,
+        // поэтому вместе с экзаменом каскадно уходят и они.
+        EXAMS = EXAMS.filter(e => e.id !== id);
         return { ok: true, id };
     },
 
@@ -1004,11 +1003,9 @@ export const mockApi = {
         }>;
     }) {
         await delay();
-        MAILBOXES = MAILBOXES.map((m) => {
-            const upd = payload.mailboxes.find((u) => u.id === m.id);
-            return upd
-                ? { ...m, connected: upd.connected, autoForward: upd.autoForward }
-                : m;
+        MAILBOXES = MAILBOXES.map(m => {
+            const upd = payload.mailboxes.find(u => u.id === m.id);
+            return upd ? { ...m, connected: upd.connected, autoForward: upd.autoForward } : m;
         });
         return { ok: true };
     },
@@ -1032,14 +1029,14 @@ export const mockApi = {
 
     async removeMailbox(id: string) {
         await delay();
-        MAILBOXES = MAILBOXES.filter((m) => m.id !== id);
+        MAILBOXES = MAILBOXES.filter(m => m.id !== id);
         return { ok: true, id };
     },
 
     // ===== РОЛИ / ГРУППА =====
     async assignRole(payload: { studentId: string; roleId: string }) {
         await delay();
-        STUDENTS = STUDENTS.map((s) =>
+        STUDENTS = STUDENTS.map(s =>
             s.id === payload.studentId ? { ...s, role: payload.roleId } : s
         );
         return {
@@ -1051,25 +1048,21 @@ export const mockApi = {
 
     async renameMember(studentId: string, newName: string) {
         await delay();
-        const oldName = STUDENTS.find((s) => s.id === studentId)?.name ?? '';
-        STUDENTS = STUDENTS.map((s) =>
-            s.id === studentId ? { ...s, name: newName } : s
-        );
+        const oldName = STUDENTS.find(s => s.id === studentId)?.name ?? '';
+        STUDENTS = STUDENTS.map(s => (s.id === studentId ? { ...s, name: newName } : s));
         return { ok: true, oldName, newName };
     },
 
     async removeGroupMember(studentId: string) {
         await delay();
-        STUDENTS = STUDENTS.filter((s) => s.id !== studentId);
+        STUDENTS = STUDENTS.filter(s => s.id !== studentId);
         return { ok: true, removed: studentId };
     },
 
     async leaveGroup() {
         await delay();
         const myName = `${ME.firstName} ${ME.lastName}`;
-        STUDENTS = STUDENTS.filter(
-            (s) => s.id !== ME.id && s.name !== myName
-        );
+        STUDENTS = STUDENTS.filter(s => s.id !== ME.id && s.name !== myName);
         ME.groupId = '';
         ME.groupName = '';
         return { ok: true };

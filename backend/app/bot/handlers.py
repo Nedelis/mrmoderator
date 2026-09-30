@@ -1,24 +1,20 @@
 from maxapi import Dispatcher
 from maxapi.filters.command import Command, CommandStart
 from maxapi.types import (
-    attachments,
     BotStarted,
-    ButtonsPayload,
     CallbackButton,
     LinkButton,
     MessageCallback,
-    MessageCreated
+    MessageCreated,
 )
-from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
 from maxapi.types.attachments.buttons.attachment_button import AttachmentButton
+from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
 
-from app.core.config import SETTINGS
+from app.bot.bot_info import BotInfo
 from app.core.database import async_session
 from app.core.roles import ROLES
 from app.models.user import User
 from app.services import group_service, notify_service, user_service
-
-from app.bot.bot_info import BotInfo
 
 dp = Dispatcher()
 
@@ -93,10 +89,10 @@ async def on_bot_started(event: BotStarted):
             await event.bot.send_message(chat_id=event.chat_id, text="❌ Неверный код приглашения.")
 
 
-
 # ═══════════════════════════════════════════════════════════════
 # /start
 # ═══════════════════════════════════════════════════════════════
+
 
 @dp.message_created(CommandStart())
 async def cmd_start(event: MessageCreated):
@@ -345,6 +341,7 @@ async def cmd_test_notify(event: MessageCreated):
 # ФОЛБЕК — ловит всё, что не подошло выше
 # ═══════════════════════════════════════════════════════════════
 
+
 @dp.message_created()
 async def fallback_handler(event: MessageCreated):
     """Ловит все сообщения, которые не подошли под другие хендлеры."""
@@ -407,6 +404,4 @@ async def on_callback(event: MessageCallback):
         await event.message.answer("Напиши: /creategroup НАЗВАНИЕ\nНапример: /creategroup ИС-21")
 
     elif payload == "join_group":
-        await event.message.answer(
-            "Напиши: /join КОД\nКод можно получить у старосты группы."
-        )
+        await event.message.answer("Напиши: /join КОД\nКод можно получить у старосты группы.")

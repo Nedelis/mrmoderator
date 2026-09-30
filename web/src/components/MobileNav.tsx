@@ -60,11 +60,7 @@ export default function MobileNav({ open, onClose, onToggle }: MobileNavProps) {
                 закрытие живёт в крестике внутри .mobile-nav-header,
                 иначе кнопка перекрывает заголовок «Меню». */}
             {!open && (
-                <button
-                    className="mobile-menu-btn"
-                    onClick={onToggle}
-                    aria-label="Открыть меню"
-                >
+                <button className="mobile-menu-btn" onClick={onToggle} aria-label="Открыть меню">
                     ☰
                 </button>
             )}

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Final
 
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # === Database ===
     # Обычная БД (продакшен, Docker, локальная разработка)
     DATABASE_URL: str = "postgresql+asyncpg://mrmod:mrmod@localhost:5432/mrmod"
-    
+
     # === Uploads ===
     UPLOAD_DIR: Path = BACKEND_DIR / "uploads"
     MAX_FILE_SIZE: int = 20 * 1024 * 1024  # 20 MB

@@ -12,10 +12,10 @@ from app.models.task import Task
 from app.models.user import User
 from app.schemas.user import GroupInfo
 
-
 # ═══════════════════════════════════════════════════════════════
 # Чтение
 # ═══════════════════════════════════════════════════════════════
+
 
 async def get_group(db: AsyncSession, group_id: str) -> Group | None:
     result = await db.execute(select(Group).where(Group.id == group_id))
@@ -52,6 +52,7 @@ async def get_group_name(db: AsyncSession, group_id: str) -> str:
 # Утилиты
 # ═══════════════════════════════════════════════════════════════
 
+
 def _generate_invite_code() -> str:
     return secrets.token_urlsafe(6)
 
@@ -59,6 +60,7 @@ def _generate_invite_code() -> str:
 # ═══════════════════════════════════════════════════════════════
 # Создание группы
 # ═══════════════════════════════════════════════════════════════
+
 
 async def create_group(db: AsyncSession, user: User, name: str) -> Group:
     """
@@ -91,6 +93,7 @@ async def create_group(db: AsyncSession, user: User, name: str) -> Group:
 # ═══════════════════════════════════════════════════════════════
 # Вступление в группу
 # ═══════════════════════════════════════════════════════════════
+
 
 async def join_group_by_invite(
     db: AsyncSession,
@@ -128,6 +131,7 @@ async def join_group_by_invite(
 # Привязка chat_id
 # ═══════════════════════════════════════════════════════════════
 
+
 async def save_chat_id(db: AsyncSession, group_id: str, chat_id: str) -> None:
     group = await get_group(db, group_id)
     if group is not None:
@@ -138,6 +142,7 @@ async def save_chat_id(db: AsyncSession, group_id: str, chat_id: str) -> None:
 # ═══════════════════════════════════════════════════════════════
 # Выход из группы
 # ═══════════════════════════════════════════════════════════════
+
 
 async def leave_group(db: AsyncSession, user: User) -> None:
     """

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 
@@ -23,8 +23,8 @@ DEADLINE_MILESTONES = [
     (24 * 7, "deadline_7d", "📅", "через неделю"),
     (24 * 3, "deadline_3d", "📅", "через 3 дня"),
     (24 * 1, "deadline_1d", "⏰", "завтра"),
-    (8,      "deadline_8h", "🚨", "через 8 часов"),
-    (2,      "deadline_2h", "🚨", "через 2 часа"),
+    (8, "deadline_8h", "🚨", "через 8 часов"),
+    (2, "deadline_2h", "🚨", "через 2 часа"),
 ]
 
 # Окно срабатывания вехи (±часов вокруг целевого момента)
@@ -48,6 +48,7 @@ def _match_milestone(deadline: datetime, now: datetime) -> tuple[str, str, str] 
 # ═══════════════════════════════════════════════════════════════
 # Задача 1: напоминание о дедлайнах на разных вехах
 # ═══════════════════════════════════════════════════════════════
+
 
 async def check_upcoming_deadlines() -> None:
     now = utcnow()
@@ -134,9 +135,7 @@ async def check_upcoming_deadlines() -> None:
             kind, emoji, label = milestone
             logger.info("  Debt id=%s → веха %s (%s)", debt.id, kind, label)
 
-            if await notification_log_service.was_sent(
-                db, "debt", debt.id, debt.student_id, kind
-            ):
+            if await notification_log_service.was_sent(db, "debt", debt.id, debt.student_id, kind):
                 logger.info("    Debt id=%s — уже отправлено, пропускаем", debt.id)
                 continue
 
@@ -155,12 +154,12 @@ async def check_upcoming_deadlines() -> None:
                 f"Тип: {debt.type}\n"
                 f"Срок: {debt.deadline.strftime('%d.%m.%Y')}"
             )
-            logger.info("    Отправка студенту %s (max_user_id=%s)", student.id, student.max_user_id)
+            logger.info(
+                "    Отправка студенту %s (max_user_id=%s)", student.id, student.max_user_id
+            )
             if await notify_service.send_to_user(student.max_user_id, text):
                 logger.info("    ✅ УСПЕШНО отправлено %s", student.max_user_id)
-                await notification_log_service.mark_sent(
-                    db, "debt", debt.id, student.id, kind
-                )
+                await notification_log_service.mark_sent(db, "debt", debt.id, student.id, kind)
             else:
                 logger.error("    ❌ НЕ УДАЛОСЬ отправить %s", student.max_user_id)
 
@@ -182,31 +181,26 @@ async def _notify_group_about(
     students = await user_service.get_group_students(db, group_id)
     logger.info(
         "  _notify_group_about: entity=%s/%s, студентов: %d",
-        entity_type, entity_id, len(students),
+        entity_type,
+        entity_id,
+        len(students),
     )
 
-    text = (
-        f"{emoji} Напоминание: {title}\n"
-        f"Дедлайн {label}: {deadline.strftime('%d.%m.%Y %H:%M')}"
-    )
+    text = f"{emoji} Напоминание: {title}\nДедлайн {label}: {deadline.strftime('%d.%m.%Y %H:%M')}"
 
     for student in students:
         if not student.max_user_id:
             logger.warning("    У студента id=%s нет max_user_id", student.id)
             continue
 
-        if await notification_log_service.was_sent(
-            db, entity_type, entity_id, student.id, kind
-        ):
+        if await notification_log_service.was_sent(db, entity_type, entity_id, student.id, kind):
             logger.info("    Студент %s — уже отправлено, пропускаем", student.id)
             continue
 
         logger.info("    Отправка студенту %s (max_user_id=%s)", student.id, student.max_user_id)
         if await notify_service.send_to_user(student.max_user_id, text):
             logger.info("    ✅ УСПЕШНО отправлено %s", student.max_user_id)
-            await notification_log_service.mark_sent(
-                db, entity_type, entity_id, student.id, kind
-            )
+            await notification_log_service.mark_sent(db, entity_type, entity_id, student.id, kind)
         else:
             logger.error("    ❌ НЕ УДАЛОСЬ отправить %s", student.max_user_id)
 
@@ -214,6 +208,7 @@ async def _notify_group_about(
 # ═══════════════════════════════════════════════════════════════
 # Задача 2: напоминание о просроченных долгах
 # ═══════════════════════════════════════════════════════════════
+
 
 async def check_overdue_debts() -> None:
     """Раз в день шлёт персональные напоминания должникам."""
@@ -230,7 +225,9 @@ async def check_overdue_debts() -> None:
         for debt in debts:
             logger.info(
                 "  Debt id=%s, subject=%s, student_id=%s",
-                debt.id, debt.subject, debt.student_id,
+                debt.id,
+                debt.subject,
+                debt.student_id,
             )
 
             if await notification_log_service.was_sent_recently(
@@ -260,9 +257,7 @@ async def check_overdue_debts() -> None:
             logger.info("  Отправка студенту %s (max_user_id=%s)", student.id, student.max_user_id)
             if await notify_service.send_to_user(student.max_user_id, text):
                 logger.info("  ✅ УСПЕШНО отправлено %s", student.max_user_id)
-                await notification_log_service.mark_sent(
-                    db, "debt", debt.id, student.id, "overdue"
-                )
+                await notification_log_service.mark_sent(db, "debt", debt.id, student.id, "overdue")
             else:
                 logger.error("  ❌ НЕ УДАЛОСЬ отправить %s", student.max_user_id)
 
@@ -272,6 +267,7 @@ async def check_overdue_debts() -> None:
 # ═══════════════════════════════════════════════════════════════
 # Задача 3: утренняя сводка старосте
 # ═══════════════════════════════════════════════════════════════
+
 
 async def send_daily_summary() -> None:
     """Раз в день собирает статистику по группе и шлёт старосте."""
@@ -303,9 +299,7 @@ async def send_daily_summary() -> None:
                 logger.warning("    У старосты id=%s нет max_user_id", starosta.id)
                 continue
 
-            debts_result = await db.execute(
-                select(Debt).where(Debt.group_id == group.id)
-            )
+            debts_result = await db.execute(select(Debt).where(Debt.group_id == group.id))
             debts = list(debts_result.scalars().all())
             overdue = [d for d in debts if d.deadline < now]
 
@@ -330,7 +324,9 @@ async def send_daily_summary() -> None:
                 for t in today_tasks[:5]:
                     text += f"• {t.title} — {t.deadline.strftime('%H:%M')}\n"
 
-            logger.info("  Отправка старосте %s (max_user_id=%s)", starosta.id, starosta.max_user_id)
+            logger.info(
+                "  Отправка старосте %s (max_user_id=%s)", starosta.id, starosta.max_user_id
+            )
             if await notify_service.send_to_user(starosta.max_user_id, text):
                 logger.info("  ✅ УСПЕШНО отправлено %s", starosta.max_user_id)
             else:

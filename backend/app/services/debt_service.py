@@ -92,7 +92,7 @@ async def create_debt(
     elif can_edit_any:
         target_user = await _get_user_by_id(db, int(data.student_id))
         if target_user is None or target_user.group_id != group_id:
-            raise ValueError(f"Студент с id={data.student_id} не найден в группе")
+            raise LookupError(f"Студент с id={data.student_id} не найден в группе")
     else:
         raise PermissionError("Можно создавать долги только себе")
 
@@ -130,7 +130,7 @@ async def update_debt(
     if data.student_id is not None:
         target = await _get_user_by_id(db, int(data.student_id))
         if target is None or target.group_id != debt.group_id:
-            raise ValueError(f"Студент с id={data.student_id} не найден в группе")
+            raise LookupError(f"Студент с id={data.student_id} не найден в группе")
         debt.student_id = target.id
         debt.student_name = _build_full_name(target)
 

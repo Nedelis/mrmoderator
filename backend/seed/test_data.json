@@ -674,20 +674,5 @@
       "auto_forward": false,
       "group_id": "iu7-42b"
     }
-  ],
-
-  "group_settings": [
-    {
-      "id": 1,
-      "group_id": "iu7-42b",
-      "payload": {
-        "pushNotifications": true,
-        "dailySummary": true,
-        "debtNotifications": true,
-        "newMaterials": false,
-        "twoFactor": true,
-        "auditLog": true
-      }
-    }
   ]
 }

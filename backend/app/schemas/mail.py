@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import Field
 
 from app.schemas.base import BaseSchema
@@ -22,8 +20,14 @@ class Mailbox(BaseSchema):
     auto_forward: bool
 
 
+class MailboxSettings(BaseSchema):
+    id: str
+    connected: bool | None = None
+    auto_forward: bool | None = None
+
+
 class ConfigureMailboxesRequest(BaseSchema):
-    mailboxes: list[dict]
+    mailboxes: list[MailboxSettings]
 
 
 class AddMailboxRequest(BaseSchema):

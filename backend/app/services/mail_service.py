@@ -1,16 +1,17 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.mail import Mailbox, MailItem
-from app.schemas.mail import (
-    AddMailboxRequest, ConfigureMailboxesRequest
-)
+from app.schemas.mail import AddMailboxRequest, MailboxSettings
 from app.schemas.mail import (
     Mailbox as MailboxSchema,
 )
 from app.schemas.mail import (
     MailItem as MailItemSchema,
 )
+from app.services import notify_service, user_service
 
 
 def _to_mail_schema(m: MailItem) -> MailItemSchema:
@@ -49,23 +50,16 @@ async def list_mailboxes(db: AsyncSession, group_id: str) -> list[MailboxSchema]
 async def configure_mailboxes(
     db: AsyncSession,
     group_id: str,
-    mailboxes: list,
+    mailboxes: list[MailboxSettings],
 ) -> None:
-    """Обновляет настройки ящиков: connected и auto_forward."""
+    """Обновляет настройки ящиков группы: меняются только переданные поля."""
     for item in mailboxes:
-        # item может быть dict или Pydantic-модель — приводим к dict
-        if hasattr(item, "model_dump"):
-            item = item.model_dump()
-        elif hasattr(item, "dict"):
-            item = item.dict()
-
-        mb_id = item.get("id")
-        if not mb_id:
+        if not item.id.isdigit():
             continue
 
         result = await db.execute(
             select(Mailbox).where(
-                Mailbox.id == int(mb_id),
+                Mailbox.id == int(item.id),
                 Mailbox.group_id == group_id,
             )
         )
@@ -73,14 +67,37 @@ async def configure_mailboxes(
         if mb is None:
             continue
 
-        if "connected" in item:
-            mb.connected = bool(item["connected"])
-        if "autoForward" in item:
-            mb.auto_forward = bool(item["autoForward"])
-        elif "auto_forward" in item:
-            mb.auto_forward = bool(item["auto_forward"])
+        if item.connected is not None:
+            mb.connected = item.connected
+        if item.auto_forward is not None:
+            mb.auto_forward = item.auto_forward
 
     await db.commit()
+
+
+async def get_mail_item(db: AsyncSession, mail_id: int) -> MailItem | None:
+    result = await db.execute(select(MailItem).where(MailItem.id == mail_id))
+    return result.scalar_one_or_none()
+
+
+async def forward_mail(db: AsyncSession, mail: MailItem) -> int:
+    """
+    Пересылает письмо участникам группы личным сообщением от бота.
+    Возвращает число доставленных сообщений и отмечает письмо пересланным.
+    """
+    students = await user_service.get_group_students(db, mail.group_id)
+    text = f"✉️ Письмо от {mail.sender}\n{mail.subject}"
+    if mail.preview:
+        text += f"\n\n{mail.preview}"
+
+    sent = 0
+    for student in students:
+        if await notify_service.send_to_user(student.max_user_id, text):
+            sent += 1
+
+    mail.forwarded_at = datetime.now(UTC).replace(tzinfo=None)
+    await db.commit()
+    return sent
 
 
 async def add_mailbox(db: AsyncSession, group_id: str, data: AddMailboxRequest) -> MailboxSchema:

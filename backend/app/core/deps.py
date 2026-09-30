@@ -10,7 +10,6 @@ from app.core.security import validate_init_data
 from app.models.group import Group
 from app.models.user import User
 
-
 # =============================================================================
 # Получение текущего пользователя
 # =============================================================================
@@ -33,9 +32,7 @@ async def _get_or_create_test_user(db: AsyncSession) -> User:
     group = group_result.scalar_one_or_none()
 
     if group is None:
-        group_result = await db.execute(
-            select(Group).where(Group.invite_code == TEST_INVITE_CODE)
-        )
+        group_result = await db.execute(select(Group).where(Group.invite_code == TEST_INVITE_CODE))
         group = group_result.scalar_one_or_none()
 
     if group is None:
@@ -53,9 +50,7 @@ async def _get_or_create_test_user(db: AsyncSession) -> User:
         except IntegrityError:
             # Кто-то другой уже создал — откатываем и перечитываем
             await db.rollback()
-            group_result = await db.execute(
-                select(Group).where(Group.id == TEST_GROUP_ID)
-            )
+            group_result = await db.execute(select(Group).where(Group.id == TEST_GROUP_ID))
             group = group_result.scalar_one_or_none()
             if group is None:
                 group_result = await db.execute(
@@ -83,9 +78,7 @@ async def _get_or_create_test_user(db: AsyncSession) -> User:
             await db.refresh(user)
         except IntegrityError:
             await db.rollback()
-            result = await db.execute(
-                select(User).where(User.max_user_id == TEST_MAX_ID)
-            )
+            result = await db.execute(select(User).where(User.max_user_id == TEST_MAX_ID))
             user = result.scalar_one_or_none()
 
     return user
@@ -119,9 +112,7 @@ async def _get_or_create_user_from_init_data(
             await db.refresh(user)
         except IntegrityError:
             await db.rollback()
-            result = await db.execute(
-                select(User).where(User.max_user_id == max_user_id)
-            )
+            result = await db.execute(select(User).where(User.max_user_id == max_user_id))
             user = result.scalar_one_or_none()
 
     return user
@@ -133,7 +124,7 @@ async def get_current_user(
 ) -> User:
     if x_max_init_data is not None:
         return await _get_or_create_user_from_init_data(db, x_max_init_data)
-    
+
     if not SETTINGS.STRICT_AUTH:
         return await _get_or_create_test_user(db)
 

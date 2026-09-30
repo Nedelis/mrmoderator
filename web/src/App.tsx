@@ -31,13 +31,7 @@ export default function App() {
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const { isReady } = useMaxBridge();
     const { loading: rolesLoading, error: rolesError } = useRoles();
-    const {
-        loading: userLoading,
-        error: userError,
-        user,
-        role,
-        hasMenuItem,
-    } = useCurrentUser();
+    const { loading: userLoading, error: userError, user, role, hasMenuItem } = useCurrentUser();
     const location = useLocation();
 
     useEffect(() => {

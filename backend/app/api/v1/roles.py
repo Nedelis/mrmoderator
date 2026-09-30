@@ -33,6 +33,8 @@ async def assign_role(
         raise HTTPException(403, "Нельзя менять роль самому себе")
 
     # 2. Найти целевого пользователя
+    if not data.student_id.isdigit():
+        raise HTTPException(404, "Студент не найден")
     result = await db.execute(select(User).where(User.id == int(data.student_id)))
     target = result.scalar_one_or_none()
     if target is None or target.group_id != current.group_id:
@@ -72,7 +74,7 @@ async def assign_role(
 
 @router.delete("/group/members/{student_id}", response_model=RemovedMemberResponse)
 async def remove_group_member(
-    student_id: str,
+    student_id: int,
     current: User = Depends(require("group.edit")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -81,7 +83,7 @@ async def remove_group_member(
         raise HTTPException(403, "Нельзя удалить себя")
 
     # 2. Найти целевого пользователя
-    result = await db.execute(select(User).where(User.id == int(student_id)))
+    result = await db.execute(select(User).where(User.id == student_id))
     target = result.scalar_one_or_none()
     if target is None or target.group_id != current.group_id:
         raise HTTPException(404, "Участник не найден")
@@ -106,12 +108,12 @@ async def remove_group_member(
 
 @router.patch("/group/members/{student_id}/name", response_model=RenamedMemberResponse)
 async def rename_member(
-    student_id: str,
+    student_id: int,
     data: RenameMemberRequest,
     current: User = Depends(require("group.edit")),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(User).where(User.id == int(student_id)))
+    result = await db.execute(select(User).where(User.id == student_id))
     target = result.scalar_one_or_none()
     if target is None or target.group_id != current.group_id:
         raise HTTPException(404, "Участник не найден")

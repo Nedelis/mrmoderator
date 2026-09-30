@@ -33,7 +33,7 @@ class UpdateReminderRequest(BaseSchema):
     description: str | None = None
     date: str | None = None
     time: str | None = None
-    scope: str | None = None
+    scope: ReminderScope | None = None
     student_ids: list[str] | None = None
 
 

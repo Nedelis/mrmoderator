@@ -28,6 +28,7 @@ class ForwardMailResponse(BaseSchema):
     ok: bool = True
     id: str
     forwarded_to: str
+    sent_to: int = 0
 
 
 class RefreshMailResponse(BaseSchema):

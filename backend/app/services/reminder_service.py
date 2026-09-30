@@ -82,18 +82,29 @@ async def update_reminder(
     reminder: Reminder,
     data: UpdateReminderRequest,
 ) -> ReminderSchema:
+    """Частичное обновление: меняются только переданные поля."""
     if data.title is not None:
         reminder.title = data.title
     if data.description is not None:
         reminder.description = data.description
-    if data.date is not None:
-        reminder.date = data.date
-    if data.time is not None:
-        reminder.time = data.time
+
+    # Дедлайн хранится одним полем — пересобираем его из новой даты и/или времени
+    if data.date is not None or data.time is not None:
+        new_date = data.date if data.date is not None else reminder.deadline.date().isoformat()
+        new_time = data.time if data.time is not None else reminder.deadline.strftime("%H:%M")
+        reminder.deadline = _parse_deadline(new_date, new_time)
+
+    # scope: personal → личная; group → всей группе; selected → выбранным участникам
     if data.scope is not None:
-        reminder.scope = data.scope
-        if data.scope == 'selected' and data.student_ids is not None:
-            reminder.student_ids = data.student_ids
+        reminder.type = "personal" if data.scope == "personal" else "group"
+        if data.scope == "selected":
+            if data.student_ids is not None:
+                reminder.target_student_ids = data.student_ids
+        else:
+            reminder.target_student_ids = []
+    elif data.student_ids is not None and reminder.type == "group":
+        reminder.target_student_ids = data.student_ids
+
     await db.commit()
     await db.refresh(reminder)
     return _to_schema(reminder)

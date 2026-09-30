@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require
-from app.core.roles import ROLES
+from app.core.roles import has_permission
 from app.models.user import User
 from app.schemas.common import OkResponse, RemindResponse
 from app.schemas.reminder import (
@@ -36,16 +36,23 @@ async def create_reminder(
     db: AsyncSession = Depends(get_db),
 ):
     if data.scope == "personal":
-        if "reminder.create.personal" not in ROLES[user.role_id]["permissions"]:
+        if not has_permission(user.role_id, "reminder.create.personal"):
             raise HTTPException(403, "Нет права создавать личные напоминалки")
     else:
-        if "reminder.create.group" not in ROLES[user.role_id]["permissions"]:
+        if not has_permission(user.role_id, "reminder.create.group"):
             raise HTTPException(403, "Нет права создавать групповые напоминалки")
 
     if not user.group_id:
         raise HTTPException(400, "Пользователь не в группе")
 
     return await reminder_service.create_reminder(db, user, user.group_id, data)
+
+
+def _can_manage(user: User, reminder) -> bool:
+    """Личную напоминалку меняет только автор; групповую — автор или право reminder.remind."""
+    if reminder.author_id == user.id:
+        return True
+    return reminder.type == "group" and has_permission(user.role_id, "reminder.remind")
 
 
 @router.put("/{reminder_id}", response_model=OkResponse)
@@ -58,11 +65,14 @@ async def update_reminder(
     reminder = await reminder_service.get_reminder(db, reminder_id)
     if reminder is None or reminder.group_id != user.group_id:
         raise HTTPException(404, "Напоминалка не найдена")
-
-    is_author = reminder.author_id == user.id
-    can_remind = "reminder.remind" in ROLES[user.role_id]["permissions"]
-    if not (is_author or can_remind):
+    if not _can_manage(user, reminder):
         raise HTTPException(403, "Можно редактировать только свои напоминалки")
+
+    # Смена адресатов требует того же права, что и создание
+    if data.scope is not None:
+        perm = "reminder.create.personal" if data.scope == "personal" else "reminder.create.group"
+        if not has_permission(user.role_id, perm):
+            raise HTTPException(403, f"Нет права {perm}")
 
     await reminder_service.update_reminder(db, reminder, data)
     return OkResponse()
@@ -77,10 +87,7 @@ async def delete_reminder(
     reminder = await reminder_service.get_reminder(db, reminder_id)
     if reminder is None or reminder.group_id != user.group_id:
         raise HTTPException(404, "Напоминалка не найдена")
-
-    is_author = reminder.author_id == user.id
-    can_remind = "reminder.remind" in ROLES[user.role_id]["permissions"]
-    if not (is_author or can_remind):
+    if not _can_manage(user, reminder):
         raise HTTPException(403, "Можно удалять только свои напоминалки")
 
     await reminder_service.delete_reminder(db, reminder)
@@ -96,6 +103,9 @@ async def complete_reminder(
 ):
     reminder = await reminder_service.get_reminder(db, reminder_id)
     if reminder is None or reminder.group_id != user.group_id:
+        raise HTTPException(404, "Напоминалка не найдена")
+    # Чужая личная напоминалка пользователю не видна
+    if reminder.type == "personal" and reminder.author_id != user.id:
         raise HTTPException(404, "Напоминалка не найдена")
 
     await reminder_service.toggle_completed(db, reminder, user, data.completed)

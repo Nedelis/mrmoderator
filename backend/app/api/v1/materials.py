@@ -36,9 +36,6 @@ async def upload_material(
     if not user.group_id:
         raise HTTPException(400, "Пользователь не в группе")
 
-    if not data.url:
-        raise HTTPException(400, "Нужно передать url")
-
     return await material_service.create_material_with_url(
         db,
         user,

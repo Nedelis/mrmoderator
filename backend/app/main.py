@@ -11,6 +11,7 @@ from app.core.config import SETTINGS
 from app.core.openapi import install_openapi
 from app.services import notify_service
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """При старте API регистрируем sender и заполняем BotInfo + сидим тестовую БД если есть такой флаг."""
@@ -21,6 +22,7 @@ async def lifespan(_: FastAPI):
         print("[api] USE_TEST_DATA=true — запускаем сидинг")
         try:
             from seed.seed import main as seed_main
+
             await seed_main(True)
         except Exception as e:
             print(f"[api] Ошибка сидинга: {e}")

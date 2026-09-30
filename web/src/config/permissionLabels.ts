@@ -13,6 +13,8 @@ export const PERMISSION_LABELS: Record<string, string> = {
     'roles.assign': 'Назначение ролей',
     'group.edit': 'Управление составом группы',
     'exam.create': 'Создание экзаменов',
+    'exam.edit': 'Редактирование экзаменов',
+    'exam.delete': 'Удаление экзаменов',
     'exam.addMaterial': 'Добавление материалов к экзаменам',
     'task.create.group': 'Создание групповых заданий',
     'task.create.personal': 'Создание личных заданий',

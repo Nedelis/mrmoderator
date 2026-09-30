@@ -106,7 +106,8 @@ export default function Reminders() {
     const canEditTaskGroup = can('task.edit');
 
     const canCreateExam = can('exam.create');
-    const canDeleteExam = can('exam.create');
+    const canEditExam = can('exam.edit');
+    const canDeleteExam = can('exam.delete');
 
     const availableKinds: CreateKind[] = [];
     if (canCreateReminder) availableKinds.push('reminder');
@@ -259,11 +260,12 @@ export default function Reminders() {
             case 'reminder':
                 return item.data.type === 'group' ? canRemind : true;
             case 'debt':
-                return canCreateDebtAny;
+                // Любой долг — с правом debts.edit, свой — с правом debts.create.own
+                return canCreateDebtAny || (canCreateDebtOwn && item.data.studentId === user?.id);
             case 'task':
                 return item.data.type === 'group' ? canEditTaskGroup : true;
             case 'exam':
-                return canCreateExam;
+                return canEditExam;
         }
     };
 
@@ -280,11 +282,12 @@ export default function Reminders() {
                 description: r.description,
                 date: d,
                 time: t,
-                scope: r.type === 'personal'
-                    ? 'personal'
-                    : r.targetStudentIds?.length
-                      ? 'selected'
-                      : 'group',
+                scope:
+                    r.type === 'personal'
+                        ? 'personal'
+                        : r.targetStudentIds?.length
+                          ? 'selected'
+                          : 'group',
                 selectedStudentIds: r.targetStudentIds ?? [],
                 debtType: 'Экзамен',
                 debtStudentId: '',
@@ -390,9 +393,7 @@ export default function Reminders() {
                         time: editForm.time,
                         scope: editForm.scope,
                         studentIds:
-                            editForm.scope === 'selected'
-                                ? editForm.selectedStudentIds
-                                : undefined,
+                            editForm.scope === 'selected' ? editForm.selectedStudentIds : undefined,
                     });
                 } else if (editForm.kind === 'debt') {
                     const selectedStudent = editForm.debtStudentId
@@ -1208,9 +1209,7 @@ export default function Reminders() {
                 open={!!editForm}
                 onClose={() => setEditForm(null)}
                 title={
-                    editForm
-                        ? `Редактировать · ${KIND_META[editForm.kind].label}`
-                        : 'Редактировать'
+                    editForm ? `Редактировать · ${KIND_META[editForm.kind].label}` : 'Редактировать'
                 }
             >
                 {editForm && (
@@ -1228,9 +1227,7 @@ export default function Reminders() {
                                         : 'Название'
                                 }
                                 value={editForm.title}
-                                onChange={e =>
-                                    setEditForm({ ...editForm, title: e.target.value })
-                                }
+                                onChange={e => setEditForm({ ...editForm, title: e.target.value })}
                             />
                             {editErrors.title && (
                                 <div className="field-error-msg">{editErrors.title}</div>
@@ -1472,11 +1469,7 @@ export default function Reminders() {
                             >
                                 Отмена
                             </button>
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={pending}
-                            >
+                            <button type="submit" className="btn btn-primary" disabled={pending}>
                                 {pending ? '⏳ Сохраняем...' : '✅ Сохранить'}
                             </button>
                         </div>

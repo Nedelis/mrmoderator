@@ -38,7 +38,7 @@ class CreateExamRequest(BaseSchema):
     room: str = ""
     teacher: str = ""
     icon: str = "📚"
-    type: str = "exam"  # "exam" | "test" | "credit"
+    type: ExamType = "exam"
 
 
 class UpdateExamRequest(BaseSchema):
@@ -48,4 +48,4 @@ class UpdateExamRequest(BaseSchema):
     room: str | None = None
     teacher: str | None = None
     icon: str | None = None
-    type: str | None = None
+    type: ExamType | None = None

@@ -11,7 +11,7 @@
 Просто очищает БД и выходит, если есть флаг --clean.
 """
 
-__all__ = ['is_db_empty', 'clear_db', 'seed', 'main', 'cli']
+__all__ = ["is_db_empty", "clear_db", "seed", "main", "cli"]
 
 import argparse
 import asyncio
@@ -30,10 +30,8 @@ from app.models.group import Group
 from app.models.mail import Mailbox, MailItem
 from app.models.material import Material
 from app.models.reminder import Reminder
-from app.models.settings import GroupSettings
 from app.models.task import Task
 from app.models.user import User
-
 
 DATA_FILE = Path(__file__).parent / "test_data.json"
 
@@ -73,7 +71,6 @@ async def clear_db() -> None:
         await db.execute(delete(Reminder))
         await db.execute(delete(Debt))
         await db.execute(delete(Task))
-        await db.execute(delete(GroupSettings))
         await db.execute(delete(User))
         await db.execute(delete(Group))
         await db.commit()
@@ -135,10 +132,6 @@ async def seed() -> None:
         for mb in data.get("mailboxes", []):
             db.add(Mailbox(**mb))
 
-        # Настройки группы
-        for gs in data.get("group_settings", []):
-            db.add(GroupSettings(**gs))
-
         await db.commit()
 
     print("✅ Тестовые данные загружены")
@@ -179,7 +172,7 @@ def cli() -> None:
     parser.add_argument(
         "--clean",
         action="store_true",
-        help="Очистить БД, не заполняя данными. Приоритет выше --force"
+        help="Очистить БД, не заполняя данными. Приоритет выше --force",
     )
     args = parser.parse_args()
     asyncio.run(main(force=args.force, just_clean=args.clean))

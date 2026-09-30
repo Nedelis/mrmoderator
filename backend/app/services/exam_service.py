@@ -8,7 +8,8 @@ from app.models.exam import Exam, ExamMaterial
 from app.models.user import User
 from app.schemas.exam import CreateExamRequest as CreateExamRequestSchema
 from app.schemas.exam import Exam as ExamSchema
-from app.schemas.exam import ExamMaterial as ExamMaterialSchema, UpdateExamRequest
+from app.schemas.exam import ExamMaterial as ExamMaterialSchema
+from app.schemas.exam import UpdateExamRequest
 
 
 def _to_material_schema(m: ExamMaterial, added_by_name: str) -> ExamMaterialSchema:
@@ -43,19 +44,7 @@ async def list_exams(db: AsyncSession, group_id: str) -> list[ExamSchema]:
                     added_by_name = f"{u.last_name} {u.first_name[0]}."
             materials.append(_to_material_schema(m, added_by_name))
 
-        out.append(
-            ExamSchema(
-                id=str(e.id),
-                subject=e.subject,
-                date=e.date.isoformat(timespec="minutes"),
-                time=e.time,
-                room=e.room,
-                teacher=e.teacher,
-                icon=e.icon,
-                type=e.type,
-                materials=materials,
-            )
-        )
+        out.append(_to_schema(e, materials))
     return out
 
 
@@ -64,18 +53,38 @@ async def get_exam(db: AsyncSession, exam_id: int) -> Exam | None:
     return result.scalar_one_or_none()
 
 
+def _parse_exam_datetime(date_str: str, time_str: str | None) -> datetime:
+    """
+    Собирает дату экзамена из 'YYYY-MM-DD' (или 'YYYY-MM-DDTHH:MM') и 'HH:MM'.
+    Если в дате нет времени, а time задано — время берётся из time.
+    """
+    try:
+        if "T" not in date_str and time_str:
+            return datetime.fromisoformat(f"{date_str}T{time_str}")
+        return datetime.fromisoformat(date_str)
+    except ValueError:
+        raise ValueError(f"Неверный формат даты или времени: {date_str} {time_str or ''}".strip())
+
+
+def _to_schema(exam: Exam, materials: list[ExamMaterialSchema]) -> ExamSchema:
+    return ExamSchema(
+        id=str(exam.id),
+        subject=exam.subject,
+        date=exam.date.isoformat(timespec="minutes"),
+        time=exam.time,
+        room=exam.room,
+        teacher=exam.teacher,
+        icon=exam.icon,
+        type=exam.type,
+        materials=materials,
+    )
+
+
 async def create_exam(db: AsyncSession, group_id: str, data: CreateExamRequestSchema) -> ExamSchema:
     """Создаёт новый экзамен в расписании группы."""
-
-    # Парсим дату из строки (ISO-формат: YYYY-MM-DD или YYYY-MM-DDTHH:MM)
-    try:
-        exam_date = datetime.fromisoformat(data.date)
-    except ValueError:
-        raise ValueError(f"Неверный формат даты: {data.date}")
-
     exam = Exam(
         subject=data.subject,
-        date=exam_date,
+        date=_parse_exam_datetime(data.date, data.time),
         time=data.time or "",
         room=data.room or "",
         teacher=data.teacher or "",
@@ -86,27 +95,13 @@ async def create_exam(db: AsyncSession, group_id: str, data: CreateExamRequestSc
     db.add(exam)
     await db.commit()
     await db.refresh(exam)
-
-    return ExamSchema(
-        id=str(exam.id),
-        subject=exam.subject,
-        date=exam.date.isoformat(timespec="minutes"),
-        time=exam.time,
-        room=exam.room,
-        teacher=exam.teacher,
-        icon=exam.icon,
-        type=exam.type,
-        materials=[],
-    )
+    return _to_schema(exam, [])
 
 
-async def update_exam(db: AsyncSession, exam: Exam, data: UpdateExamRequest) -> ExamSchema:
+async def update_exam(db: AsyncSession, exam: Exam, data: UpdateExamRequest) -> None:
+    """Частичное обновление экзамена: меняются только переданные поля."""
     if data.subject is not None:
         exam.subject = data.subject
-    if data.date is not None:
-        exam.date = data.date
-    if data.time is not None:
-        exam.time = data.time
     if data.room is not None:
         exam.room = data.room
     if data.teacher is not None:
@@ -116,30 +111,14 @@ async def update_exam(db: AsyncSession, exam: Exam, data: UpdateExamRequest) -> 
     if data.type is not None:
         exam.type = data.type
 
+    # Дата и время хранятся вместе в exam.date, время дублируется в exam.time
+    if data.date is not None or data.time is not None:
+        new_time = data.time if data.time is not None else exam.time
+        new_date = data.date if data.date is not None else exam.date.date().isoformat()
+        exam.date = _parse_exam_datetime(new_date, new_time)
+        exam.time = new_time or ""
+
     await db.commit()
-    await db.refresh(exam)
-
-    materials = []
-    for m in exam.materials:
-        added_by_name = ""
-        if m.added_by:
-            u = await db.execute(select(User).where(User.id == m.added_by))
-            u = u.scalar_one_or_none()
-            if u:
-                added_by_name = f"{u.last_name} {u.first_name[0]}."
-        materials.append(_to_material_schema(m, added_by_name))
-
-    return ExamSchema(
-        id=str(exam.id),
-        subject=exam.subject,
-        date=exam.date,
-        time=exam.time,
-        room=exam.room,
-        teacher=exam.teacher,
-        icon=exam.icon,
-        type=exam.type,
-        materials=materials
-    )
 
 
 async def delete_exam(db: AsyncSession, exam: Exam) -> None:
